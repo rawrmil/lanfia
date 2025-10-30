@@ -35,12 +35,12 @@ int main(int argc, char** argv) {
 	if (!flag_parse(argc, argv)) {
 		flag_print_options(stderr);
 		flag_print_error(stderr);
-		return 1;
+		exit(1);
 	}
 
 	if (*f_help) {
     flag_print_options(stdout);
-		return 0;
+		exit(0);
 	}
 
 	// Building
