@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define NOB_IMPLEMENTATION
 #include "nob.h"
@@ -45,6 +46,20 @@ void AppParseFlags(int argc, char** argv) {
 	mg_log_set(*f_ll);
 }
 
+// --- USERS ---
+
+typedef struct GameUser {
+	struct mg_connection* c;
+} GameUser;
+
+typedef struct GameUsers {
+	GameUser* items;
+	size_t count;
+	size_t capacity;
+} GameUsers; // nob.h dynamic array
+
+GameUsers users;
+
 // --- EVENTS ---
 
 void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
@@ -52,6 +67,10 @@ void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
 	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
 		mg_ws_upgrade(c, hm, NULL);
 		mg_ws_send(c, "TEST", 4, WEBSOCKET_OP_TEXT);
+		GameUser user = {0};
+		user.c = c;
+		nob_da_append(&users, user);
+		printf("users: %zu\n", users.count);
 		return;
 	}
 	if (!strncmp(hm->method.buf, "GET", 3)) {
@@ -66,8 +85,13 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	printf("%.*s\n", wm->data.len, wm->data.buf);
 }
 
-void HandleClose(struct mg_connection* c, void* ev_data) {
-	// ...
+void HandleWSClose(struct mg_connection* c, void* ev_data) {
+	for (int i = 0; i < users.count; i++) {
+		if (c == users.items[i].c) {
+			nob_da_remove_unordered(&users, i);
+		}
+	}
+	printf("users: %zu\n", users.count);
 }
 
 void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
@@ -79,7 +103,7 @@ void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
 			HandleWSMessage(c, ev_data);
 			break;
 		case MG_EV_CLOSE:
-			HandleClose(c, ev_data);
+			if (c->is_websocket) { HandleWSClose(c, ev_data); }
 			break;
 		case MG_EV_POLL:
 			break;
@@ -109,6 +133,7 @@ int main(int argc, char* argv[]) {
 
 	// Closing
 	mg_mgr_free(&mgr);
+	nob_da_free(users);
 	printf("Server closed.\n");
 
 	return 0;
