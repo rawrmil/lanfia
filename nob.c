@@ -15,6 +15,8 @@
 #error "Unsupported platform."
 #endif
 
+#define MONGOOSE "./resources/mongoose-7.19"
+
 //#define LINUX_RAYLIB "./resources/raylib-5.5/linux_amd64"
 #define LINUX_OUTPUT "./build/lanfia"
 
@@ -47,8 +49,16 @@ int main(int argc, char** argv) {
 
 	if (!nob_mkdir_if_not_exists("./build")) return 1;
 
+
+	if (nob_needs_rebuild1("build/mongoose.o", MONGOOSE"/mongoose.c")) {
+		nob_cmd_append(&cmd, *f_cc, MONGOOSE"/mongoose.c", "-c", "-o", "build/mongoose.o");
+		if (!cmd_run(&cmd)) return 1;
+	}
+
 	if (strcmp(*f_target, "linux") == 0) {
 		nob_cmd_append(&cmd, *f_cc, "main.c");
+		nob_cmd_append(&cmd, "build/mongoose.o");
+		nob_cmd_append(&cmd, "-I"MONGOOSE);
 		//nob_cmd_append(&cmd, LINUX_RAYLIB"/lib/libraylib.a");
 		//nob_cmd_append(&cmd, "-I"LINUX_RAYLIB"/include");
 		nob_cmd_append(&cmd, "-o", LINUX_OUTPUT);
@@ -60,6 +70,8 @@ int main(int argc, char** argv) {
 		}
 	} else if (strcmp(*f_target, "windows") == 0) {
 		nob_cmd_append(&cmd, *f_cc, "main.c");
+		nob_cmd_append(&cmd, "build/mongoose.o");
+		nob_cmd_append(&cmd, "-I"MONGOOSE);
 		//nob_cmd_append(&cmd, WINDOWS_RAYLIB"/lib/libraylib.a");
 		//nob_cmd_append(&cmd, "-I"WINDOWS_RAYLIB"/include");
 		nob_cmd_append(&cmd, "-o", WINDOWS_OUTPUT);
