@@ -45,23 +45,41 @@ void AppParseFlags(int argc, char** argv) {
 	mg_log_set(*f_ll);
 }
 
-
 // --- EVENTS ---
-
-// -- HTTP --
 
 void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
 	struct mg_http_message* hm = (struct mg_http_message*)ev_data;
+	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
+		mg_ws_upgrade(c, hm, NULL);
+		mg_ws_send(c, "TEST", 4, WEBSOCKET_OP_TEXT);
+		return;
+	}
 	if (!strncmp(hm->method.buf, "GET", 3)) {
 			struct mg_http_serve_opts opts = { .root_dir = config.web_dir };
 			mg_http_serve_dir(c, hm, &opts);
 	}
 }
 
+
+void HandleWSMessage(struct mg_connection* c, void* ev_data) {
+	struct mg_ws_message* wm = (struct mg_ws_message*)ev_data;
+	printf("%.*s\n", wm->data.len, wm->data.buf);
+}
+
+void HandleClose(struct mg_connection* c, void* ev_data) {
+	// ...
+}
+
 void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
 	switch (ev) {
 		case MG_EV_HTTP_MSG:
 			HandleHTTPMessage(c, ev_data);
+			break;
+		case MG_EV_WS_MSG:
+			HandleWSMessage(c, ev_data);
+			break;
+		case MG_EV_CLOSE:
+			HandleClose(c, ev_data);
 			break;
 		case MG_EV_POLL:
 			break;
