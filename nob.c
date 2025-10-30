@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
 	bool* f_run = flag_bool("run", false, "run program");
 
 	if (!flag_parse(argc, argv)) {
-		flag_print_options(stderr);
+		flag_print_options(stdout);
 		flag_print_error(stderr);
 		exit(1);
 	}
