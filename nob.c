@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 		//nob_cmd_append(&cmd, "-I"WINDOWS_RAYLIB"/include");
 		nob_cmd_append(&cmd, "-o", WINDOWS_OUTPUT);
 		nob_cmd_append(&cmd, "-mwindows");
-		nob_cmd_append(&cmd, "-lgdi32", "-lopengl32", "-lwinmm");
+		nob_cmd_append(&cmd, "-lws2_32");
 		if (!cmd_run(&cmd)) return 1;
 		if (*f_run) {
 			nob_cmd_append(&cmd, WINDOWS_OUTPUT);
