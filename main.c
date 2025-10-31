@@ -50,7 +50,7 @@ void AppParseFlags(int argc, char** argv) {
 
 typedef struct GameUser {
 	struct mg_connection* c;
-} GameUser;
+} GameUser; // stored in c->fn_data
 
 typedef struct GameUsers {
 	GameUser* items;
@@ -60,6 +60,22 @@ typedef struct GameUsers {
 
 GameUsers users;
 
+void GameUserAdd(struct mg_connection* c) {
+	GameUser user = {0};
+	user.c = c;
+	nob_da_append(&users, user);
+	printf("users: %zu\n", users.count);
+}
+
+void GameUserRemove(struct mg_connection* c) {
+	for (int i = 0; i < users.count; i++) {
+		if (c == users.items[i].c) {
+			nob_da_remove_unordered(&users, i);
+		}
+	}
+	printf("users: %zu\n", users.count);
+}
+
 // --- EVENTS ---
 
 void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
@@ -67,10 +83,7 @@ void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
 	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
 		mg_ws_upgrade(c, hm, NULL);
 		mg_ws_send(c, "TEST", 4, WEBSOCKET_OP_TEXT);
-		GameUser user = {0};
-		user.c = c;
-		nob_da_append(&users, user);
-		printf("users: %zu\n", users.count);
+		GameUserAdd(c);
 		return;
 	}
 	if (!strncmp(hm->method.buf, "GET", 3)) {
@@ -79,19 +92,13 @@ void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
 	}
 }
 
+void HandleWSClose(struct mg_connection* c, void* ev_data) {
+	GameUserRemove(c);
+}
 
 void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	struct mg_ws_message* wm = (struct mg_ws_message*)ev_data;
 	printf("%.*s\n", wm->data.len, wm->data.buf);
-}
-
-void HandleWSClose(struct mg_connection* c, void* ev_data) {
-	for (int i = 0; i < users.count; i++) {
-		if (c == users.items[i].c) {
-			nob_da_remove_unordered(&users, i);
-		}
-	}
-	printf("users: %zu\n", users.count);
 }
 
 void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
