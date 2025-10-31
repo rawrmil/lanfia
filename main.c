@@ -63,14 +63,56 @@ GameUsers users;
 
 /*
 	GAME SERVER MESSAGES:
-		Server-side:
+		Server:
 			[ GSMT_INFO_VIEWERS | uint32_t(4b) ]
 			- information about viewer count
 */
 
-enum GameServerMessageType {
-	GSMT_INFO_VIEWERS = 0,
-}; // TODO: separate file, generated alongside JS file
+// Game Server Message Types
+
+#define GSMT \
+	X(GSMT_INFO_VIEWERS) \
+	X(GSMT_LAST_)\
+
+#define X(name_) name_,
+enum GameServerMessageTypes { GSMT };
+#undef X
+
+#define X(name_) #name_,
+const char *gsmt_names[] = { GSMT };
+#undef X
+
+// Game Client Message Types
+
+#define GCMT \
+	X(GCMT_LOGIN) \
+	X(GCMT_LAST_)\
+
+#define X(name_) name_,
+enum GameClientMessageTypes { GCMT };
+#undef X
+
+#define X(name_) #name_,
+const char *gcmt_names[] = { GCMT };
+#undef X
+
+// JS
+
+Nob_String_Builder gmt_js;
+
+void GameMessageTypesGenerateJS() {
+	nob_sb_append_cstr(&gmt_js, "const GSMT = {\n");
+	for (int i = 0; i < GSMT_LAST_; i++) {
+		nob_sb_appendf(&gmt_js, "\t%s: %d,\n", gsmt_names[i]+strlen("GSMT_"), i);
+	}
+	nob_sb_append_cstr(&gmt_js, "};\n");
+	nob_sb_append_cstr(&gmt_js, "const GCMT = {\n");
+	for (int i = 0; i < GCMT_LAST_; i++) {
+		nob_sb_appendf(&gmt_js, "\t%s: %d,\n", gcmt_names[i]+strlen("GCMT_"), i);
+	}
+	nob_sb_append_cstr(&gmt_js, "};");
+	nob_sb_append_null(&gmt_js);
+}
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
 	Nob_String_Builder msg = {0};
@@ -117,8 +159,11 @@ void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
 		return;
 	}
 	if (!strncmp(hm->method.buf, "GET", 3)) {
-			struct mg_http_serve_opts opts = { .root_dir = config.web_dir };
-			mg_http_serve_dir(c, hm, &opts);
+		if (mg_strcmp(hm->uri, mg_str("/gmt.js")) == 0) {
+			mg_http_reply(c, 200, "", gmt_js.items);
+		}
+		struct mg_http_serve_opts opts = { .root_dir = config.web_dir };
+		mg_http_serve_dir(c, hm, &opts);
 	}
 }
 
@@ -150,6 +195,9 @@ void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
 // --- MAIN ---
 
 int main(int argc, char* argv[]) {
+
+	GameMessageTypesGenerateJS();
+
 	AppParseFlags(argc, argv);
 
 	printf("log_level: %d\n", mg_log_level);

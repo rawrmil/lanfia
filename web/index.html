@@ -7,6 +7,7 @@
 		Viewers:
 		<span id="game_viewers">?</span>
 	</div>
+	<script src="gmt.js"></script>
 	<script>
 		// E L E M E N T S
 		const viewersEl = document.getElementById("game_viewers");
@@ -17,11 +18,10 @@
 		ws.onmessage = (event) => {
 			const data = new DataView(event.data);
 			msg_type = data.getUint8(0, 1);
-			if (msg_type == 0) {
+			if (msg_type == GSMT.INFO_VIEWERS) {
 				const viewer_count = data.getUint32(1, 1);
 				console.log("viewers: "+viewer_count);
 				viewersEl.textContent = viewer_count;
-				d
 			}
 		}
 	</script>
