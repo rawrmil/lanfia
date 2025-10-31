@@ -3,14 +3,26 @@
 	<title>Hello</title>
 </head>
 <body>
-	test
+	<div>
+		Viewers:
+		<span id="game_viewers">?</span>
+	</div>
 	<script>
+		// E L E M E N T S
+		const viewersEl = document.getElementById("game_viewers");
 		// W E B S O C K E T S
 		const ws = new WebSocket(`ws://${location.host}/ws`);
+		ws.binaryType = "arraybuffer";
 		ws.onopen = () => { console.log('WS: open'); };
 		ws.onmessage = (event) => {
-			console.log(event.data);
-			ws.send(event.data);
+			const data = new DataView(event.data);
+			msg_type = data.getUint8(0, 1);
+			if (msg_type == 0) {
+				const viewer_count = data.getUint32(1, 1);
+				console.log("viewers: "+viewer_count);
+				viewersEl.textContent = viewer_count;
+				d
+			}
 		}
 	</script>
 </body>

@@ -50,7 +50,8 @@ void AppParseFlags(int argc, char** argv) {
 
 typedef struct GameUser {
 	struct mg_connection* c;
-} GameUser; // stored in c->fn_data
+	bool is_player;
+} GameUser;
 
 typedef struct GameUsers {
 	GameUser* items;
@@ -60,10 +61,39 @@ typedef struct GameUsers {
 
 GameUsers users;
 
+/*
+	GAME SERVER MESSAGES:
+		Server-side:
+			[ GSMT_INFO_VIEWERS | uint32_t(4b) ]
+			- information about viewer count
+*/
+
+enum GameServerMessageType {
+	GSMT_INFO_VIEWERS = 0,
+}; // TODO: separate file, generated alongside JS file
+
+void GameUsersUpdate(struct mg_mgr* mgr) {
+	Nob_String_Builder msg = {0};
+	uint32_t count = 0;
+	nob_da_foreach(GameUser, user, &users) {
+		count += user->is_player == false;
+	}
+	MG_INFO(("viewers: %d\n", count));
+	nob_da_append(&msg, GSMT_INFO_VIEWERS);
+	nob_da_append_many(&msg, &count, sizeof(count));
+	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
+		mg_ws_send(c, msg.items, msg.count, WEBSOCKET_OP_BINARY);
+	}
+	nob_da_free(msg);
+}
+
+
 void GameUserAdd(struct mg_connection* c) {
 	GameUser user = {0};
 	user.c = c;
+	user.is_player = 0;
 	nob_da_append(&users, user);
+	GameUsersUpdate(c->mgr);
 	MG_INFO(("users: %d\n", users.count));
 }
 
@@ -73,6 +103,7 @@ void GameUserRemove(struct mg_connection* c) {
 			nob_da_remove_unordered(&users, i);
 		}
 	}
+	GameUsersUpdate(c->mgr);
 	MG_INFO(("users: %d\n", users.count));
 }
 
@@ -82,7 +113,6 @@ void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
 	struct mg_http_message* hm = (struct mg_http_message*)ev_data;
 	if (mg_strcmp(hm->uri, mg_str("/ws")) == 0) {
 		mg_ws_upgrade(c, hm, NULL);
-		mg_ws_send(c, "TEST", 4, WEBSOCKET_OP_TEXT);
 		GameUserAdd(c);
 		return;
 	}
