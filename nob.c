@@ -78,6 +78,7 @@ int main(int argc, char** argv) {
 			if (!cmd_run(&cmd)) return 1;
 			if (*f_run) {
 				nob_cmd_append(&cmd, LINUX_OUTPUT);
+				for (int i = 0; i < rargc; i++) { nob_cmd_append(&cmd, rargv[i]); }
 				if (!cmd_run(&cmd)) return 1;
 			}
 			break;
@@ -93,6 +94,7 @@ int main(int argc, char** argv) {
 			if (!cmd_run(&cmd)) return 1;
 			if (*f_run) {
 				nob_cmd_append(&cmd, WINDOWS_OUTPUT);
+				for (int i = 0; i < rargc; i++) { nob_cmd_append(&cmd, rargv[i]); }
 				if (!cmd_run(&cmd)) return 1;
 			}
 			break;
