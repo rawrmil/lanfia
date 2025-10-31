@@ -24,6 +24,15 @@
 //#define WINDOWS_RAYLIB "./resources/raylib-5.5/win64_mingw-w64"
 #define WINDOWS_OUTPUT "./build/lanfia.exe"
 
+void PrintHelp(int argc, char** argv) {
+	flag_print_options(stdout);
+	printf("Examples:\n");
+	printf("%s\n", argv[0]);
+	printf("%s -target linux\n", argv[0]);
+	printf("%s -cc x86_64-w64-mingw32-gcc -target windows\n", argv[0]);
+	printf("%s -run -- -log-level 2\n", argv[0]);
+}
+
 int main(int argc, char** argv) {
 
 	NOB_GO_REBUILD_URSELF(argc, argv);
@@ -34,15 +43,18 @@ int main(int argc, char** argv) {
 	bool* f_run = flag_bool("run", false, "run program");
 
 	if (!flag_parse(argc, argv)) {
-		flag_print_options(stdout);
+		PrintHelp(argc, argv);
 		flag_print_error(stderr);
 		exit(1);
 	}
 
 	if (*f_help) {
-    flag_print_options(stdout);
+		PrintHelp(argc, argv);
 		exit(0);
 	}
+
+	int rargc = flag_rest_argc();
+	char **rargv = flag_rest_argv();
 
 	// Checking target
 	int target = -1; // TODO: enum + separate func
