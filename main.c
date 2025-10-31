@@ -64,7 +64,7 @@ void GameUserAdd(struct mg_connection* c) {
 	GameUser user = {0};
 	user.c = c;
 	nob_da_append(&users, user);
-	printf("users: %zu\n", users.count);
+	MG_INFO(("users: %d\n", users.count));
 }
 
 void GameUserRemove(struct mg_connection* c) {
@@ -73,7 +73,7 @@ void GameUserRemove(struct mg_connection* c) {
 			nob_da_remove_unordered(&users, i);
 		}
 	}
-	printf("users: %zu\n", users.count);
+	MG_INFO(("users: %d\n", users.count));
 }
 
 // --- EVENTS ---
@@ -98,7 +98,7 @@ void HandleWSClose(struct mg_connection* c, void* ev_data) {
 
 void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	struct mg_ws_message* wm = (struct mg_ws_message*)ev_data;
-	printf("%.*s\n", wm->data.len, wm->data.buf);
+	MG_INFO(("'%.*s'\n", wm->data.len, wm->data.buf));
 }
 
 void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
