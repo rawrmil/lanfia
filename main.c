@@ -98,16 +98,25 @@ void ByteWriterN  (ByteWriter* bw, const uint8_t* in, size_t n) { BR_WRITE(n); }
 
 typedef struct GameUser {
 	struct mg_connection* c;
-	bool is_player;
 } GameUser;
 
-typedef struct GameUsers {
-	GameUser* items;
+int users_count = 0;
+
+// --- PLAYERS ---
+
+typedef struct GamePlayer {
+	struct mg_connection* c;
+	Nob_String_Builder username;
+} GamePlayer;
+
+typedef struct GamePlayers {
+	GamePlayer* items;
 	size_t count;
 	size_t capacity;
-} GameUsers; // nob.h dynamic array
+} GamePlayers; // nob.h dynamic array
 
-GameUsers users;
+GamePlayers players;
+
 
 /*
 	GAME SERVER MESSAGES:
@@ -163,10 +172,7 @@ void GameMessageTypesGenerateJS() {
 }
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
-	uint32_t count = 0;
-	nob_da_foreach(GameUser, user, &users) {
-		count += user->is_player == false;
-	}
+	uint32_t count = users_count - players.count;
 	ByteWriter bw = {0};
 	ByteWriterU8(&bw, GSMT_INFO_VIEWERS);
 	ByteWriterU32(&bw, count);
@@ -177,24 +183,20 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 	ByteWriterFree(bw);
 }
 
-
 void GameUserAdd(struct mg_connection* c) {
-	GameUser user = {0};
-	user.c = c;
-	user.is_player = 0;
-	nob_da_append(&users, user);
+	GameUser* user = calloc(1, sizeof(*user));
+	assert(user != NULL);
+	user->c = c;
+	users_count++;
 	GameUsersUpdate(c->mgr);
-	MG_INFO(("users: %d\n", users.count));
+	MG_INFO(("users: %d\n", users_count));
 }
 
 void GameUserRemove(struct mg_connection* c) {
-	for (int i = 0; i < users.count; i++) {
-		if (c == users.items[i].c) {
-			nob_da_remove_unordered(&users, i);
-		}
-	}
+	free(c->fn_data);
+	users_count--;
 	GameUsersUpdate(c->mgr);
-	MG_INFO(("users: %d\n", users.count));
+	MG_INFO(("users: %d\n", users_count));
 }
 
 // --- EVENTS ---
@@ -219,15 +221,24 @@ void HandleWSClose(struct mg_connection* c, void* ev_data) {
 	GameUserRemove(c);
 }
 
-bool HandleGCMTLobbyJoin(ByteReader* br) {
+bool HandleGCMTLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	mg_hexdump(br->sv.data, br->sv.count);
 	bool result = true;
 	uint32_t n;
 	if (!ByteReaderU32(br, &n))
 		nob_return_defer(false);
-	Nob_String_Builder username = ByteReaderSBAlloc(br, n);
-	printf("username.count: %d\n", username.count);
-	printf("username: %.*s\n", username.count, username.items);
+	Nob_String_Builder username = ByteReaderSBAlloc(br, n); // TODO: free
+	nob_da_foreach(GamePlayer, p, &players) {
+		if (p->c == c) {
+			// TODO: already connected
+			nob_return_defer(false);
+		}
+	}
+	GamePlayer player = {0};
+	player.c = c;
+	player.username = username; // TODO: check username
+	nob_da_append(&players, player);
+	GameUsersUpdate(c->mgr);
 defer:
 	nob_sb_free(username);
 	return result;
@@ -242,7 +253,7 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	if (!ByteReaderU8(&br, &gcmt)) return;
 	switch (gcmt) {
 		case GCMT_LOBBY_JOIN:
-			HandleGCMTLobbyJoin(&br);
+			HandleGCMTLobbyJoin(c, &br);
 			break;
 	}
 }
@@ -289,7 +300,6 @@ int main(int argc, char* argv[]) {
 
 	// Closing
 	mg_mgr_free(&mgr);
-	nob_da_free(users);
 	printf("Server closed.\n");
 
 	return 0;
