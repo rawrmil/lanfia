@@ -67,6 +67,14 @@ bool ByteReaderU16(ByteReader* br, uint16_t* out) { BR_READ(uint16_t, 2); }
 bool ByteReaderU32(ByteReader* br, uint32_t* out) { BR_READ(uint32_t, 4); }
 bool ByteReaderU64(ByteReader* br, uint64_t* out) { BR_READ(uint64_t, 8); }
 bool ByteReaderN  (ByteReader* br, uint8_t*  out, size_t n) { BR_READ(uint8_t,  n); }
+Nob_String_Builder ByteReaderSBAlloc(ByteReader* br, size_t n) {
+	Nob_String_Builder sb = {0};
+	nob_da_reserve(&sb, n);
+	sb.count = n;
+	if (!ByteReaderN(br, sb.items, sb.count))
+		return (Nob_String_Builder){ 0 };
+	return sb;
+}
 
 typedef struct ByteWriter {
 	Nob_String_Builder sb;
@@ -125,7 +133,7 @@ const char *gsmt_names[] = { GSMT };
 // Game Client Message Types
 
 #define GCMT \
-	X(GCMT_LOGIN) \
+	X(GCMT_LOBBY_JOIN) \
 	X(GCMT_LAST_)\
 
 #define X(name_) name_,
@@ -211,9 +219,32 @@ void HandleWSClose(struct mg_connection* c, void* ev_data) {
 	GameUserRemove(c);
 }
 
+bool HandleGCMTLobbyJoin(ByteReader* br) {
+	mg_hexdump(br->sv.data, br->sv.count);
+	bool result = true;
+	uint32_t n;
+	if (!ByteReaderU32(br, &n))
+		nob_return_defer(false);
+	Nob_String_Builder username = ByteReaderSBAlloc(br, n);
+	printf("username.count: %d\n", username.count);
+	printf("username: %.*s\n", username.count, username.items);
+defer:
+	nob_sb_free(username);
+	return result;
+}
+
 void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	struct mg_ws_message* wm = (struct mg_ws_message*)ev_data;
-	MG_INFO(("'%.*s'\n", wm->data.len, wm->data.buf));
+	ByteReader br = {0};
+	br.sv.count = wm->data.len;
+	br.sv.data = wm->data.buf;
+	uint8_t gcmt;
+	if (!ByteReaderU8(&br, &gcmt)) return;
+	switch (gcmt) {
+		case GCMT_LOBBY_JOIN:
+			HandleGCMTLobbyJoin(&br);
+			break;
+	}
 }
 
 void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
