@@ -9,6 +9,30 @@
 	</div>
 	<script src="gmt.js"></script>
 	<script>
+		// B Y T E   R / W
+		class ByteReader {
+			constructor(buffer) {
+				this.dv = new DataView(buffer);
+				this.i = 0;
+			}
+			u8()   { const r = this.dv.getUint8(this.i);        this.i += 1; return r; }
+			u16()  { const r = this.dv.getUint16(this.i, true); this.i += 2; return r; }
+			u32()  { const r = this.dv.getUint32(this.i, true); this.i += 4; return r; }
+			u64()  { const r = this.dv.getUint64(this.i, true); this.i += 8; return r; }
+			str(n) { const str = new TextDecoder().decode(new Uint8Array(this.dv.buffer, this.i, n)); this.i += n; return str; }
+		}
+		class ByteWriter {
+			constructor() {
+				this.arr = [];
+				this.dv = new DataView(new ArrayBuffer(8))
+			}
+			u8(v)  { this.arr.push(v); }
+			u16(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 2)); }
+			u32(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 4)); }
+			u64(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 8)); }
+			str(s) { this.arr.push(...new TextEncoder().encode(s)); }
+			bytes() { return new Uint8Array(this.arr); }
+		}
 		// E L E M E N T S
 		const viewersEl = document.getElementById("game_viewers");
 		// W E B S O C K E T S
@@ -16,11 +40,14 @@
 		ws.binaryType = "arraybuffer";
 		ws.onopen = () => { console.log('WS: open'); };
 		ws.onmessage = (event) => {
-			const data = new DataView(event.data);
-			msg_type = data.getUint8(0, 1);
+			const reader = new ByteReader(event.data);
+			msg_type = reader.u8();
 			if (msg_type == GSMT.INFO_VIEWERS) {
-				const viewer_count = data.getUint32(1, 1);
+				const viewer_count = reader.u32();
 				console.log("viewers: "+viewer_count);
+				const writer = new ByteWriter();
+				writer.str("echotest");
+				ws.send(writer.bytes())
 				viewersEl.textContent = viewer_count;
 			}
 		}
