@@ -4,6 +4,11 @@
 </head>
 <body>
 	<div>
+		<label for="game_username">Username</label>
+		<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
+		<button onclick="gameLogin()">Join</button>
+	</div>
+	<div>
 		Viewers:
 		<span id="game_viewers">?</span>
 	</div>
@@ -30,11 +35,23 @@
 			u16(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 2)); }
 			u32(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 4)); }
 			u64(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 8)); }
-			str(s) { this.arr.push(...new TextEncoder().encode(s)); }
+			str(s) {
+				const te = new TextEncoder().encode(s);
+				this.u32(te.length);
+				this.arr.push(...te);
+			}
 			bytes() { return new Uint8Array(this.arr); }
 		}
 		// E L E M E N T S
 		const viewersEl = document.getElementById("game_viewers");
+		const usernameEl = document.getElementById("game_username");
+		// L O G I N
+		function gameLogin() {
+			const writer = new ByteWriter();
+			writer.u8(GCMT.LOGIN);
+			writer.str(usernameEl.value);
+			ws.send(writer.bytes())
+		}
 		// W E B S O C K E T S
 		const ws = new WebSocket(`ws://${location.host}/ws`);
 		ws.binaryType = "arraybuffer";
@@ -45,9 +62,6 @@
 			if (msg_type == GSMT.INFO_VIEWERS) {
 				const viewer_count = reader.u32();
 				console.log("viewers: "+viewer_count);
-				const writer = new ByteWriter();
-				writer.str("echotest");
-				ws.send(writer.bytes())
 				viewersEl.textContent = viewer_count;
 			}
 		}
