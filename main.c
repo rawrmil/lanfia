@@ -27,6 +27,10 @@
 #include "game_msg.h"
 #undef GAME_MSG_IMPLEMENTATION
 
+#define GAME_GETIP_IMPLEMENTATION
+#include "game_getip.h"
+#undef GAME_GETIP_IMPLEMENTATION
+
 // --- GLOBALS ---
 
 
@@ -120,13 +124,18 @@ void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
 
 int main(int argc, char* argv[]) {
 
+
 	GameMessageTypesGenerateJS();
 
 	AppParseFlags(argc, argv);
 
+	Nob_String_Builder ip_sb = {0};
+	GetIpSB(&ip_sb);
+	printf("IP: %.*s\n", ip_sb.count, ip_sb.items);
 	printf("log_level: %d\n", mg_log_level);
 	printf("flags.web_dir: %s\n", *flags.web_dir);
 	printf("flags.port: %d\n", *flags.port);
+	nob_sb_free(ip_sb);
 
 	struct mg_mgr mgr;
 	mg_mgr_init(&mgr);
