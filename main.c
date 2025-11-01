@@ -46,6 +46,46 @@ void AppParseFlags(int argc, char** argv) {
 	mg_log_set(*f_ll);
 }
 
+// --- BYTES READ/WRITE ---
+
+typedef struct ByteReader {
+	Nob_String_View sv;
+	int i;
+} ByteReader;
+
+#define BR_READ(type_, amount_) \
+	do { \
+		if (br->i + amount_ > br->sv.count) \
+			return false; \
+		memcpy(out, &br->sv.data[br->i], amount_); \
+		br->i += amount_; \
+		return true; \
+	} while(0);
+
+bool ByteReaderU8 (ByteReader* br, uint8_t*  out) { BR_READ(uint8_t,  1); }
+bool ByteReaderU16(ByteReader* br, uint16_t* out) { BR_READ(uint16_t, 2); }
+bool ByteReaderU32(ByteReader* br, uint32_t* out) { BR_READ(uint32_t, 4); }
+bool ByteReaderU64(ByteReader* br, uint64_t* out) { BR_READ(uint64_t, 8); }
+bool ByteReaderN  (ByteReader* br, uint8_t*  out, size_t n) { BR_READ(uint8_t,  n); }
+
+typedef struct ByteWriter {
+	Nob_String_Builder sb;
+} ByteWriter;
+
+void ByteWriterFree(ByteWriter bw) { nob_sb_free(bw.sb); }
+
+#define BR_WRITE_SCALAR(amount_) \
+	nob_sb_append_buf(&bw->sb, (uint8_t*)&in, amount_);
+
+#define BR_WRITE(amount_) \
+	nob_sb_append_buf(&bw->sb, (uint8_t*)in, amount_);
+
+void ByteWriterU8 (ByteWriter* bw, const uint8_t  in) { BR_WRITE_SCALAR(1); }
+void ByteWriterU16(ByteWriter* bw, const uint16_t in) { BR_WRITE_SCALAR(2); }
+void ByteWriterU32(ByteWriter* bw, const uint32_t in) { BR_WRITE_SCALAR(4); }
+void ByteWriterU64(ByteWriter* bw, const uint64_t in) { BR_WRITE_SCALAR(8); }
+void ByteWriterN  (ByteWriter* bw, const uint8_t* in, size_t n) { BR_WRITE(n); }
+
 // --- USERS ---
 
 typedef struct GameUser {
@@ -115,18 +155,18 @@ void GameMessageTypesGenerateJS() {
 }
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
-	Nob_String_Builder msg = {0};
 	uint32_t count = 0;
 	nob_da_foreach(GameUser, user, &users) {
 		count += user->is_player == false;
 	}
+	ByteWriter bw = {0};
+	ByteWriterU8(&bw, GSMT_INFO_VIEWERS);
+	ByteWriterU32(&bw, count);
 	MG_INFO(("viewers: %d\n", count));
-	nob_da_append(&msg, GSMT_INFO_VIEWERS);
-	nob_da_append_many(&msg, &count, sizeof(count));
 	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
-		mg_ws_send(c, msg.items, msg.count, WEBSOCKET_OP_BINARY);
+		mg_ws_send(c, bw.sb.items, bw.sb.count, WEBSOCKET_OP_BINARY);
 	}
-	nob_da_free(msg);
+	ByteWriterFree(bw);
 }
 
 
