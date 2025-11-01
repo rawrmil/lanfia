@@ -15,7 +15,20 @@
 #include "byterw.h"
 #undef BYTERW_IMPLEMENTATION
 
+// --- GAME PARTS ---
+
+#define GAME_LOGIC_IMPLEMENTATION
+#include "game_logic.h"
+#undef GAME_LOGIC_IMPLEMENTATION
+
+#define GAME_MSG_IMPLEMENTATION
+#include "game_msg.h"
+#undef GAME_MSG_IMPLEMENTATION
+
 #include "mongoose.h"
+
+// --- GLOBALS ---
+
 
 // --- APP ---
 
@@ -50,117 +63,6 @@ void AppParseFlags(int argc, char** argv) {
 	mg_log_set(*f_ll);
 }
 
-
-// --- USERS ---
-
-typedef struct GameUser {
-	struct mg_connection* c;
-} GameUser;
-
-int users_count = 0;
-
-// --- PLAYERS ---
-
-typedef struct GamePlayer {
-	struct mg_connection* c;
-	Nob_String_Builder username;
-} GamePlayer;
-
-typedef struct GamePlayers {
-	GamePlayer* items;
-	size_t count;
-	size_t capacity;
-} GamePlayers; // nob.h dynamic array
-
-GamePlayers players;
-
-
-/*
-	GAME SERVER MESSAGES:
-		Server:
-			[ GSMT_INFO_VIEWERS | uint32_t(4b) ]
-			- information about viewer count
-*/
-
-// Game Server Message Types
-
-#define GSMT \
-	X(GSMT_INFO_VIEWERS) \
-	X(GSMT_LAST_)\
-
-#define X(name_) name_,
-enum GameServerMessageTypes { GSMT };
-#undef X
-
-#define X(name_) #name_,
-const char *gsmt_names[] = { GSMT };
-#undef X
-
-// Game Client Message Types
-
-#define GCMT \
-	X(GCMT_LOBBY_JOIN) \
-	X(GCMT_LAST_)\
-
-#define X(name_) name_,
-enum GameClientMessageTypes { GCMT };
-#undef X
-
-#define X(name_) #name_,
-const char *gcmt_names[] = { GCMT };
-#undef X
-
-// JS
-
-Nob_String_Builder gmt_js;
-
-void GameMessageTypesGenerateJS() {
-	nob_sb_append_cstr(&gmt_js, "const GSMT = {\n");
-	for (int i = 0; i < GSMT_LAST_; i++) {
-		nob_sb_appendf(&gmt_js, "\t%s: %d,\n", gsmt_names[i]+strlen("GSMT_"), i);
-	}
-	nob_sb_append_cstr(&gmt_js, "};\n");
-	nob_sb_append_cstr(&gmt_js, "const GCMT = {\n");
-	for (int i = 0; i < GCMT_LAST_; i++) {
-		nob_sb_appendf(&gmt_js, "\t%s: %d,\n", gcmt_names[i]+strlen("GCMT_"), i);
-	}
-	nob_sb_append_cstr(&gmt_js, "};");
-	nob_sb_append_null(&gmt_js);
-}
-
-void GameUsersUpdate(struct mg_mgr* mgr) {
-	uint32_t count = users_count > players.count ? users_count-players.count : 0;
-	ByteWriter bw = {0};
-	ByteWriterU8(&bw, GSMT_INFO_VIEWERS);
-	ByteWriterU32(&bw, count);
-	MG_INFO(("viewers: %d\n", count));
-	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
-		mg_ws_send(c, bw.sb.items, bw.sb.count, WEBSOCKET_OP_BINARY);
-	}
-	ByteWriterFree(bw);
-}
-
-void GameUserAdd(struct mg_connection* c) {
-	GameUser* user = calloc(1, sizeof(*user));
-	assert(user != NULL);
-	user->c = c;
-	users_count++;
-	GameUsersUpdate(c->mgr);
-	MG_INFO(("users: %d\n", users_count));
-}
-
-void GameUserRemove(struct mg_connection* c) {
-	// TODO: IF PHASE == LOBBY
-	nob_da_foreach(GamePlayer, p, &players) {
-		if (p->c == c) {
-			nob_da_remove_unordered(&players, p - players.items);
-		}
-	}
-	free(c->fn_data);
-	users_count--;
-	GameUsersUpdate(c->mgr);
-	MG_INFO(("users: %d\n", users_count));
-}
 
 // --- EVENTS ---
 
