@@ -172,7 +172,7 @@ void GameMessageTypesGenerateJS() {
 }
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
-	uint32_t count = users_count - players.count;
+	uint32_t count = users_count > players.count ? users_count-players.count : 0;
 	ByteWriter bw = {0};
 	ByteWriterU8(&bw, GSMT_INFO_VIEWERS);
 	ByteWriterU32(&bw, count);
@@ -193,6 +193,12 @@ void GameUserAdd(struct mg_connection* c) {
 }
 
 void GameUserRemove(struct mg_connection* c) {
+	// TODO: IF PHASE == LOBBY
+	nob_da_foreach(GamePlayer, p, &players) {
+		if (p->c == c) {
+			nob_da_remove_unordered(&players, p - players.items);
+		}
+	}
 	free(c->fn_data);
 	users_count--;
 	GameUsersUpdate(c->mgr);
