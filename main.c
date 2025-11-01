@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "mongoose.h"
+
 #define NOB_IMPLEMENTATION
 #include "nob.h"
 #undef NOB_IMPLEMENTATION
@@ -24,8 +26,6 @@
 #define GAME_MSG_IMPLEMENTATION
 #include "game_msg.h"
 #undef GAME_MSG_IMPLEMENTATION
-
-#include "mongoose.h"
 
 // --- GLOBALS ---
 

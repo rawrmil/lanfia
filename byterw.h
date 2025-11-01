@@ -28,6 +28,8 @@ void ByteWriterU64(ByteWriter* bw, const uint64_t in);
 void ByteWriterN  (ByteWriter* bw, const uint8_t* in, size_t n);
 void ByteWriterFree(ByteWriter bw);
 
+#endif /* BYTERW_H */
+
 #ifdef BYTERW_IMPLEMENTATION
 
 #define BR_READ(type_, amount_) \
@@ -67,4 +69,3 @@ void ByteWriterN  (ByteWriter* bw, const uint8_t* in, size_t n) { BR_WRITE(n); }
 void ByteWriterFree(ByteWriter bw) { nob_sb_free(bw.sb); };
 
 #endif /* BYTERW_IMPLEMENTATION */
-#endif /* BYTERW_H */

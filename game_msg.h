@@ -27,17 +27,21 @@ enum GameClientMessageTypes { GCMT };
 
 extern Nob_String_Builder gmt_js;
 
+void GameMessageTypesGenerateJS();
+
+#endif /* GAME_MSG_H */
+
 #ifdef GAME_MSG_IMPLEMENTATION
 
 #define X(name_) #name_,
-const char *gcmt_names[] = { GCMT };
+const char *gsmt_names[] = { GSMT };
 #undef X
 
 #define X(name_) #name_,
 const char *gcmt_names[] = { GCMT };
 #undef X
 
-extern Nob_String_Builder gmt_js;
+Nob_String_Builder gmt_js;
 
 void GameMessageTypesGenerateJS() {
 	nob_sb_append_cstr(&gmt_js, "const GSMT = {\n");
@@ -54,4 +58,3 @@ void GameMessageTypesGenerateJS() {
 }
 
 #endif /* GAME_MSG_IMPLEMENTATION */
-#endif /* GAME_MSG_H */

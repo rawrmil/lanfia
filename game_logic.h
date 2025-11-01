@@ -27,6 +27,8 @@ void GameUsersUpdate(struct mg_mgr* mgr);
 void GameUserAdd(struct mg_connection* c);
 void GameUserRemove(struct mg_connection* c);
 
+#endif /* GAME_LOGIC_H */
+
 #ifdef GAME_LOGIC_IMPLEMENTATION
 
 int users_count = 0;
@@ -67,4 +69,3 @@ void GameUserRemove(struct mg_connection* c) {
 }
 
 #endif /* GAME_LOGIC_IMPLEMENTATION */
-#endif /* GAME_LOGIC_H */
