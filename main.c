@@ -32,20 +32,22 @@
 
 // --- APP ---
 
-typedef struct AppConfig {
-	int port;
-	char* web_dir;
-} AppConfig;
+typedef struct Flags {
+	bool* help;
+	uint64_t* ll;
+	uint64_t* port;
+	char** web_dir;
+} Flags;
 
-AppConfig config;
+Flags flags;
 
 void AppParseFlags(int argc, char** argv) {
 	mg_log_set(MG_LL_NONE);
 
-	bool* f_help = flag_bool("help", 0, "help");
-	uint64_t* f_ll = flag_uint64("log-level", 0, "none, error, info, debug, verbose (0, 1, 2, 3, 4)");
-	uint64_t* f_port = flag_uint64("port", 6969, "port for the server");
-	char** f_web_dir = flag_str("webdir", "./web", "directory for the server");
+	flags.help = flag_bool("help", 0, "help");
+	flags.ll = flag_uint64("log-level", 0, "none, error, info, debug, verbose (0, 1, 2, 3, 4)");
+	flags.port = flag_uint64("port", 6969, "port for the server");
+	flags.web_dir = flag_str("webdir", "./web", "directory for the server");
 
 	if (!flag_parse(argc, argv)) {
     flag_print_options(stdout);
@@ -53,16 +55,13 @@ void AppParseFlags(int argc, char** argv) {
 		exit(1);
 	}
 
-	if (*f_help) {
+	if (*flags.help) {
     flag_print_options(stdout);
 		exit(0);
 	}
 
-	config.web_dir = *f_web_dir;
-	config.port = *f_port;
-	mg_log_set(*f_ll);
+	mg_log_set(*flags.ll);
 }
-
 
 // --- EVENTS ---
 
@@ -77,7 +76,7 @@ void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
 		if (mg_strcmp(hm->uri, mg_str("/gmt.js")) == 0) {
 			mg_http_reply(c, 200, "", gmt_js.items);
 		}
-		struct mg_http_serve_opts opts = { .root_dir = config.web_dir };
+		struct mg_http_serve_opts opts = { .root_dir = *flags.web_dir };
 		mg_http_serve_dir(c, hm, &opts);
 	}
 }
@@ -148,14 +147,14 @@ int main(int argc, char* argv[]) {
 	AppParseFlags(argc, argv);
 
 	printf("log_level: %d\n", mg_log_level);
-	printf("config.web_dir: %s\n", config.web_dir);
-	printf("config.port: %d\n", config.port);
+	printf("flags.web_dir: %s\n", *flags.web_dir);
+	printf("flags.port: %d\n", *flags.port);
 
 	struct mg_mgr mgr;
 	mg_mgr_init(&mgr);
 
 	char addrstr[32];
-	snprintf(addrstr, sizeof(addrstr), "http://0.0.0.0:%d", config.port);
+	snprintf(addrstr, sizeof(addrstr), "http://0.0.0.0:%d", *flags.port);
 
 	mg_http_listen(&mgr, addrstr, EventHandler, NULL);
 
