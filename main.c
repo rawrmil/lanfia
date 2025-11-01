@@ -85,28 +85,6 @@ void HandleWSClose(struct mg_connection* c, void* ev_data) {
 	GameUserRemove(c);
 }
 
-bool HandleGCMTLobbyJoin(struct mg_connection* c, ByteReader* br) {
-	mg_hexdump(br->sv.data, br->sv.count);
-	bool result = true;
-	uint32_t n;
-	if (!ByteReaderU32(br, &n))
-		nob_return_defer(false);
-	Nob_String_Builder username = ByteReaderSBAlloc(br, n); // TODO: free
-	nob_da_foreach(GamePlayer, p, &players) {
-		if (p->c == c) {
-			// TODO: already connected
-			nob_return_defer(false);
-		}
-	}
-	GamePlayer player = {0};
-	player.c = c;
-	player.username = username; // TODO: check username
-	nob_da_append(&players, player);
-	GameUsersUpdate(c->mgr);
-defer:
-	nob_sb_free(username);
-	return result;
-}
 
 void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	struct mg_ws_message* wm = (struct mg_ws_message*)ev_data;
@@ -117,7 +95,7 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	if (!ByteReaderU8(&br, &gcmt)) return;
 	switch (gcmt) {
 		case GCMT_LOBBY_JOIN:
-			HandleGCMTLobbyJoin(c, &br);
+			HandleClientLobbyJoin(c, &br);
 			break;
 	}
 }

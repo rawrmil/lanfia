@@ -27,6 +27,8 @@ void GameUsersUpdate(struct mg_mgr* mgr);
 void GameUserAdd(struct mg_connection* c);
 void GameUserRemove(struct mg_connection* c);
 
+bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br);
+
 #endif /* GAME_LOGIC_H */
 
 #ifdef GAME_LOGIC_IMPLEMENTATION
@@ -66,6 +68,31 @@ void GameUserRemove(struct mg_connection* c) {
 	users_count--;
 	GameUsersUpdate(c->mgr);
 	MG_INFO(("users: %d\n", users_count));
+}
+
+// --- HANDLERS ---
+
+bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
+	mg_hexdump(br->sv.data, br->sv.count);
+	bool result = true;
+	uint32_t n;
+	if (!ByteReaderU32(br, &n))
+		nob_return_defer(false);
+	Nob_String_Builder username = ByteReaderSBAlloc(br, n); // TODO: free
+	nob_da_foreach(GamePlayer, p, &players) {
+		if (p->c == c) {
+			// TODO: already connected
+			nob_return_defer(false);
+		}
+	}
+	GamePlayer player = {0};
+	player.c = c;
+	player.username = username; // TODO: check username
+	nob_da_append(&players, player);
+	GameUsersUpdate(c->mgr);
+defer:
+	nob_sb_free(username);
+	return result;
 }
 
 #endif /* GAME_LOGIC_IMPLEMENTATION */
