@@ -30,6 +30,7 @@ int target = T_UNDEFINED;
 #endif
 
 #define MONGOOSE "./resources/mongoose-7.19"
+#define QRCODEGEN "./resources/qrcodegen"
 
 //#define LINUX_RAYLIB "./resources/raylib-5.5/linux_amd64"
 #define LINUX_OUTPUT "./build/lanfia"
@@ -102,11 +103,21 @@ void Build() {
 	}
 	nob_temp_reset();
 
+	if (nob_needs_rebuild1(nob_temp_sprintf("build/qrcodegen_%s.o", *flags.target), QRCODEGEN"/qrcodegen.c")) {
+		nob_cmd_append(&cmd, *flags.cc, QRCODEGEN"/qrcodegen.c", "-c", "-o");
+		nob_cmd_append(&cmd, nob_temp_sprintf("build/qrcodegen_%s.o", *flags.target));
+		if (!cmd_run(&cmd)) exit(1);
+	}
+	nob_temp_reset();
+
+
 	switch (target) {
 		case T_LINUX:
 			nob_cmd_append(&cmd, *flags.cc, "main.c");
 			nob_cmd_append(&cmd, "build/mongoose_linux.o");
+			nob_cmd_append(&cmd, "build/qrcodegen_linux.o");
 			nob_cmd_append(&cmd, "-I"MONGOOSE);
+			nob_cmd_append(&cmd, "-I"QRCODEGEN);
 			//nob_cmd_append(&cmd, LINUX_RAYLIB"/lib/libraylib.a");
 			//nob_cmd_append(&cmd, "-I"LINUX_RAYLIB"/include");
 			nob_cmd_append(&cmd, "-o", LINUX_OUTPUT);
@@ -121,7 +132,9 @@ void Build() {
 		case T_WINDOWS:
 			nob_cmd_append(&cmd, *flags.cc, "main.c");
 			nob_cmd_append(&cmd, "build/mongoose_windows.o");
+			nob_cmd_append(&cmd, "build/qrcodegen_windows.o");
 			nob_cmd_append(&cmd, "-I"MONGOOSE);
+			nob_cmd_append(&cmd, "-I"QRCODEGEN);
 			//nob_cmd_append(&cmd, WINDOWS_RAYLIB"/lib/libraylib.a");
 			//nob_cmd_append(&cmd, "-I"WINDOWS_RAYLIB"/include");
 			nob_cmd_append(&cmd, "-o", WINDOWS_OUTPUT);

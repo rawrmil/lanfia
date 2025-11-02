@@ -130,12 +130,22 @@ int main(int argc, char* argv[]) {
 	AppParseFlags(argc, argv);
 
 	Nob_String_Builder ip_sb = {0};
+	nob_sb_append_cstr(&ip_sb, "http://");
 	GetIpSB(&ip_sb);
-	printf("IP: %.*s\n", ip_sb.count, ip_sb.items);
+	nob_sb_appendf(&ip_sb, ":%d", *flags.port);
+	printf("Address: %.*s\n", ip_sb.count, ip_sb.items);
+
+	Nob_String_Builder ip_qrcode = {0}; // as a bitmap
+	int bitmap_size;
+	if (GetQRCodeBitmap(&ip_qrcode, ip_sb.items, &bitmap_size)) {
+		PrintBitmapSmall(ip_qrcode.items, bitmap_size, 0);
+	}
+	nob_sb_free(ip_sb);
+	nob_sb_free(ip_qrcode);
+
 	printf("log_level: %d\n", mg_log_level);
 	printf("flags.web_dir: %s\n", *flags.web_dir);
 	printf("flags.port: %d\n", *flags.port);
-	nob_sb_free(ip_sb);
 
 	struct mg_mgr mgr;
 	mg_mgr_init(&mgr);
