@@ -20,8 +20,19 @@ typedef struct GamePlayers {
 	size_t capacity;
 } GamePlayers; // nob.h dynamic array
 
-extern int users_count;
-extern GamePlayers players;
+enum GameState {
+	GS_LOBBY,
+	GS_GAME_DAY,
+	GS_GAME_NIGHT,
+	GS_TAIL_,
+};
+
+typedef struct Game {
+	int users_count;
+	GamePlayers players;
+} Game;
+
+extern Game game;
 
 void GameUsersUpdate(struct mg_mgr* mgr);
 void GameUserAdd(struct mg_connection* c);
@@ -33,19 +44,18 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br);
 
 #ifdef GAME_LOGIC_IMPLEMENTATION
 
-int users_count = 0;
-GamePlayers players = {0};
+Game game;
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
 	// [ msg_type | viewers | players.count | ( names_size | names_array ) ]
-	uint32_t viewers_count = users_count > players.count ? users_count-players.count : 0;
+	uint32_t viewers_count = game.users_count > game.players.count ? game.users_count-game.players.count : 0;
 	MG_INFO(("viewers: %d\n", viewers_count));
 	ByteWriter bw = {0};
 	ByteWriterU8(&bw, GSMT_INFO_USERS);
 	ByteWriterU32(&bw, viewers_count);
-	ByteWriterU32(&bw, (uint32_t)players.count);
+	ByteWriterU32(&bw, (uint32_t)game.players.count);
 	Nob_String_Builder player_names = {0};
-	nob_da_foreach(GamePlayer, player, &players) {
+	nob_da_foreach(GamePlayer, player, &game.players) {
 		nob_sb_append_buf(&player_names, player->username.items, player->username.count);
 		nob_da_append(&player_names, '\0');
 	}
@@ -62,22 +72,22 @@ void GameUserAdd(struct mg_connection* c) {
 	GameUser* user = calloc(1, sizeof(*user));
 	assert(user != NULL);
 	user->c = c;
-	users_count++;
+	game.users_count++;
 	GameUsersUpdate(c->mgr);
-	MG_INFO(("users: %d\n", users_count));
+	MG_INFO(("users: %d\n", game.users_count));
 }
 
 void GameUserRemove(struct mg_connection* c) {
 	// TODO: IF PHASE == LOBBY
-	nob_da_foreach(GamePlayer, p, &players) {
+	nob_da_foreach(GamePlayer, p, &game.players) {
 		if (p->c == c) {
 			nob_sb_free(p->username);
-			nob_da_remove_unordered(&players, p - players.items);
+			nob_da_remove_unordered(&game.players, p - game.players.items);
 		}
 	}
-	users_count--;
+	game.users_count--;
 	GameUsersUpdate(c->mgr);
-	MG_INFO(("users: %d\n", users_count));
+	MG_INFO(("users: %d\n", game.users_count));
 }
 
 // --- HANDLERS ---
@@ -88,7 +98,7 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	if (!ByteReaderU32(br, &n))
 		nob_return_defer(false);
 	Nob_String_Builder username = ByteReaderSBAlloc(br, n);
-	nob_da_foreach(GamePlayer, p, &players) {
+	nob_da_foreach(GamePlayer, p, &game.players) {
 		if (p->c == c) {
 			// TODO: already connected
 			nob_return_defer(false);
@@ -97,7 +107,7 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	GamePlayer player = {0};
 	player.c = c;
 	player.username = username; // TODO: check username
-	nob_da_append(&players, player);
+	nob_da_append(&game.players, player);
 	GameUsersUpdate(c->mgr);
 defer:
 	if (result == false) nob_sb_free(username);
