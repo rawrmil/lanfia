@@ -71,7 +71,9 @@ void PrintBitmapBig(uint8_t* bitmap, int bitmap_side, bool inv) {
 void PrintBitmapSmall(uint8_t* bitmap, int bitmap_side, bool inv) {
 	const char p[][4] = { " ", "▄", "▀", "█"};
 	for (int hy = 0; hy < bitmap_side/2+1; hy++) {
-		for (int x = 0; x < bitmap_side; x++) {
+		for (int _x = 0; _x < bitmap_side*2; _x++) {
+			int x = _x%bitmap_side;
+			inv = _x/bitmap_side;
 			uint8_t up, down;
 			up = BitmapAt(bitmap, bitmap_side, hy*2+0, x) != inv;
 			if (hy*2+1 < bitmap_side)
