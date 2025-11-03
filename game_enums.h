@@ -7,17 +7,17 @@
 
 #define GSMT \
 	X(GSMT_INFO_USERS) \
-	X(GSMT_LAST_)\
+	X(GSMT_LAST_) \
 
 #define X(name_) name_,
-enum GameServerMessageTypes { GSMT };
+enum { GSMT };
 #undef X
 
 // --- Game Client Message Types (GCMT) ---
 
 #define GCMT \
 	X(GCMT_LOBBY_JOIN) \
-	X(GCMT_LAST_)\
+	X(GCMT_LAST_) \
 
 #define X(name_) name_,
 enum GameClientMessageTypes { GCMT };
@@ -34,11 +34,11 @@ void GameMessageTypesGenerateJS();
 #ifdef GAME_ENUMS_IMPLEMENTATION
 
 #define X(name_) #name_,
-const char *gsmt_names[] = { GSMT };
+const char *GSMT_NAMES[] = { GSMT };
 #undef X
 
 #define X(name_) #name_,
-const char *gcmt_names[] = { GCMT };
+const char *GCMT_NAMES[] = { GCMT };
 #undef X
 
 Nob_String_Builder gmt_js;
@@ -47,7 +47,7 @@ Nob_String_Builder gmt_js;
 	do { \
 		nob_sb_append_cstr(&gmt_js, "const "#name_" = {\n"); \
 		for (int i = 0; i < name_##_LAST_; i++) { \
-			nob_sb_appendf(&gmt_js, "\t%s: %d,\n", gsmt_names[i]+strlen(#name_"_"), i); \
+			nob_sb_appendf(&gmt_js, "\t%s: %d,\n", name_##_NAMES[i]+strlen(#name_"_"), i); \
 		} \
 		nob_sb_append_cstr(&gmt_js, "};\n"); \
 	} while(0);
