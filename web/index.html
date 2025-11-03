@@ -41,6 +41,7 @@
 				this.arr = [];
 				this.dv = new DataView(new ArrayBuffer(8))
 			}
+			bytes() { return new Uint8Array(this.arr); }
 			u8(v)  { this.arr.push(v); }
 			u16(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 2)); }
 			u32(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 4)); }
@@ -50,7 +51,6 @@
 				this.u32(te.length);
 				this.arr.push(...te);
 			}
-			bytes() { return new Uint8Array(this.arr); }
 		}
 		// E L E M E N T S
 		const viewersEl = document.getElementById("game_viewers");
@@ -63,27 +63,31 @@
 			writer.strn(usernameEl.value);
 			ws.send(writer.bytes())
 		}
+		// M E S S A G E S
+		function HandleServerInfoUsers(reader) {
+			const viewer_count = reader.u32();
+			const player_count = reader.u32();
+			const player_names = reader.strn().split('\0');
+			player_names.pop();
+			playersEl.innerHTML = "";
+			for (const i in player_names) {
+				playersEl.innerHTML   += "<div class='player_entry'>\n";
+				playersEl.textContent += player_names[i]+"\n";
+				playersEl.innerHTML   += "</div>\n";
+			}
+			viewersEl.textContent = viewer_count;
+		}
 		// W E B S O C K E T S
 		const ws = new WebSocket(`ws://${location.host}/ws`);
 		ws.binaryType = "arraybuffer";
-		ws.onopen = () => { console.log('WS: open'); };
+		ws.onopen = () => {
+			//console.log('WS: open');
+		};
 		ws.onmessage = (event) => {
 			const reader = new ByteReader(event.data);
 			msg_type = reader.u8();
-			if (msg_type == GSMT.INFO_USERS) {
-				const viewer_count = reader.u32();
-				const player_count = reader.u32();
-				const player_names = reader.strn().split('\0');
-				player_names.pop();
-				console.log("viewers: "+viewer_count);
-				console.log("player_names: "+player_names);
-				playersEl.innerHTML = "";
-				for (const i in player_names) {
-					playersEl.innerHTML   += "<div class='player_entry'>\n";
-					playersEl.textContent += player_names[i]+"\n";
-					playersEl.innerHTML   += "</div>\n";
-				}
-				viewersEl.textContent = viewer_count;
+			switch (msg_type) {
+				case GSMT.INFO_USERS: HandleServerInfoUsers(reader); break;
 			}
 		}
 	</script>
