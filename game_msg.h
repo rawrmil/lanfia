@@ -43,17 +43,18 @@ const char *gcmt_names[] = { GCMT };
 
 Nob_String_Builder gmt_js;
 
+#define JS_ENUM_GENERATE(name_) \
+	do { \
+		nob_sb_append_cstr(&gmt_js, "const "#name_" = {\n"); \
+		for (int i = 0; i < name_##_LAST_; i++) { \
+			nob_sb_appendf(&gmt_js, "\t%s: %d,\n", gsmt_names[i]+strlen(#name_"_"), i); \
+		} \
+		nob_sb_append_cstr(&gmt_js, "};\n"); \
+	} while(0);
+
 void GameMessageTypesGenerateJS() {
-	nob_sb_append_cstr(&gmt_js, "const GSMT = {\n");
-	for (int i = 0; i < GSMT_LAST_; i++) {
-		nob_sb_appendf(&gmt_js, "\t%s: %d,\n", gsmt_names[i]+strlen("GSMT_"), i);
-	}
-	nob_sb_append_cstr(&gmt_js, "};\n");
-	nob_sb_append_cstr(&gmt_js, "const GCMT = {\n");
-	for (int i = 0; i < GCMT_LAST_; i++) {
-		nob_sb_appendf(&gmt_js, "\t%s: %d,\n", gcmt_names[i]+strlen("GCMT_"), i);
-	}
-	nob_sb_append_cstr(&gmt_js, "};");
+	JS_ENUM_GENERATE(GSMT);
+	JS_ENUM_GENERATE(GCMT);
 	nob_sb_append_null(&gmt_js);
 }
 
