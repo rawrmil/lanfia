@@ -26,6 +26,7 @@ void ByteWriterU16(ByteWriter* bw, const uint16_t in);
 void ByteWriterU32(ByteWriter* bw, const uint32_t in);
 void ByteWriterU64(ByteWriter* bw, const uint64_t in);
 void ByteWriterN  (ByteWriter* bw, const uint8_t* in, size_t n);
+void ByteWriterSN (ByteWriter* bw, const uint8_t* in, size_t n); // [ size(4) | data(N) ]
 void ByteWriterFree(ByteWriter bw);
 
 #endif /* BYTERW_H */
@@ -66,6 +67,10 @@ void ByteWriterU16(ByteWriter* bw, const uint16_t in) { BR_WRITE_SCALAR(2); }
 void ByteWriterU32(ByteWriter* bw, const uint32_t in) { BR_WRITE_SCALAR(4); }
 void ByteWriterU64(ByteWriter* bw, const uint64_t in) { BR_WRITE_SCALAR(8); }
 void ByteWriterN  (ByteWriter* bw, const uint8_t* in, size_t n) { BR_WRITE(n); }
+void ByteWriterSN (ByteWriter* bw, const uint8_t* in, size_t n) { // TODO: same with BR
+	ByteWriterU32(bw, (uint32_t)n);
+	ByteWriterN(bw, in, n);
+}
 void ByteWriterFree(ByteWriter bw) { nob_sb_free(bw.sb); };
 
 #endif /* BYTERW_IMPLEMENTATION */

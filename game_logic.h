@@ -37,15 +37,25 @@ int users_count = 0;
 GamePlayers players = {0};
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
-	uint32_t count = users_count > players.count ? users_count-players.count : 0;
+	// [ msg_type | viewers | players.count | ( names_size | names_array ) ]
+	uint32_t viewers_count = users_count > players.count ? users_count-players.count : 0;
+	MG_INFO(("viewers: %d\n", viewers_count));
 	ByteWriter bw = {0};
-	ByteWriterU8(&bw, GSMT_INFO_VIEWERS);
-	ByteWriterU32(&bw, count);
-	MG_INFO(("viewers: %d\n", count));
+	ByteWriterU8(&bw, GSMT_INFO_USERS);
+	ByteWriterU32(&bw, viewers_count);
+	ByteWriterU32(&bw, (uint32_t)players.count);
+	Nob_String_Builder player_names = {0};
+	nob_da_foreach(GamePlayer, player, &players) {
+		nob_sb_append_buf(&player_names, player->username.items, player->username.count);
+		nob_da_append(&player_names, '\0');
+	}
+	ByteWriterSN(&bw, player_names.items, player_names.count);
 	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
-		mg_ws_send(c, bw.sb.items, bw.sb.count, WEBSOCKET_OP_BINARY);
+		if (c->is_websocket)
+			mg_ws_send(c, bw.sb.items, bw.sb.count, WEBSOCKET_OP_BINARY);
 	}
 	ByteWriterFree(bw);
+	nob_sb_free(player_names);
 }
 
 void GameUserAdd(struct mg_connection* c) {

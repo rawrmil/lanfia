@@ -6,7 +6,7 @@
 // --- Game Server Message Types (GSMT) ---
 
 #define GSMT \
-	X(GSMT_INFO_VIEWERS) \
+	X(GSMT_INFO_USERS) \
 	X(GSMT_LAST_)\
 
 #define X(name_) name_,
