@@ -3,7 +3,7 @@
 
 #include "nob.h"
 #include "mongoose.h"
-#include "game_msg.h"
+#include "game_enums.h"
 
 typedef struct GameUser {
 	struct mg_connection* c;

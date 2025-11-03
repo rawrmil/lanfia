@@ -1,5 +1,5 @@
-#ifndef GAME_MSG_H
-#define GAME_MSG_H
+#ifndef GAME_ENUMS_H
+#define GAME_ENUMS_H
 
 #include "nob.h"
 
@@ -29,9 +29,9 @@ extern Nob_String_Builder gmt_js;
 
 void GameMessageTypesGenerateJS();
 
-#endif /* GAME_MSG_H */
+#endif /* GAME_ENUMS_H */
 
-#ifdef GAME_MSG_IMPLEMENTATION
+#ifdef GAME_ENUMS_IMPLEMENTATION
 
 #define X(name_) #name_,
 const char *gsmt_names[] = { GSMT };
@@ -58,4 +58,4 @@ void GameMessageTypesGenerateJS() {
 	nob_sb_append_null(&gmt_js);
 }
 
-#endif /* GAME_MSG_IMPLEMENTATION */
+#endif /* GAME_ENUMS_IMPLEMENTATION */

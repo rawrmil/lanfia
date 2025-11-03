@@ -23,9 +23,9 @@
 #include "game_logic.h"
 #undef GAME_LOGIC_IMPLEMENTATION
 
-#define GAME_MSG_IMPLEMENTATION
-#include "game_msg.h"
-#undef GAME_MSG_IMPLEMENTATION
+#define GAME_ENUMS_IMPLEMENTATION
+#include "game_enums.h"
+#undef GAME_ENUMS_IMPLEMENTATION
 
 #define GAME_GETIP_IMPLEMENTATION
 #include "game_getip.h"
