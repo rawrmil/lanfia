@@ -20,13 +20,6 @@ typedef struct GamePlayers {
 	size_t capacity;
 } GamePlayers; // nob.h dynamic array
 
-enum GameState {
-	GS_LOBBY,
-	GS_GAME_DAY,
-	GS_GAME_NIGHT,
-	GS_TAIL_,
-};
-
 typedef struct Game {
 	int users_count;
 	GamePlayers players;

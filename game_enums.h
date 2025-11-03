@@ -20,7 +20,21 @@ enum { GSMT };
 	X(GCMT_LAST_) \
 
 #define X(name_) name_,
-enum GameClientMessageTypes { GCMT };
+enum { GCMT };
+#undef X
+
+// --- Game State (GS) ---
+
+#define GS \
+	X(GS_LOBBY) \
+	X(GS_ROLES) \
+	X(GS_DAY) \
+	X(GS_NIGHT) \
+	X(GS_RESULTS) \
+	X(GS_LAST_)
+
+#define X(name_) name_,
+enum { GS };
 #undef X
 
 // --- JS ---
@@ -41,6 +55,10 @@ const char *GSMT_NAMES[] = { GSMT };
 const char *GCMT_NAMES[] = { GCMT };
 #undef X
 
+#define X(name_) #name_,
+const char *GS_NAMES[] = { GS };
+#undef X
+
 Nob_String_Builder gmt_js;
 
 #define JS_ENUM_GENERATE(name_) \
@@ -55,6 +73,7 @@ Nob_String_Builder gmt_js;
 void GameMessageTypesGenerateJS() {
 	JS_ENUM_GENERATE(GSMT);
 	JS_ENUM_GENERATE(GCMT);
+	JS_ENUM_GENERATE(GS);
 	nob_sb_append_null(&gmt_js);
 }
 
