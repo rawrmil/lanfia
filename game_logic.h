@@ -61,10 +61,10 @@ void GameUserRemove(struct mg_connection* c) {
 	// TODO: IF PHASE == LOBBY
 	nob_da_foreach(GamePlayer, p, &players) {
 		if (p->c == c) {
+			nob_sb_free(p->username);
 			nob_da_remove_unordered(&players, p - players.items);
 		}
 	}
-	free(c->fn_data);
 	users_count--;
 	GameUsersUpdate(c->mgr);
 	MG_INFO(("users: %d\n", users_count));
@@ -73,12 +73,11 @@ void GameUserRemove(struct mg_connection* c) {
 // --- HANDLERS ---
 
 bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
-	mg_hexdump(br->sv.data, br->sv.count);
 	bool result = true;
 	uint32_t n;
 	if (!ByteReaderU32(br, &n))
 		nob_return_defer(false);
-	Nob_String_Builder username = ByteReaderSBAlloc(br, n); // TODO: free
+	Nob_String_Builder username = ByteReaderSBAlloc(br, n);
 	nob_da_foreach(GamePlayer, p, &players) {
 		if (p->c == c) {
 			// TODO: already connected
@@ -91,7 +90,7 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	nob_da_append(&players, player);
 	GameUsersUpdate(c->mgr);
 defer:
-	nob_sb_free(username);
+	if (result == false) nob_sb_free(username);
 	return result;
 }
 
