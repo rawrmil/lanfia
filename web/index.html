@@ -6,7 +6,7 @@
 	<div>
 		<label for="game_username">Username</label>
 		<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
-		<button onclick="gameLogin()">Join</button>
+		<button onclick="GCMJoin(ws, usernameEl.value)">Join</button>
 	</div>
 	<div id="game_players">
 	</div>
@@ -15,59 +15,17 @@
 		<span id="game_viewers">?</span>
 	</div>
 	<script src="gmt.js"></script>
+	<script src="game.js"></script>
 	<script>
-		// B Y T E   R / W
-		class ByteReader {
-			constructor(buffer) {
-				this.dv = new DataView(buffer);
-				this.i = 0;
-			}
-			u8()   { const r = this.dv.getUint8(this.i);        this.i += 1; return r; }
-			u16()  { const r = this.dv.getUint16(this.i, true); this.i += 2; return r; }
-			u32()  { const r = this.dv.getUint32(this.i, true); this.i += 4; return r; }
-			u64()  { const r = this.dv.getUint64(this.i, true); this.i += 8; return r; }
-			str(n) {
-				const str = new TextDecoder().decode(new Uint8Array(this.dv.buffer, this.i, n));
-				this.i += n;
-				return str;
-			}
-			strn() {
-				var n = this.u32();
-				return this.str(n);
-			}
-		}
-		class ByteWriter {
-			constructor() {
-				this.arr = [];
-				this.dv = new DataView(new ArrayBuffer(8))
-			}
-			bytes() { return new Uint8Array(this.arr); }
-			u8(v)  { this.arr.push(v); }
-			u16(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 2)); }
-			u32(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 4)); }
-			u64(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 8)); }
-			strn(s) {
-				const te = new TextEncoder().encode(s);
-				this.u32(te.length);
-				this.arr.push(...te);
-			}
-		}
 		// E L E M E N T S
 		const viewersEl = document.getElementById("game_viewers");
 		const usernameEl = document.getElementById("game_username");
 		const playersEl = document.getElementById("game_players");
-		// L O G I N
-		function gameLogin() {
-			const writer = new ByteWriter();
-			writer.u8(GCMT.LOGIN);
-			writer.strn(usernameEl.value);
-			ws.send(writer.bytes())
-		}
 		// M E S S A G E S
-		function HandleServerInfoUsers(reader) {
-			const viewer_count = reader.u32();
-			const player_count = reader.u32();
-			const player_names = reader.strn().split('\0');
+		function HandleServerInfoUsers(br) {
+			const viewer_count = br.u32();
+			const player_count = br.u32();
+			const player_names = br.strn().split('\0');
 			player_names.pop();
 			playersEl.innerHTML = "";
 			for (const i in player_names) {
@@ -84,10 +42,10 @@
 			//console.log('WS: open');
 		};
 		ws.onmessage = (event) => {
-			const reader = new ByteReader(event.data);
-			msg_type = reader.u8();
+			const br = new ByteReader(event.data);
+			msg_type = br.u8();
 			switch (msg_type) {
-				case GSMT.INFO_USERS: HandleServerInfoUsers(reader); break;
+				case GSMT.INFO_USERS: HandleServerInfoUsers(br); break;
 			}
 		}
 	</script>
