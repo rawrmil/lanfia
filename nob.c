@@ -161,6 +161,7 @@ int main(int argc, char** argv) {
 
 	FlagsParse(argc, argv);
 
+	PreBuild();
 	Build();
 
 	return 0;
