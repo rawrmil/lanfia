@@ -34,9 +34,11 @@ int target = T_UNDEFINED;
 
 //#define LINUX_RAYLIB "./resources/raylib-5.5/linux_amd64"
 #define LINUX_OUTPUT "./build/lanfia"
+#define LINUX_TESTS_OUTPUT "./build/lanfia_tests"
 
 //#define WINDOWS_RAYLIB "./resources/raylib-5.5/win64_mingw-w64"
 #define WINDOWS_OUTPUT "./build/lanfia.exe"
+#define WINDOWS_TESTS_OUTPUT "./build/lanfia_Tests.exe"
 
 // --- Flags ---
 
@@ -45,6 +47,7 @@ typedef struct Flags {
 	char** cc;
 	char** target;
 	bool* run;
+	bool* tests;
 	int rargc;
 	char** rargv;
 } Flags;
@@ -65,6 +68,7 @@ void FlagsParse(int argc, char** argv) {
 	flags.cc = flag_str("cc", "cc", "provided compiler");
 	flags.target = flag_str("target", DEFAULT_TARGET, "target platform");
 	flags.run = flag_bool("run", false, "run program");
+	flags.tests = flag_bool("tests", false, "run tests");
 
 	if (!flag_parse(argc, argv)) {
 		PrintHelp(argc, argv);
@@ -91,9 +95,9 @@ void FlagsParse(int argc, char** argv) {
 
 // --- Build ---
 
-void Build() {
-	Cmd cmd = {0};
+Cmd cmd = {0};
 
+void PreBuild() {
 	if (!nob_mkdir_if_not_exists("./build")) exit(1);
 
 	if (nob_needs_rebuild1(nob_temp_sprintf("build/mongoose_%s.o", *flags.target), MONGOOSE"/mongoose.c")) {
@@ -109,8 +113,41 @@ void Build() {
 		if (!cmd_run(&cmd)) exit(1);
 	}
 	nob_temp_reset();
+}
 
+void BuildTests() {
+	switch (target) {
+		case T_LINUX:
+			nob_cmd_append(&cmd, *flags.cc, "tests.c");
+			nob_cmd_append(&cmd, "build/mongoose_linux.o");
+			nob_cmd_append(&cmd, "-I"MONGOOSE);
+			nob_cmd_append(&cmd, "-o", LINUX_TESTS_OUTPUT);
+			nob_cmd_append(&cmd, "-lm");
+			if (!cmd_run(&cmd)) exit(1);
+			if (*flags.run) {
+				nob_cmd_append(&cmd, LINUX_TESTS_OUTPUT);
+				for (int i = 0; i < flags.rargc; i++) { nob_cmd_append(&cmd, flags.rargv[i]); }
+				if (!cmd_run(&cmd)) exit(1);
+			}
+			break;
+		case T_WINDOWS:
+			nob_cmd_append(&cmd, *flags.cc, "tests.c");
+			nob_cmd_append(&cmd, "build/mongoose_windows.o");
+			nob_cmd_append(&cmd, "-I"MONGOOSE);
+			nob_cmd_append(&cmd, "-o", WINDOWS_TESTS_OUTPUT);
+			nob_cmd_append(&cmd, "-mwindows");
+			nob_cmd_append(&cmd, "-lws2_32");
+			if (!cmd_run(&cmd)) exit(1);
+			if (*flags.run) {
+				nob_cmd_append(&cmd, WINDOWS_TESTS_OUTPUT);
+				for (int i = 0; i < flags.rargc; i++) { nob_cmd_append(&cmd, flags.rargv[i]); }
+				if (!cmd_run(&cmd)) exit(1);
+			}
+			break;
+	}
+}
 
+void BuildApp() {
 	switch (target) {
 		case T_LINUX:
 			nob_cmd_append(&cmd, *flags.cc, "main.c");
@@ -156,7 +193,14 @@ int main(int argc, char** argv) {
 
 	FlagsParse(argc, argv);
 
-	Build();
+	PreBuild();
+
+	if (*flags.tests) {
+		BuildTests();
+		return 0;
+	}
+
+	BuildApp();
 
 	return 0;
 }
