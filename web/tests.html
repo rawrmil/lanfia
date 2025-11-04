@@ -4,25 +4,123 @@
 </head>
 <body>
 	<h1>TESTS</h1>
+	<div id="log"></div>
 	<script src="gmt.js"></script>
 	<script src="game.js"></script>
 	<script>
-		// --- Websockets ---
-		const conn_count = 2;
-		const ws = [];
-		for (let i = 0; i < conn_count; i++) {
-			ws.push(new WebSocket(`ws://${location.host}/ws`));
-			ws[i].binaryType = "arraybuffer";
-			ws[i].onopen = () => {
-				if (i == 0) GCMTestsReset(ws[i]);
-				GCMJoin(ws[i], `player${i}`);
-				console.log(`WS${i}: open`)
-			};
-			ws[i].onmessage = (event) => {
-				const br = new ByteReader(event.data);
-				msg_type = br.u8();
-				console.log(`WS: '${msg_type}'`)
-			};
+		// --- Utils ---
+		const logElement = document.getElementById("log");
+		function EscapeHTML(str) {
+			return str.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#039;");
 		}
+
+		function Log(msg) {
+			logElement.innerHTML += EscapeHTML(msg) + '<br>';
+		}
+		function ArraysCompare(a, b) {
+			if (a.length !== b.length) return false;
+			for (let i = 0; i < a.length; i++) {
+				if (a[i] !== b[i]) return false;
+			}
+			return true;
+		}
+		function toHex(bytes) {
+			const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join(' ');
+			return hex;
+		}
+		// --- Messages ---
+		function Msg(...args) {
+			const bw = new ByteWriter();
+			bw.u8(args[0]);
+			args.shift();
+			for (const i in args) {
+				switch (typeof args[i]) {
+					case "number":
+						bw.u32(args[i]);
+						break;
+					case "string":
+						bw.strn(args[i]);
+						break;
+				}
+			}
+			return bw.bytes();
+		}
+		// --- Tests ---
+		class Test {
+			constructor(ws_i, msg_bytes, exp_bytes) {
+				this.ws_i = ws_i;
+				this.msg = msg_bytes;
+				this.exp = exp_bytes;
+			}
+		}
+		class Tests {
+			constructor(name, conn_count) {
+				this.name = name
+				this.arr = [];
+				this.i = 0;
+				this.conn_count = conn_count;
+			}
+			add(ws_i, msg_bytes, exp_bytes) { this.arr.push(new Test(ws_i, msg_bytes, exp_bytes)); }
+			last() { return this.i > 0 ? this.arr[this.i-1] : null; }
+			curr() { return this.i < this.arr.length ? this.arr[this.i] : null }
+			next() { this.i += 1; }
+		}
+		batches = [];
+		// BATCH1
+		tests1 = new Tests("BATCH1", 1);
+		tests1.add(0, Msg(GCMT.LOBBY_JOIN, "player1"), Msg(GSMT.INFO_USERS, 0, 1, "player1\0"));
+		batches.push(tests1);
+		tests2 = new Tests("BATCH2", 1);
+		tests2.add(0, Msg(GCMT.LOBBY_JOIN, "player2"), Msg(GSMT.INFO_USERS, 0, 1, "player2\0"));
+		batches.push(tests2);
+		// --- TESTS ---
+		async function DoBatch(tests, resolve) {
+			const ws = [];
+			let done = false;
+			function TestCheckLast(msg) {
+				const last = tests.last();
+				if (last === null) return true;
+				if (ArraysCompare(msg, last.exp)) return true;
+				Log(`FAIL: `)
+				Log(`exp: `)
+				Log(`${toHex(last.exp)}`)
+				Log(`msg: `)
+				Log(`${toHex(msg)}`);
+				// FAIL EXIT HERE
+				resolve(true);
+				return false;
+			}
+			function TestStep(msg, i) {
+				if (!TestCheckLast(msg)) return;
+				const curr = tests.curr()
+				if (curr === null) {
+					// SUCCESS EXIT HERE
+					resolve(true);
+					return;
+				}
+				if (i == curr.ws_i) {
+					ws[i].send(curr.msg);
+					tests.next();
+				}
+			}
+			for (let i = 0; i < tests.conn_count; i++) {
+				ws.push(new WebSocket(`ws://${location.host}/ws`));
+				ws[i].binaryType = "arraybuffer";
+				ws[i].onopen = () => { GCMTestsReset(ws[i]); };
+				ws[i].onmessage = (event) => { TestStep(new Uint8Array(event.data), i); }
+			}
+		}
+		async function RunAllBatches() {
+			for (const batch of batches) {
+				Log(`Running ${batch.name}...`);
+				await new Promise(resolve => DoBatch(batch, resolve));
+			}
+			Log("All batches completed");
+		}
+		RunAllBatches();
 	</script>
 </body>
