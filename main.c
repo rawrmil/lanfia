@@ -97,6 +97,7 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	ByteReader br = {0};
 	br.sv.count = wm->data.len;
 	br.sv.data = wm->data.buf;
+	if (mg_log_level >= MG_LL_INFO) mg_hexdump(wm->data.buf, wm->data.len);
 	uint8_t gcmt;
 	if (!ByteReaderU8(&br, &gcmt)) return;
 	switch (gcmt) {

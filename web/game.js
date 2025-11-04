@@ -37,7 +37,7 @@ class ByteWriter {
 // L O G I N
 function GCMJoin(ws, username) {
 	const bw = new ByteWriter();
-	bw.u8(GCMT.LOGIN);
+	bw.u8(GCMT.LOBBY_JOIN);
 	bw.strn(username);
 	ws.send(bw.bytes())
 }
