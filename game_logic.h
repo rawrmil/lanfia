@@ -14,6 +14,8 @@ typedef struct GamePlayer {
 	Nob_String_Builder username;
 } GamePlayer;
 
+void GamePlayerFree(GamePlayer* player);
+
 typedef struct GamePlayers {
 	GamePlayer* items;
 	size_t count;
@@ -21,10 +23,11 @@ typedef struct GamePlayers {
 } GamePlayers; // nob.h dynamic array
 
 typedef struct Game {
-	bool tests;
 	int users_count;
 	GamePlayers players;
 } Game;
+
+void GameReset();
 
 extern Game game;
 
@@ -39,6 +42,18 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br);
 #ifdef GAME_LOGIC_IMPLEMENTATION
 
 Game game;
+
+void GamePlayerFree(GamePlayer* player) {
+	nob_sb_free(player->username);
+}
+
+void GameReset() {
+	nob_da_foreach(GamePlayer, player, &game.players) {
+		GamePlayerFree(player);
+	}
+	nob_da_free(game.players);
+	memset(&game, 0, sizeof(game));
+}
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
 	// [ msg_type | viewers | players.count | ( names_size | names_array ) ]
@@ -75,7 +90,7 @@ void GameUserRemove(struct mg_connection* c) {
 	// TODO: IF PHASE == LOBBY
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		if (p->c == c) {
-			nob_sb_free(p->username);
+			GamePlayerFree(p);
 			nob_da_remove_unordered(&game.players, p - game.players.items);
 		}
 	}

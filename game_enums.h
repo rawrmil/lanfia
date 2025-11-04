@@ -16,6 +16,7 @@ enum { GSMT };
 // --- Game Client Message Types (GCMT) ---
 
 #define GCMT \
+	X(GCMT_TESTS_RESET) \
 	X(GCMT_LOBBY_JOIN) \
 	X(GCMT_LAST_) \
 

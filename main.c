@@ -100,6 +100,9 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	uint8_t gcmt;
 	if (!ByteReaderU8(&br, &gcmt)) return;
 	switch (gcmt) {
+		case GCMT_TESTS_RESET:
+			if (*flags.tests) GameReset();
+			break;
 		case GCMT_LOBBY_JOIN:
 			HandleClientLobbyJoin(c, &br);
 			break;
@@ -129,7 +132,6 @@ int main(int argc, char* argv[]) {
 	GameMessageTypesGenerateJS();
 
 	AppParseFlags(argc, argv);
-	game.tests = *flags.tests;
 
 	Nob_String_Builder ip_sb = {0};
 	nob_sb_append_cstr(&ip_sb, "http://");
