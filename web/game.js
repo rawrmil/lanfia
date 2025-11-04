@@ -34,7 +34,12 @@ class ByteWriter {
 		this.arr.push(...te);
 	}
 }
-// L O G I N
+// --- Client Messages ---
+function GCMTestsReset(ws) {
+	const bw = new ByteWriter();
+	bw.u8(GCMT.TESTS_RESET);
+	ws.send(bw.bytes())
+}
 function GCMJoin(ws, username) {
 	const bw = new ByteWriter();
 	bw.u8(GCMT.LOBBY_JOIN);

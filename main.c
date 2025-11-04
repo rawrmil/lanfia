@@ -102,6 +102,7 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	if (!ByteReaderU8(&br, &gcmt)) return;
 	switch (gcmt) {
 		case GCMT_TESTS_RESET:
+			MG_INFO(("RESET: %d", *flags.tests));
 			if (*flags.tests) GameReset();
 			break;
 		case GCMT_LOBBY_JOIN:

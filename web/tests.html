@@ -1,1 +1,28 @@
-TESTS PAGE
+<!DOCTYPE html>
+<head>
+	<title>TESTS</title>
+</head>
+<body>
+	<h1>TESTS</h1>
+	<script src="gmt.js"></script>
+	<script src="game.js"></script>
+	<script>
+		// --- Websockets ---
+		const conn_count = 2;
+		const ws = [];
+		for (let i = 0; i < conn_count; i++) {
+			ws.push(new WebSocket(`ws://${location.host}/ws`));
+			ws[i].binaryType = "arraybuffer";
+			ws[i].onopen = () => {
+				if (i == 0) GCMTestsReset(ws[i]);
+				GCMJoin(ws[i], `player${i}`);
+				console.log(`WS${i}: open`)
+			};
+			ws[i].onmessage = (event) => {
+				const br = new ByteReader(event.data);
+				msg_type = br.u8();
+				console.log(`WS: '${msg_type}'`)
+			};
+		}
+	</script>
+</body>
