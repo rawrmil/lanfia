@@ -41,6 +41,7 @@ typedef struct Flags {
 	uint64_t* ll;
 	uint64_t* port;
 	char** web_dir;
+	bool* tests;
 } Flags;
 
 Flags flags;
@@ -52,6 +53,7 @@ void AppParseFlags(int argc, char** argv) {
 	flags.ll = flag_uint64("log-level", 0, "none, error, info, debug, verbose (0, 1, 2, 3, 4)");
 	flags.port = flag_uint64("port", 6969, "port for the server");
 	flags.web_dir = flag_str("webdir", "./web", "directory for the server");
+	flags.tests = flag_bool("tests", 0, "tests page at /tests.html");
 
 	if (!flag_parse(argc, argv)) {
     flag_print_options(stdout);
@@ -124,10 +126,10 @@ void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
 
 int main(int argc, char* argv[]) {
 
-
 	GameMessageTypesGenerateJS();
 
 	AppParseFlags(argc, argv);
+	game.tests = *flags.tests;
 
 	Nob_String_Builder ip_sb = {0};
 	nob_sb_append_cstr(&ip_sb, "http://");
@@ -146,6 +148,7 @@ int main(int argc, char* argv[]) {
 	printf("log_level: %d\n", mg_log_level);
 	printf("flags.web_dir: %s\n", *flags.web_dir);
 	printf("flags.port: %d\n", *flags.port);
+	printf("flags.tests: %d\n", *flags.tests);
 
 	struct mg_mgr mgr;
 	mg_mgr_init(&mgr);

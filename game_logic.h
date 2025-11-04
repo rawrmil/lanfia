@@ -21,6 +21,7 @@ typedef struct GamePlayers {
 } GamePlayers; // nob.h dynamic array
 
 typedef struct Game {
+	bool tests;
 	int users_count;
 	GamePlayers players;
 } Game;
