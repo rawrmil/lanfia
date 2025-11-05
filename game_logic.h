@@ -40,19 +40,19 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br);
 Game game;
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
-	// [ msg_type | viewers | players.count | ( names_size | names_array ) ]
 	uint32_t viewers_count = game.users_count > game.players.count ? game.users_count-game.players.count : 0;
 	MG_INFO(("viewers: %d\n", viewers_count));
 	ByteWriter bw = {0};
-	ByteWriterU8(&bw, GSMT_INFO_USERS);
-	ByteWriterU32(&bw, viewers_count);
-	ByteWriterU32(&bw, (uint32_t)game.players.count);
 	Nob_String_Builder player_names = {0};
 	nob_da_foreach(GamePlayer, player, &game.players) {
 		nob_sb_append_buf(&player_names, player->username.items, player->username.count);
 		nob_da_append(&player_names, '\0');
 	}
-	ByteWriterSN(&bw, player_names.items, player_names.count);
+	ByteWriterBuild(&bw,
+		BU8, GSMT_INFO_USERS,
+		BU32, viewers_count,
+		BU32, game.players.count,
+		BSN, player_names.count, player_names.items);
 	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
 		if (c->is_websocket)
 			mg_ws_send(c, bw.sb.items, bw.sb.count, WEBSOCKET_OP_BINARY);

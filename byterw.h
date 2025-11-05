@@ -10,6 +10,16 @@ typedef struct ByteReader {
 	int i;
 } ByteReader;
 
+enum {
+	BNULL,
+	BU8,
+	BU16,
+	BU32,
+	BU64,
+	BN,
+	BSN,
+};
+
 bool ByteReaderU8 (ByteReader* br, uint8_t*  out);
 bool ByteReaderU16(ByteReader* br, uint16_t* out);
 bool ByteReaderU32(ByteReader* br, uint32_t* out);
@@ -27,6 +37,7 @@ void ByteWriterU32(ByteWriter* bw, const uint32_t in);
 void ByteWriterU64(ByteWriter* bw, const uint64_t in);
 void ByteWriterN  (ByteWriter* bw, const uint8_t* in, size_t n);
 void ByteWriterSN (ByteWriter* bw, const uint8_t* in, size_t n); // [ size(4) | data(N) ]
+ByteWriter* _ByteWriterBuild(ByteWriter* bw, ...);
 void ByteWriterFree(ByteWriter bw);
 
 #endif /* BYTERW_H */
@@ -71,6 +82,47 @@ void ByteWriterSN (ByteWriter* bw, const uint8_t* in, size_t n) { // TODO: same 
 	ByteWriterU32(bw, (uint32_t)n);
 	ByteWriterN(bw, in, n);
 }
+ByteWriter* _ByteWriterBuild(ByteWriter* bw, ...) {
+	va_list args;
+	va_start(args, bw);
+	while (1) {
+		int type = va_arg(args, int);
+		switch (type) {
+			case BU8:
+				ByteWriterU8(bw, (uint8_t)va_arg(args, int));
+				break;
+			case BU16:
+				ByteWriterU16(bw, (uint16_t)va_arg(args, int));
+				break;
+			case BU32:
+				ByteWriterU32(bw, (uint32_t)va_arg(args, int));
+				break;
+			case BU64:
+				ByteWriterU64(bw, (uint64_t)va_arg(args, int));
+				break;
+			case BN:
+				{
+				uint32_t len = (uint32_t)va_arg(args, int);
+				uint8_t* buf = (uint8_t*)va_arg(args, char*);
+				ByteWriterN(bw, buf, len);
+				}
+				break;
+			case BSN:
+				{
+				uint32_t len = (uint32_t)va_arg(args, int);
+				uint8_t* buf = (uint8_t*)va_arg(args, char*);
+				ByteWriterSN(bw, buf, len);
+				}
+				break;
+			case BNULL:
+				goto defer;
+		}
+	}
+defer:
+	va_end(args);
+	return bw;
+}
+#define ByteWriterBuild(...) _ByteWriterBuild(__VA_ARGS__, BNULL)
 void ByteWriterFree(ByteWriter bw) { nob_sb_free(bw.sb); };
 
 #endif /* BYTERW_IMPLEMENTATION */
