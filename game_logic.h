@@ -39,6 +39,16 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br);
 
 Game game;
 
+void GameSend(struct mg_connection* c, ByteWriter* bw) {
+	mg_ws_send(c, bw->sb.items, bw->sb.count, WEBSOCKET_OP_BINARY);
+}
+
+void GameSendAll(struct mg_mgr* mgr, ByteWriter* bw) {
+	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
+		if (c->is_websocket) GameSend(c, bw);
+	}
+}
+
 void GameUsersUpdate(struct mg_mgr* mgr) {
 	uint32_t viewers_count = game.users_count > game.players.count ? game.users_count-game.players.count : 0;
 	MG_INFO(("viewers: %d\n", viewers_count));
@@ -53,10 +63,7 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		BU32, viewers_count,
 		BU32, game.players.count,
 		BSN, player_names.count, player_names.items);
-	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
-		if (c->is_websocket)
-			mg_ws_send(c, bw.sb.items, bw.sb.count, WEBSOCKET_OP_BINARY);
-	}
+	GameSendAll(mgr, &bw);
 	ByteWriterFree(bw);
 	nob_sb_free(player_names);
 }
