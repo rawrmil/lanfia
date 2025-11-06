@@ -1,21 +1,102 @@
 <!DOCTYPE html>
 <head>
 	<title>Hello</title>
+	<style>
+		body { margin: 0; min-height: 100vh; }
+		body * { border: solid 1px red; }
+		.game_nav {
+			width: 100%;
+			height: 48px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			top: 0;
+			z-index: 1000;
+		}
+		.game_nav * {
+			display: flex;
+			align-items: center;
+			margin: 0 10px 0 10px;
+		}
+		#game_logo {
+			font-size: 32px;
+		}
+		.game_content {
+			padding-top: 40px;
+			display: flex;
+			flex-flow: column;
+			justify-content: flex-start;
+			align-items: center;
+			width: 100vw;
+			/*background-color: var(--bg-dark);*/
+			box-sizing: border-box; /* No shrinking */
+			overflow: hidden;
+		}
+		.game_box {
+			width: clamp(50%, 600px, 85%);
+			height: 100%;
+			font-size: 24px;
+			line-height: 1.6;
+			margin: 10px;
+			padding: 24px 1.25rem 32px 1.25rem;
+			border-radius: 15px;
+			/*background-color: var(--bg);*/
+			/*box-shadow: var(--shadow-s);*/
+			/*text-shadow: var(--shadow-text-s);*/
+			width: clamp(50%, 600px, 85%);
+			height: 100%;
+			line-height: 1.6;
+			margin: 10px;
+		}
+		.game_box h1 { font-size: 2.5rem; }
+		.game_box h2 { font-size: 2rem; }
+		.game_box h3 { font-size: 1.5rem; }
+		.game_box input { font-size: 1.5rem; }
+		.game_box button { font-size: 1.5rem; }
+		#players_list {
+			display: block;
+			width: 100%;
+		}
+		.player_entry {
+			background: #999;
+		}
+	</style>
 </head>
 <body>
-	<div>
-		<label for="game_username">Username</label>
-		<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
-		<button onclick="gameLogin()">Join</button>
-	</div>
-	<div id="game_players">
-	</div>
-	<div>
-		Viewers:
-		<span id="game_viewers">?</span>
+	<nav class="game_nav">
+		<span id="game_logo">
+			LANfia
+		</span>
+	</nav>
+	<div class="game_content">
+		<div class="game_box">
+			<h1>Players</h1>
+			<div class="game_join" style="display: flex; flex-flow: row; justify-content: center; margin: 10px;">
+				<label for="game_username"></label>
+				<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
+				<button onclick="gameLogin()">Join</button>
+			</div>
+			<div id="players_list">
+			</div>
+			<hr>
+			<div>
+				Viewers:
+				<span id="game_viewers">?</span>
+			</div>
+			<div class="box">
+			</div>
+		</div>
 	</div>
 	<script src="gmt.js"></script>
 	<script>
+		// U T I L S
+		function Escaped(str) {
+			return str.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#39;');
+		}
 		// B Y T E   R / W
 		class ByteReader {
 			constructor(buffer) {
@@ -55,7 +136,7 @@
 		// E L E M E N T S
 		const viewersEl = document.getElementById("game_viewers");
 		const usernameEl = document.getElementById("game_username");
-		const playersEl = document.getElementById("game_players");
+		const playersListEl = document.getElementById("players_list");
 		// L O G I N
 		function gameLogin() {
 			const writer = new ByteWriter();
@@ -69,11 +150,13 @@
 			const player_count = reader.u32();
 			const player_names = reader.strn().split('\0');
 			player_names.pop();
-			playersEl.innerHTML = "";
+			playersListEl.innerHTML = "";
 			for (const i in player_names) {
-				playersEl.innerHTML   += "<div class='player_entry'>\n";
-				playersEl.textContent += player_names[i]+"\n";
-				playersEl.innerHTML   += "</div>\n";
+				playersListEl.innerHTML +=
+					`<div class='player_entry'>
+						<span class='player_number'>${Number(i)+1}</span>
+						<span class='player_name'>${Escaped(player_names[i]+"\n")}</span>
+					</div>\n`;
 			}
 			viewersEl.textContent = viewer_count;
 		}
