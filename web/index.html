@@ -2,8 +2,40 @@
 <head>
 	<title>Hello</title>
 	<style>
-		body { margin: 0; min-height: 100vh; }
-		body * { border: solid 1px red; }
+		/*body * { border: solid 1px red; }*/
+		:root { /* Inspiration: sajid */
+			--primary:    #01fdf2;
+			--text:       #fff5f5;
+			--text-muted: #909295;
+			--bg-dark:    #090909;
+			--bg:         #151514;
+			--bg-light:   #272727;
+			--shadow-s: inset 0 1px 2px #ffffff30, 0 1px 2px #00000030, 0 2px 4px #00000015;
+			--shadow-m: inset 0 1px 2px #ffffff50, 0 2px 4px #00000030, 0 4px 8px #00000015; 
+			--shadow-l: inset 0 1px 2px #ffffff70, 0 4px 6px #00000030, 0 6px 10px #00000015;
+			--shadow-s-in: inset 0 -1px 1px #ffffff30, 0 1px 2px #00000030, 0 2px 4px #00000015;
+			--shadow-m-in: inset 0 -1px 1px #ffffff50, 0 2px 4px #00000030, 0 4px 8px #00000015; 
+			--shadow-l-in: inset 0 -1px 1px #ffffff70, 0 4px 6px #00000030, 0 6px 10px #00000015;
+			--gradient-bg: linear-gradient(0deg, var(--bg), var(--bg-light));
+			--gradient-bg-h: linear-gradient(-90deg, var(--bg), var(--bg-light));
+			--shadow-text-s: 0.07rem 0.07rem 0.0rem var(--bg-light);
+		}
+		@media (prefers-color-scheme: light) {
+			:root {
+				--primary:    #fe5060;
+				--text:       #010203;
+				--text-muted: #6d6d6d;
+				--bg-dark:    #e5e4de;
+				--bg:         #f2efe5;
+				--bg-light:   #fefeff;
+			}
+		}
+		body {
+			margin: 0;
+			min-height: 100vh;
+			background-color: var(--bg-dark);
+			color: var(--text);
+		}
 		.game_nav {
 			width: 100%;
 			height: 48px;
@@ -12,6 +44,7 @@
 			align-items: center;
 			top: 0;
 			z-index: 1000;
+			background-color: var(--bg);
 		}
 		.game_nav * {
 			display: flex;
@@ -28,7 +61,6 @@
 			justify-content: flex-start;
 			align-items: center;
 			width: 100vw;
-			/*background-color: var(--bg-dark);*/
 			box-sizing: border-box; /* No shrinking */
 			overflow: hidden;
 		}
@@ -40,9 +72,9 @@
 			margin: 10px;
 			padding: 24px 1.25rem 32px 1.25rem;
 			border-radius: 15px;
-			/*background-color: var(--bg);*/
-			/*box-shadow: var(--shadow-s);*/
-			/*text-shadow: var(--shadow-text-s);*/
+			background-color: var(--bg);
+			box-shadow: var(--shadow-s);
+			text-shadow: var(--shadow-text-s);
 			width: clamp(50%, 600px, 85%);
 			height: 100%;
 			line-height: 1.6;
@@ -51,14 +83,45 @@
 		.game_box h1 { font-size: 2.5rem; }
 		.game_box h2 { font-size: 2rem; }
 		.game_box h3 { font-size: 1.5rem; }
-		.game_box input { font-size: 1.5rem; }
-		.game_box button { font-size: 1.5rem; }
+		.game_box input {
+			font-size: 1rem;
+			margin: 0.1rem 0.2rem;
+			padding: 0.2rem 0.5rem;
+			color: var(--text);
+			background: var(--bg-light);	
+			box-shadow: var(--shadow-s-in);
+			border: none;
+			border-radius: 3px;
+			transition: var(--ease);
+		}
+		.game_box input:focus {
+			outline: none;
+			box-shadow: var(--shadow-m-in);
+		}
+		.game_box button {
+			margin: 0.1rem 0.2rem;
+			font-size: 1rem;
+			padding: 0.2rem 0.5rem;
+			background: var(--bg-light);	
+			box-shadow: var(--shadow-s);
+			border: none;
+			border-radius: 3px;
+			color: var(--text);
+			transition: var(--ease);
+		}
+		.game_box button:hover {
+			box-shadow: var(--shadow-l);
+		}
+		.game_box button:active {
+			box-shadow: var(--shadow-s-in);
+			transform: scale(0.98);
+		}
 		#players_list {
 			display: block;
 			width: 100%;
 		}
 		.player_entry {
-			background: #999;
+			background: var(--bg-light);	
 		}
 	</style>
 </head>
