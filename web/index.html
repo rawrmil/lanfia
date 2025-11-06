@@ -39,6 +39,7 @@
 			background-color: var(--bg-dark);
 			color: var(--text);
 		}
+		/* --- Generic elements --- */
 		.game_nav {
 			width: 100%;
 			height: 48px;
@@ -75,8 +76,6 @@
 			background-color: var(--bg);
 			box-shadow: var(--shadow-s);
 			text-shadow: var(--shadow-text-s);
-			width: clamp(50%, 600px, 85%);
-			height: 100%;
 		}
 		.game_box span { font-size: 1rem; }
 		.game_box h1 { font-size: 2.5rem; }
@@ -120,6 +119,7 @@
 			pointer-events: none;
 			color: var(--text-muted)
 		}
+		/* --- Player List --- */
 		#players_list {
 			display: block;
 			width: 100%;
@@ -163,7 +163,7 @@
 	</div>
 	<script src="gmt.js"></script>
 	<script>
-		// U T I L S
+		// --- Utils ---
 		function Escaped(str) {
 			return str.replace(/&/g, '&amp;')
 				.replace(/</g, '&lt;')
@@ -171,7 +171,7 @@
 				.replace(/"/g, '&quot;')
 				.replace(/'/g, '&#39;');
 		}
-		// B Y T E   R / W
+		// --- ByteReader/ByteWriter (stream I/O) ---
 		class ByteReader {
 			constructor(buffer) {
 				this.dv = new DataView(buffer);
@@ -207,12 +207,12 @@
 				this.arr.push(...te);
 			}
 		}
-		// E L E M E N T S
+		// --- Elements ---
 		const viewersEl = document.getElementById("game_viewers");
 		const playersListEl = document.getElementById("players_list");
 		const usernameEl = document.getElementById("game_username");
 		const readyButtonEl = document.getElementById("ready_button");
-		// J O I N
+		// --- Join ---
 		function GameJoin() {
 			const writer = new ByteWriter();
 			writer.u8(GCMT.LOBBY_JOIN);
@@ -239,7 +239,7 @@
 			//document.getElementById("join_button").style.display  = "unset";
 			//document.getElementById("leave_button").style.display = "none";
 		}
-		// M E S S A G E S
+		// --- Message processing ---
 		function HandleServerInfoUsers(reader) {
 			const viewer_count = reader.u32();
 			const player_count = reader.u32();
@@ -258,7 +258,7 @@
 			}
 			viewersEl.textContent = viewer_count;
 		}
-		// W E B S O C K E T S
+		// --- WebSockets ---
 		const ws = new WebSocket(`ws://${location.host}/ws`);
 		ws.binaryType = "arraybuffer";
 		ws.onopen = () => {
