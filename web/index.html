@@ -98,6 +98,7 @@
 			outline: none;
 			box-shadow: var(--shadow-m-in);
 		}
+		.game_box input:disabled { color: var(--text-muted) }
 		.game_box button {
 			margin: 0.1rem 0.2rem;
 			font-size: 1rem;
@@ -137,7 +138,8 @@
 			<div class="game_join" style="display: flex; flex-flow: row; justify-content: center; margin: 10px;">
 				<label for="game_username"></label>
 				<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
-				<button onclick="gameLogin()">Join</button>
+				<button id="join_button" onclick="GameJoin()">Join</button>
+				<button id="leave_button" onclick="GameLeave()" style="display: none;">Leave</button>
 			</div>
 			<div id="players_list">
 			</div>
@@ -198,14 +200,25 @@
 		}
 		// E L E M E N T S
 		const viewersEl = document.getElementById("game_viewers");
-		const usernameEl = document.getElementById("game_username");
 		const playersListEl = document.getElementById("players_list");
-		// L O G I N
-		function gameLogin() {
+		const usernameEl = document.getElementById("game_username");
+		// J O I N
+		function GameJoin() {
 			const writer = new ByteWriter();
-			writer.u8(GCMT.LOGIN);
+			writer.u8(GCMT.LOBBY_JOIN);
 			writer.strn(usernameEl.value);
 			ws.send(writer.bytes())
+			document.getElementById("join_button").style.display  = "none";
+			document.getElementById("leave_button").style.display = "unset";
+			usernameEl.disabled = true;
+		}
+		function GameLeave() {
+			const writer = new ByteWriter();
+			writer.u8(GCMT.LOBBY_LEAVE);
+			ws.send(writer.bytes())
+			document.getElementById("join_button").style.display  = "unset";
+			document.getElementById("leave_button").style.display = "none";
+			usernameEl.disabled = false;
 		}
 		// M E S S A G E S
 		function HandleServerInfoUsers(reader) {
