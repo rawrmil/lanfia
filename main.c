@@ -102,7 +102,7 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 			HandleClientLobbyJoin(c, &br);
 			break;
 		case GCMT_LOBBY_LEAVE:
-			GameUserRemove(c);
+			GamePlayerRemove(c);
 			break;
 	}
 }

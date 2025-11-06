@@ -30,6 +30,7 @@ extern Game game;
 void GameUsersUpdate(struct mg_mgr* mgr);
 void GameUserAdd(struct mg_connection* c);
 void GameUserRemove(struct mg_connection* c);
+void GamePlayerRemove(struct mg_connection* c);
 
 bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br);
 
@@ -50,7 +51,7 @@ void GameSendAll(struct mg_mgr* mgr, ByteWriter* bw) {
 }
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
-	uint32_t viewers_count = game.users_count > game.players.count ? game.users_count-game.players.count : 0;
+	uint32_t viewers_count = game.users_count > game.players.count ? game.users_count - game.players.count : 0;
 	MG_INFO(("viewers: %d\n", viewers_count));
 	ByteWriter bw = {0};
 	Nob_String_Builder player_names = {0};
@@ -79,15 +80,19 @@ void GameUserAdd(struct mg_connection* c) {
 
 void GameUserRemove(struct mg_connection* c) {
 	// TODO: IF PHASE == LOBBY
+	game.users_count--;
+	GamePlayerRemove(c);
+	MG_INFO(("users: %d\n", game.users_count));
+}
+
+void GamePlayerRemove(struct mg_connection* c) {
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		if (p->c == c) {
 			nob_sb_free(p->username);
 			nob_da_remove_unordered(&game.players, p - game.players.items);
 		}
 	}
-	game.users_count--;
 	GameUsersUpdate(c->mgr);
-	MG_INFO(("users: %d\n", game.users_count));
 }
 
 // --- HANDLERS ---
