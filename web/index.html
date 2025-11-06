@@ -116,6 +116,10 @@
 			box-shadow: var(--shadow-s-in);
 			transform: scale(0.98);
 		}
+		.game_box button:disabled {
+			pointer-events: none;
+			color: var(--text-muted)
+		}
 		#players_list {
 			display: block;
 			width: 100%;
@@ -142,8 +146,11 @@
 				<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
 				<button id="join_button" onclick="GameJoin()">Join</button>
 				<button id="leave_button" onclick="GameLeave()" style="display: none;">Leave</button>
+				<button id="ready_button" onclick="GameReady()" style="display: none;">Ready</button>
 			</div>
-			<div style="display: flex"><span id="players_none" style="color: var(--text-muted);">No players yet...</span></div>
+			<div style="display: flex">
+				<span id="players_none" style="color: var(--text-muted);">No players yet...</span>
+			</div>
 			<div id="players_list">
 			</div>
 			<hr>
@@ -204,6 +211,7 @@
 		const viewersEl = document.getElementById("game_viewers");
 		const playersListEl = document.getElementById("players_list");
 		const usernameEl = document.getElementById("game_username");
+		const readyButtonEl = document.getElementById("ready_button");
 		// J O I N
 		function GameJoin() {
 			const writer = new ByteWriter();
@@ -212,6 +220,7 @@
 			ws.send(writer.bytes())
 			document.getElementById("join_button").style.display  = "none";
 			document.getElementById("leave_button").style.display = "unset";
+			document.getElementById("ready_button").style.display = "unset";
 			usernameEl.disabled = true;
 		}
 		function GameLeave() {
@@ -220,7 +229,15 @@
 			ws.send(writer.bytes())
 			document.getElementById("join_button").style.display  = "unset";
 			document.getElementById("leave_button").style.display = "none";
+			document.getElementById("ready_button").style.display = "none";
 			usernameEl.disabled = false;
+		}
+		function GameReady() {
+			//const writer = new ByteWriter();
+			//writer.u8(GCMT.LOBBY_LEAVE);
+			//ws.send(writer.bytes())
+			//document.getElementById("join_button").style.display  = "unset";
+			//document.getElementById("leave_button").style.display = "none";
 		}
 		// M E S S A G E S
 		function HandleServerInfoUsers(reader) {
