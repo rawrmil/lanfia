@@ -4,6 +4,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<style>
+		html { font-size: 20px; }
 		/*body * { border: solid 1px red; }*/
 		:root { /* Inspiration: sajid */
 			--primary:    #01fdf2;
@@ -69,9 +70,6 @@
 		.game_box {
 			width: clamp(50%, 600px, 85%);
 			height: 100%;
-			font-size: 24px;
-			line-height: 1.6;
-			margin: 10px;
 			padding: 24px 1.25rem 32px 1.25rem;
 			border-radius: 15px;
 			background-color: var(--bg);
@@ -79,9 +77,8 @@
 			text-shadow: var(--shadow-text-s);
 			width: clamp(50%, 600px, 85%);
 			height: 100%;
-			line-height: 1.6;
-			margin: 10px;
 		}
+		.game_box span { font-size: 1rem; }
 		.game_box h1 { font-size: 2.5rem; }
 		.game_box h2 { font-size: 2rem; }
 		.game_box h3 { font-size: 1.5rem; }
@@ -124,6 +121,10 @@
 			width: 100%;
 		}
 		.player_entry {
+			display: flex;
+			justify-content: flex-start;
+			align-items: center;
+			height: 2rem;
 			background: var(--bg-light);	
 		}
 	</style>
@@ -136,20 +137,18 @@
 	</nav>
 	<div class="game_content">
 		<div class="game_box">
-			<h1>Players</h1>
 			<div class="game_join" style="display: flex; flex-flow: row; justify-content: center; margin: 10px;">
 				<label for="game_username"></label>
 				<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
 				<button id="join_button" onclick="GameJoin()">Join</button>
 				<button id="leave_button" onclick="GameLeave()" style="display: none;">Leave</button>
 			</div>
-			<span id="players_none" style="color: var(--text-muted);">No players yet...</span>
+			<div style="display: flex"><span id="players_none" style="color: var(--text-muted);">No players yet...</span></div>
 			<div id="players_list">
 			</div>
 			<hr>
-			<div>
-				Viewers:
-				<span id="game_viewers">?</span>
+			<div style="display: flex;">
+				<span>Viewers:</span>&nbsp;<span id="game_viewers">?</span>
 			</div>
 			<div class="box">
 			</div>
@@ -235,7 +234,8 @@
 			for (const i in player_names) {
 				playersListEl.innerHTML +=
 					`<div class='player_entry'>
-						<span class='player_number'>${Number(i)+1}</span>
+						<span class='player_number'>${Number(i)+1}.</span>
+						&nbsp;
 						<span class='player_name'>${Escaped(player_names[i]+"\n")}</span>
 					</div>\n`;
 			}
