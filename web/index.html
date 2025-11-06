@@ -141,6 +141,7 @@
 				<button id="join_button" onclick="GameJoin()">Join</button>
 				<button id="leave_button" onclick="GameLeave()" style="display: none;">Leave</button>
 			</div>
+			<span id="players_none" style="color: var(--text-muted);">No players yet...</span>
 			<div id="players_list">
 			</div>
 			<hr>
@@ -227,6 +228,8 @@
 			const player_names = reader.strn().split('\0');
 			player_names.pop();
 			playersListEl.innerHTML = "";
+			const playersNoneEl = document.getElementById("players_none");
+			playersNoneEl.style.display = player_names.length == 0 ? "unset" : "none";
 			for (const i in player_names) {
 				playersListEl.innerHTML +=
 					`<div class='player_entry'>
