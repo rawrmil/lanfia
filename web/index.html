@@ -131,6 +131,15 @@
 			height: 2rem;
 			background: var(--bg-light);	
 		}
+		/* --- Joining --- */
+		.game_join {
+			display: flex;
+			flex-flow: row;
+			flex-wrap: wrap;
+			justify-content: center;
+			margin: 10px;
+			padding: 5px;
+		}
 	</style>
 </head>
 <body>
@@ -141,7 +150,7 @@
 	</nav>
 	<div class="game_content">
 		<div class="game_box">
-			<div class="game_join" style="display: flex; flex-flow: row; justify-content: center; margin: 10px;">
+			<div class="game_join" style="">
 				<label for="game_username"></label>
 				<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
 				<button id="join_button" onclick="GameJoin()">Join</button>
