@@ -90,7 +90,7 @@ void PrintBitmapSmall(uint8_t* bitmap, int bitmap_side, bool inv) {
 bool GetQRCodeBitmap(Nob_String_Builder* bitmap, char* ip, int* bitmap_size) {
 	*bitmap_size = -1;
 
-	const size_t MAX_BUFFER = qrcodegen_BUFFER_LEN_FOR_VERSION(2);
+	const size_t MAX_BUFFER = qrcodegen_BUFFER_LEN_FOR_VERSION(3);
 	const size_t MAX_SIZE = 4 * 2 + 17; // 4 * VERSION + 17
 
 	uint8_t tmp[MAX_BUFFER];
@@ -103,7 +103,7 @@ bool GetQRCodeBitmap(Nob_String_Builder* bitmap, char* ip, int* bitmap_size) {
 			qrc,
 			qrcodegen_Ecc_MEDIUM,
 			1,
-			2,
+			3,
 			qrcodegen_Mask_AUTO,
 			false
 		);
