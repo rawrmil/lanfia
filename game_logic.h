@@ -53,13 +53,12 @@ void GameSendAll(struct mg_mgr* mgr, ByteWriter* bw) {
 void GameUsersUpdate(struct mg_mgr* mgr) {
 	uint32_t viewers_count = game.users_count > game.players.count ? game.users_count - game.players.count : 0;
 	MG_INFO(("viewers: %d\n", viewers_count));
-	ByteWriter bw = {0};
 	Nob_String_Builder player_names = {0};
 	nob_da_foreach(GamePlayer, player, &game.players) {
 		nob_sb_append_buf(&player_names, player->username.items, player->username.count);
 		nob_da_append(&player_names, '\0');
 	}
-	ByteWriterBuild(&bw,
+	ByteWriter bw = ByteWriterBuild((ByteWriter){0},
 		BU8, GSMT_INFO_USERS,
 		BU32, viewers_count,
 		BU32, game.players.count,
