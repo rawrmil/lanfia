@@ -15,3 +15,8 @@ cc nob.c -o nob
 # Linux -> Windows example
 ./nob -cc x86_64-w64-mingw32-gcc -target windows
 ```
+
+# Tests
+```sh
+./nob -run -- -tests
+```

@@ -19,6 +19,10 @@
 
 // --- GAME PARTS ---
 
+#define GAME_TESTS_IMPLEMENTATION
+#include "game_tests.h"
+#undef GAME_TESTS_IMPLEMENTATION
+
 #define GAME_LOGIC_IMPLEMENTATION
 #include "game_logic.h"
 #undef GAME_LOGIC_IMPLEMENTATION
@@ -41,6 +45,7 @@ typedef struct Flags {
 	uint64_t* ll;
 	uint64_t* port;
 	char** web_dir;
+	bool* tests;
 } Flags;
 
 Flags flags;
@@ -52,6 +57,7 @@ void AppParseFlags(int argc, char** argv) {
 	flags.ll = flag_uint64("log-level", 0, "none, error, info, debug, verbose (0, 1, 2, 3, 4)");
 	flags.port = flag_uint64("port", 6969, "port for the server");
 	flags.web_dir = flag_str("webdir", "./web", "directory for the server");
+	flags.tests = flag_bool("tests", false, "run tests for the server");
 
 	if (!flag_parse(argc, argv)) {
     flag_print_options(stdout);
@@ -156,9 +162,15 @@ int main(int argc, char* argv[]) {
 	char addrstr[32];
 	snprintf(addrstr, sizeof(addrstr), "http://0.0.0.0:%d", *flags.port);
 
+	bool done = false;
 	mg_http_listen(&mgr, addrstr, EventHandler, NULL);
 
-	while (true) {
+	if (*flags.tests) {
+		struct mg_connection* c;
+		c = mg_ws_connect(&mgr, "ws://localhost:6969/ws", TestsEventHandler, &done, NULL);
+	}
+
+	while (!done) {
 		mg_mgr_poll(&mgr, 1000);
 	}
 
