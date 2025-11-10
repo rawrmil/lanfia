@@ -114,6 +114,8 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 }
 
 void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
+	if (c->is_client)
+		return;
 	switch (ev) {
 		case MG_EV_HTTP_MSG:
 			HandleHTTPMessage(c, ev_data);
@@ -162,15 +164,13 @@ int main(int argc, char* argv[]) {
 	char addrstr[32];
 	snprintf(addrstr, sizeof(addrstr), "http://0.0.0.0:%d", *flags.port);
 
-	bool done = false;
 	mg_http_listen(&mgr, addrstr, EventHandler, NULL);
 
 	if (*flags.tests) {
-		struct mg_connection* c;
-		c = mg_ws_connect(&mgr, "ws://localhost:6969/ws", TestsEventHandler, &done, NULL);
+		c[0] = mg_ws_connect(&mgr, "ws://localhost:6969/ws", TestsEventHandler, NULL, NULL);
 	}
 
-	while (!done) {
+	while (1) {
 		mg_mgr_poll(&mgr, 1000);
 	}
 

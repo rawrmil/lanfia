@@ -46,7 +46,7 @@ void GameSend(struct mg_connection* c, ByteWriter* bw) {
 
 void GameSendAll(struct mg_mgr* mgr, ByteWriter* bw) {
 	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
-		if (c->is_websocket) GameSend(c, bw);
+		if (c->is_websocket && !c->is_client) GameSend(c, bw);
 	}
 }
 

@@ -6,6 +6,7 @@
 // --- Game Server Message Types (GSMT) ---
 
 #define GSMT \
+	X(GSMT_NO_MSG) \
 	X(GSMT_INFO_USERS) \
 	X(GSMT_LAST_) \
 
@@ -16,6 +17,7 @@ enum { GSMT };
 // --- Game Client Message Types (GCMT) ---
 
 #define GCMT \
+	X(GCMT_NO_MSG) \
 	X(GCMT_LOBBY_JOIN) \
 	X(GCMT_LOBBY_LEAVE) \
 	X(GCMT_LAST_) \
