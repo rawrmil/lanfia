@@ -102,6 +102,7 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	br.sv.count = wm->data.len;
 	br.sv.data = wm->data.buf;
 	uint8_t gcmt;
+	//mg_hexdump(br.sv.data, br.sv.count);
 	if (!ByteReaderU8(&br, &gcmt)) return;
 	switch (gcmt) {
 		case GCMT_LOBBY_JOIN:
@@ -167,7 +168,10 @@ int main(int argc, char* argv[]) {
 	mg_http_listen(&mgr, addrstr, EventHandler, NULL);
 
 	if (*flags.tests) {
-		c[0] = mg_ws_connect(&mgr, "ws://localhost:6969/ws", TestsEventHandler, NULL, NULL);
+		TestsInit();
+		snprintf(addrstr, sizeof(addrstr), "ws://0.0.0.0:%d/ws", *flags.port);
+		for (int i = 0; i < sizeof(test_conns)/sizeof(*test_conns); i++)
+			test_conns[i] = mg_ws_connect(&mgr, addrstr, TestsEventHandler, NULL, NULL);
 	}
 
 	while (1) {
