@@ -9,7 +9,7 @@ typedef struct TestMsg {
 	ByteWriter msg;
 	bool is_check;
 	size_t conn_index;
-	// TODO: mssage on check/send
+	Nob_String_Builder desc;
 } TestMsg;
 
 typedef struct TestBatch {
@@ -38,23 +38,31 @@ void TestMsgAdd(bool is_check, int conn_index, ByteWriter msg, char* desc) {
 	test_msg.msg = msg;
 	test_msg.is_check = is_check;
 	test_msg.conn_index = conn_index;
+	test_msg.desc = (Nob_String_Builder){0};
+	if (desc)
+		nob_sb_append_cstr(&test_msg.desc, desc);
 	nob_da_append(&batch, test_msg);
 }
 
 void TestsInit() {
 	TestMsgAdd(false, 0, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 7, "player1"), NULL);
 	TestMsgAdd(false, 1, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 7, "player2"), NULL);
+	TestMsgAdd(false, 2, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 7, "player3"), NULL);
+	TestMsgAdd(false, 3, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 7, "player4"), "Added last player");
 }
 
 void TestsStep(struct mg_connection* c) {
 	if (tests_done) return;
-	printf("%d/%d\n", batch.index, batch.count);
 	if (batch.index >= batch.count) {
 		printf("TESTS: end\n");
 		tests_done = true;
 		return;
 	}
 	TestMsg test_msg = batch.items[batch.index];
+	if (test_msg.desc.count > 0) {
+		printf("[ %d/%d ]: ", batch.index, batch.count);
+		printf("'%.*s'\n", test_msg.desc.count, test_msg.desc.items);
+	}
 	mg_ws_send(test_conns[test_msg.conn_index], test_msg.msg.sb.items, test_msg.msg.sb.count, WEBSOCKET_OP_BINARY);
 	batch.index++;
 }
