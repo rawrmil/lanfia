@@ -45,7 +45,7 @@ typedef struct Flags {
 	uint64_t* ll;
 	uint64_t* port;
 	char** web_dir;
-	bool* tests;
+	uint64_t* state;
 } Flags;
 
 Flags flags;
@@ -57,7 +57,7 @@ void AppParseFlags(int argc, char** argv) {
 	flags.ll = flag_uint64("log-level", 0, "none, error, info, debug, verbose (0, 1, 2, 3, 4)");
 	flags.port = flag_uint64("port", 6969, "port for the server");
 	flags.web_dir = flag_str("webdir", "./web", "directory for the server");
-	flags.tests = flag_bool("tests", false, "run tests for the server");
+	flags.state = flag_uint64("state", 0, "debug state of the game");
 
 	if (!flag_parse(argc, argv)) {
     flag_print_options(stdout);
@@ -167,8 +167,8 @@ int main(int argc, char* argv[]) {
 
 	mg_http_listen(&mgr, addrstr, EventHandler, NULL);
 
-	if (*flags.tests) {
-		MsgSeqInit();
+	if (*flags.state != 0) {
+		MsgSeqInit(*flags.state);
 		snprintf(addrstr, sizeof(addrstr), "ws://0.0.0.0:%d/ws", *flags.port);
 		for (int i = 0; i < sizeof(debug_conns)/sizeof(*debug_conns); i++)
 			debug_conns[i] = mg_ws_connect(&mgr, addrstr, DebugEventHandler, NULL, NULL);

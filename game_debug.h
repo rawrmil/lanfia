@@ -21,7 +21,7 @@ typedef struct MsgSeq {
 
 extern struct mg_connection* debug_conns[32];
 
-void MsgSeqInit();
+void MsgSeqInit(int state);
 void DebugEventHandler(struct mg_connection* c, int ev, void* ev_data);
 
 #endif /* GAME_DEBUG_H */
@@ -44,11 +44,19 @@ void ClientMsgAdd(bool is_check, int conn_index, ByteWriter msg, char* desc) {
 	nob_da_append(&batch, cm);
 }
 
-void MsgSeqInit() {
-	ClientMsgAdd(false, 0, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 7, "player1"), NULL);
-	ClientMsgAdd(false, 1, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 7, "player2"), NULL);
-	ClientMsgAdd(false, 2, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 7, "player3"), NULL);
-	ClientMsgAdd(false, 3, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 7, "player4"), "Added last player");
+void MsgSeq6PlayersConnect() {
+	ClientMsgAdd(false, 0, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 6, "mafia1"),    NULL);
+	ClientMsgAdd(false, 1, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 6, "mafia2"),    NULL);
+	ClientMsgAdd(false, 2, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 6, "doctor"),    NULL);
+	ClientMsgAdd(false, 3, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 3, "cop"),       NULL);
+	ClientMsgAdd(false, 4, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager1"), NULL);
+	ClientMsgAdd(false, 5, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager2"), NULL);
+}
+
+void MsgSeqInit(int state) {
+	switch (state) {
+		case 1: MsgSeq6PlayersConnect(); break;
+	}
 }
 
 void SeqStep(struct mg_connection* c) {
