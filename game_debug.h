@@ -67,6 +67,7 @@ void SeqStep(struct mg_connection* c) {
 		return;
 	}
 	ClientMsg cm = batch.items[batch.index];
+	if (debug_conns[cm.conn_index] != c) return;
 	if (cm.desc.count > 0) {
 		printf("[ %d/%d ]: ", batch.index, batch.count);
 		printf("'%.*s'\n", cm.desc.count, cm.desc.items);
