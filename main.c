@@ -19,9 +19,9 @@
 
 // --- GAME PARTS ---
 
-#define GAME_TESTS_IMPLEMENTATION
-#include "game_tests.h"
-#undef GAME_TESTS_IMPLEMENTATION
+#define GAME_DEBUG_IMPLEMENTATION
+#include "game_debug.h"
+#undef GAME_DEBUG_IMPLEMENTATION
 
 #define GAME_LOGIC_IMPLEMENTATION
 #include "game_logic.h"
@@ -168,10 +168,10 @@ int main(int argc, char* argv[]) {
 	mg_http_listen(&mgr, addrstr, EventHandler, NULL);
 
 	if (*flags.tests) {
-		TestsInit();
+		MsgSeqInit();
 		snprintf(addrstr, sizeof(addrstr), "ws://0.0.0.0:%d/ws", *flags.port);
-		for (int i = 0; i < sizeof(test_conns)/sizeof(*test_conns); i++)
-			test_conns[i] = mg_ws_connect(&mgr, addrstr, TestsEventHandler, NULL, NULL);
+		for (int i = 0; i < sizeof(debug_conns)/sizeof(*debug_conns); i++)
+			debug_conns[i] = mg_ws_connect(&mgr, addrstr, DebugEventHandler, NULL, NULL);
 	}
 
 	while (1) {
