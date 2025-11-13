@@ -137,8 +137,6 @@ void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
 int main(int argc, char* argv[]) {
 
 
-	GameMessageTypesGenerateJS();
-
 	AppParseFlags(argc, argv);
 
 	Nob_String_Builder ip_sb = {0};
@@ -168,11 +166,14 @@ int main(int argc, char* argv[]) {
 	mg_http_listen(&mgr, addrstr, EventHandler, NULL);
 
 	if (*flags.state != 0) {
+		game.debug = true;
 		MsgSeqInit(*flags.state);
 		snprintf(addrstr, sizeof(addrstr), "ws://0.0.0.0:%d/ws", *flags.port);
 		for (int i = 0; i < sizeof(debug_conns)/sizeof(*debug_conns); i++)
 			debug_conns[i] = mg_ws_connect(&mgr, addrstr, DebugEventHandler, NULL, NULL);
 	}
+
+	GameMessageTypesGenerateJS();
 
 	while (1) {
 		mg_mgr_poll(&mgr, 1000);

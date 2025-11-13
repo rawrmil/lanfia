@@ -157,7 +157,8 @@
 				<button id="leave_button" onclick="GameLeave()" style="display: none;">Leave</button>
 				<button id="ready_button" onclick="GameReady()" style="display: none;">Ready</button>
 			</div>
-			<div style="display: flex">
+			<div style="display: flex; margin: 8px;">
+				<span id="game_error" style="color: tomato;"></span>
 				<span id="players_none" style="color: var(--text-muted);">No players yet...</span>
 			</div>
 			<div id="players_list">
@@ -220,9 +221,16 @@
 		const viewersEl = document.getElementById("game_viewers");
 		const playersListEl = document.getElementById("players_list");
 		const usernameEl = document.getElementById("game_username");
+		const errorEl = document.getElementById("game_error");
 		const readyButtonEl = document.getElementById("ready_button");
+		var player_names = [];
 		// --- Join ---
 		function GameJoin() {
+			if (player_names.includes(usernameEl.value)) {
+				errorEl.innerHTML = "Name taken";
+				if (!debug) return;
+			}
+			errorEl.innerHTML = "";
 			const writer = new ByteWriter();
 			writer.u8(GCMT.LOBBY_JOIN);
 			writer.strn(usernameEl.value);
@@ -252,7 +260,7 @@
 		function HandleServerInfoUsers(reader) {
 			const viewer_count = reader.u32();
 			const player_count = reader.u32();
-			const player_names = reader.strn().split('\0');
+			player_names = reader.strn().split('\0');
 			player_names.pop();
 			playersListEl.innerHTML = "";
 			const playersNoneEl = document.getElementById("players_none");

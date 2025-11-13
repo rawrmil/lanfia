@@ -23,6 +23,7 @@ typedef struct GamePlayers {
 typedef struct Game {
 	int users_count;
 	GamePlayers players;
+	bool debug;
 } Game;
 
 extern Game game;
@@ -103,6 +104,13 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 		nob_return_defer(false);
 	Nob_String_Builder username = ByteReaderSBAlloc(br, n);
 	nob_da_foreach(GamePlayer, p, &game.players) {
+		if (p->username.count == username.count && strncmp(p->username.items, username.items, username.count) == 0) {
+			if (game.debug) {
+				p->c = c;
+				GameUsersUpdate(c->mgr);
+			}
+			nob_return_defer(false);
+		}
 		if (p->c == c) {
 			// TODO: already connected
 			nob_return_defer(false);

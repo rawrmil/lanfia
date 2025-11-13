@@ -2,6 +2,7 @@
 #define GAME_ENUMS_H
 
 #include "nob.h"
+#include "game_logic.h"
 
 // --- Game Server Message Types (GSMT) ---
 
@@ -77,6 +78,7 @@ void GameMessageTypesGenerateJS() {
 	JS_ENUM_GENERATE(GSMT);
 	JS_ENUM_GENERATE(GCMT);
 	JS_ENUM_GENERATE(GS);
+	nob_sb_appendf(&gmt_js, "const debug = %s;\n", game.debug ? "true" : "false");
 	nob_sb_append_null(&gmt_js);
 }
 
