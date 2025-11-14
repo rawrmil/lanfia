@@ -217,13 +217,16 @@
 				this.arr.push(...te);
 			}
 		}
+		// --- Variables ---
+		var ready = true;
+		var player_names = [];
+		var player_states = "";
 		// --- Elements ---
 		const viewersEl = document.getElementById("game_viewers");
 		const playersListEl = document.getElementById("players_list");
 		const usernameEl = document.getElementById("game_username");
 		const errorEl = document.getElementById("game_error");
 		const readyButtonEl = document.getElementById("ready_button");
-		var player_names = [];
 		// --- Join ---
 		function GameJoin() {
 			if (player_names.includes(usernameEl.value)) {
@@ -250,17 +253,19 @@
 			usernameEl.disabled = false;
 		}
 		function GameReady() {
-			//const writer = new ByteWriter();
-			//writer.u8(GCMT.LOBBY_LEAVE);
-			//ws.send(writer.bytes())
-			//document.getElementById("join_button").style.display  = "unset";
-			//document.getElementById("leave_button").style.display = "none";
+			const writer = new ByteWriter();
+			writer.u8(GCMT.LOBBY_READY);
+			writer.u8(ready);
+			ws.send(writer.bytes())
+			ready = !ready;
+			document.getElementById("ready_button").innerHTML = ready ? "Ready" : "Not ready";
 		}
 		// --- Message processing ---
 		function HandleServerInfoUsers(reader) {
 			const viewer_count = reader.u32();
 			const player_count = reader.u32();
 			player_names = reader.strn().split('\0');
+			player_states = reader.strn();
 			player_names.pop();
 			playersListEl.innerHTML = "";
 			const playersNoneEl = document.getElementById("players_none");
@@ -271,6 +276,8 @@
 						<span class='player_number'>${Number(i)+1}.</span>
 						&nbsp;
 						<span class='player_name'>${Escaped(player_names[i]+"\n")}</span>
+						&nbsp;
+						<span class='player_name'>${player_states[i] != "0" ? "(ready)" : ""}</span>
 					</div>\n`;
 			}
 			viewersEl.textContent = viewer_count;

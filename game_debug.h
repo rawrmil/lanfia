@@ -53,9 +53,25 @@ void MsgSeq6PlayersConnect() {
 	ClientMsgAdd(false, 5, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager2"), NULL);
 }
 
+void MsgSeq6PlayersReady() {
+	ClientMsgAdd(false, 0, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 6, "mafia1"),    NULL);
+	ClientMsgAdd(false, 0, ByteWriterBuild((ByteWriter){0}, BU8, 1),    NULL);
+	ClientMsgAdd(false, 1, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 6, "mafia2"),    NULL);
+	ClientMsgAdd(false, 1, ByteWriterBuild((ByteWriter){0}, BU8, '1'),    NULL);
+	ClientMsgAdd(false, 2, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 6, "doctor"),    NULL);
+	ClientMsgAdd(false, 2, ByteWriterBuild((ByteWriter){0}, BU8, '1'),    NULL);
+	ClientMsgAdd(false, 3, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 3, "cop"),       NULL);
+	ClientMsgAdd(false, 3, ByteWriterBuild((ByteWriter){0}, BU8, '1'),    NULL);
+	ClientMsgAdd(false, 4, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager1"), NULL);
+	ClientMsgAdd(false, 4, ByteWriterBuild((ByteWriter){0}, BU8, '1'),    NULL);
+	ClientMsgAdd(false, 5, ByteWriterBuild((ByteWriter){0}, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager2"), NULL);
+	ClientMsgAdd(false, 5, ByteWriterBuild((ByteWriter){0}, BU8, '1'),    NULL);
+}
+
 void MsgSeqInit(int state) {
 	switch (state) {
 		case 1: MsgSeq6PlayersConnect(); break;
+		case 2: MsgSeq6PlayersReady(); break;
 	}
 }
 

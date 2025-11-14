@@ -21,6 +21,7 @@ enum { GSMT };
 	X(GCMT_NO_MSG) \
 	X(GCMT_LOBBY_JOIN) \
 	X(GCMT_LOBBY_LEAVE) \
+	X(GCMT_LOBBY_READY) \
 	X(GCMT_LAST_) \
 
 #define X(name_) name_,

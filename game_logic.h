@@ -12,6 +12,7 @@ typedef struct GameUser {
 typedef struct GamePlayer {
 	struct mg_connection* c;
 	Nob_String_Builder username;
+	bool ready;
 } GamePlayer;
 
 typedef struct GamePlayers {
@@ -34,6 +35,7 @@ void GameUserRemove(struct mg_connection* c);
 void GamePlayerRemove(struct mg_connection* c);
 
 bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br);
+bool HandleClientLobbyReady(struct mg_connection* c, ByteReader* br);
 
 #endif /* GAME_LOGIC_H */
 
@@ -55,15 +57,18 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 	uint32_t viewers_count = game.users_count > game.players.count ? game.users_count - game.players.count : 0;
 	MG_INFO(("viewers: %d\n", viewers_count));
 	Nob_String_Builder player_names = {0};
+	Nob_String_Builder player_states = {0};
 	nob_da_foreach(GamePlayer, player, &game.players) {
 		nob_sb_append_buf(&player_names, player->username.items, player->username.count);
 		nob_da_append(&player_names, '\0');
+		nob_da_append(&player_states, player->ready ? '1' : '0');
 	}
 	ByteWriter bw = ByteWriterBuild((ByteWriter){0},
 		BU8, GSMT_INFO_USERS,
 		BU32, viewers_count,
 		BU32, game.players.count,
-		BSN, player_names.count, player_names.items);
+		BSN, player_names.count, player_names.items,
+		BSN, player_states.count, player_states.items);
 	GameSendAll(mgr, &bw);
 	ByteWriterFree(bw);
 	nob_sb_free(player_names);
@@ -123,6 +128,23 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	GameUsersUpdate(c->mgr);
 defer:
 	if (result == false) nob_sb_free(username);
+	return result;
+}
+
+bool HandleClientLobbyReady(struct mg_connection* c, ByteReader* br) {
+	bool result = true;
+	uint8_t ready;
+	if (!ByteReaderU8(br, &ready))
+		nob_return_defer(false);
+	nob_da_foreach(GamePlayer, p, &game.players) {
+		if (p->c == c) {
+			p->ready = ready;
+			GameUsersUpdate(c->mgr);
+			nob_return_defer(true);
+		}
+	}
+	nob_return_defer(false);
+defer:
 	return result;
 }
 
