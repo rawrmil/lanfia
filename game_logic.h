@@ -105,9 +105,9 @@ void GamePlayerRemove(struct mg_connection* c) {
 bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	bool result = true;
 	uint32_t n;
-	if (!ByteReaderU32(br, &n))
-		nob_return_defer(false);
-	Nob_String_Builder username = ByteReaderSBAlloc(br, n);
+	Nob_String_Builder username = {0};
+	if (!ByteReaderU32(br, &n)) { nob_return_defer(false); }
+	username = ByteReaderSBAlloc(br, n);
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		if (p->username.count == username.count && strncmp(p->username.items, username.items, username.count) == 0) {
 			if (game.debug) {
