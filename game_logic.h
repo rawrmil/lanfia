@@ -63,7 +63,7 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		nob_da_append(&player_names, '\0');
 		nob_da_append(&player_states, player->ready ? '1' : '0');
 	}
-	ByteWriter bw = ByteWriterBuild((ByteWriter){0},
+	ByteWriter bw = ByteWriterBuild(NULL,
 		BU8, GSMT_INFO_USERS,
 		BU32, viewers_count,
 		BU32, game.players.count,

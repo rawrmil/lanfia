@@ -37,7 +37,7 @@ void ByteWriterU32(ByteWriter* bw, const uint32_t in);
 void ByteWriterU64(ByteWriter* bw, const uint64_t in);
 void ByteWriterN(ByteWriter* bw, const uint8_t* in, size_t n);
 void ByteWriterSN(ByteWriter* bw, const uint8_t* in, size_t n); // [ size(4) | data(N) ]
-ByteWriter _ByteWriterBuild(ByteWriter bw, ...);
+ByteWriter _ByteWriterBuild(ByteWriter* bw, ...);
 void ByteWriterFree(ByteWriter bw);
 
 #endif /* BYTERW_H */
@@ -79,36 +79,38 @@ void ByteWriterSN(ByteWriter* bw, const uint8_t* in, size_t n) { // TODO: same w
 	ByteWriterU32(bw, (uint32_t)n);
 	ByteWriterN(bw, in, n);
 }
-ByteWriter _ByteWriterBuild(ByteWriter bw, ...) {
+ByteWriter _ByteWriterBuild(ByteWriter* bw, ...) {
+	ByteWriter bw_new = {0};
+	if (bw == NULL) { bw = &bw_new; }
 	va_list args;
 	va_start(args, bw);
 	while (1) {
 		int type = va_arg(args, int);
 		switch (type) {
 			case BU8:
-				ByteWriterU8(&bw, (uint8_t)va_arg(args, int));
+				ByteWriterU8(bw, (uint8_t)va_arg(args, int));
 				break;
 			case BU16:
-				ByteWriterU16(&bw, (uint16_t)va_arg(args, int));
+				ByteWriterU16(bw, (uint16_t)va_arg(args, int));
 				break;
 			case BU32:
-				ByteWriterU32(&bw, (uint32_t)va_arg(args, int));
+				ByteWriterU32(bw, (uint32_t)va_arg(args, int));
 				break;
 			case BU64:
-				ByteWriterU64(&bw, (uint64_t)va_arg(args, int));
+				ByteWriterU64(bw, (uint64_t)va_arg(args, int));
 				break;
 			case BN:
 				{
 				uint32_t len = (uint32_t)va_arg(args, int);
 				uint8_t* buf = (uint8_t*)va_arg(args, char*);
-				ByteWriterN(&bw, buf, len);
+				ByteWriterN(bw, buf, len);
 				}
 				break;
 			case BSN:
 				{
 				uint32_t len = (uint32_t)va_arg(args, int);
 				uint8_t* buf = (uint8_t*)va_arg(args, char*);
-				ByteWriterSN(&bw, buf, len);
+				ByteWriterSN(bw, buf, len);
 				}
 				break;
 			case BNULL:
@@ -117,7 +119,7 @@ ByteWriter _ByteWriterBuild(ByteWriter bw, ...) {
 	}
 defer:
 	va_end(args);
-	return bw;
+	return bw_new;
 }
 #define ByteWriterBuild(...) _ByteWriterBuild(__VA_ARGS__, BNULL)
 void ByteWriterFree(ByteWriter bw) { nob_sb_free(bw.sb); };
