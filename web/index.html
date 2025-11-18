@@ -155,7 +155,7 @@
 				<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
 				<button id="join_button" onclick="GameJoin()">Join</button>
 				<button id="leave_button" onclick="GameLeave()" style="display: none;">Leave</button>
-				<button id="ready_button" onclick="GameReady()" style="display: none;">Ready</button>
+				<button id="ready_button" onclick="GameReady()" style="display: none;"></button>
 			</div>
 			<div style="display: flex; margin: 8px;">
 				<span id="game_error" style="color: tomato;"></span>
@@ -218,7 +218,7 @@
 			}
 		}
 		// --- Variables ---
-		var ready = true;
+		var ready = false;
 		var player_names = [];
 		var player_states = "";
 		// --- Elements ---
@@ -227,6 +227,11 @@
 		const usernameEl = document.getElementById("game_username");
 		const errorEl = document.getElementById("game_error");
 		const readyButtonEl = document.getElementById("ready_button");
+		function ToggleReady(state) {
+			ready = state;
+			document.getElementById("ready_button").innerHTML = !ready ? "Ready" : "Not ready";
+		}
+		ToggleReady(false);
 		// --- Join ---
 		function GameJoin() {
 			if (player_names.includes(usernameEl.value)) {
@@ -251,14 +256,14 @@
 			document.getElementById("leave_button").style.display = "none";
 			document.getElementById("ready_button").style.display = "none";
 			usernameEl.disabled = false;
+			ToggleReady(false);
 		}
 		function GameReady() {
 			const writer = new ByteWriter();
+			ToggleReady(!ready);
 			writer.u8(GCMT.LOBBY_READY);
 			writer.u8(ready);
 			ws.send(writer.bytes())
-			ready = !ready;
-			document.getElementById("ready_button").innerHTML = ready ? "Ready" : "Not ready";
 		}
 		// --- Message processing ---
 		function HandleServerInfoUsers(reader) {
