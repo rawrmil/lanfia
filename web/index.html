@@ -78,9 +78,9 @@
 			text-shadow: var(--shadow-text-s);
 		}
 		.game_box span { font-size: 1rem; }
-		.game_box h1 { font-size: 2.5rem; }
-		.game_box h2 { font-size: 2rem; }
-		.game_box h3 { font-size: 1.5rem; }
+		.game_box h1 { font-size: 2.5rem; text-align: center; }
+		.game_box h2 { font-size: 2rem; text-align: center; }
+		.game_box h3 { font-size: 1.5rem; text-align: center; }
 		.game_box input {
 			font-size: 1rem;
 			margin: 0.1rem 0.2rem;
@@ -140,6 +140,11 @@
 			margin: 10px;
 			padding: 5px;
 		}
+		#game_lobby {
+		}
+		#game_chat {
+			display: none;
+		}
 	</style>
 </head>
 <body>
@@ -150,24 +155,32 @@
 	</nav>
 	<div class="game_content">
 		<div class="game_box">
-			<div class="game_join" style="">
-				<label for="game_username"></label>
-				<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
-				<button id="join_button" onclick="GameJoin()">Join</button>
-				<button id="leave_button" onclick="GameLeave()" style="display: none;">Leave</button>
-				<button id="ready_button" onclick="GameReady()" style="display: none;"></button>
+			<div id="game_lobby">
+				<div class="game_join" style="">
+					<label for="game_username"></label>
+					<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
+					<button id="join_button" onclick="GameJoin()">Join</button>
+					<button id="leave_button" onclick="GameLeave()" style="display: none;">Leave</button>
+					<button id="ready_button" onclick="GameReady()" style="display: none;"></button>
+				</div>
+				<div style="display: flex; margin: 8px;">
+					<span id="game_error" style="color: tomato;"></span>
+					<span id="players_none" style="color: var(--text-muted);">No players yet...</span>
+				</div>
+				<div id="players_list">
+				</div>
+				<hr>
+				<div style="display: flex;">
+					<span>Viewers:</span>&nbsp;<span id="game_viewers">?</span>
+				</div>
+				<div class="box">
+				</div>
 			</div>
-			<div style="display: flex; margin: 8px;">
-				<span id="game_error" style="color: tomato;"></span>
-				<span id="players_none" style="color: var(--text-muted);">No players yet...</span>
-			</div>
-			<div id="players_list">
-			</div>
-			<hr>
-			<div style="display: flex;">
-				<span>Viewers:</span>&nbsp;<span id="game_viewers">?</span>
-			</div>
-			<div class="box">
+			<div id="game_chat">
+				<h2>Game started</h2>
+				<div class="game_chat_content">
+					<div class="game_chat_msg">You are the impostor!</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -231,6 +244,8 @@
 			ready = state;
 			document.getElementById("ready_button").innerHTML = !ready ? "Ready" : "Not ready";
 		}
+		const gameLobby = document.getElementById("game_lobby");
+		const gameChat = document.getElementById("game_chat");
 		ToggleReady(false);
 		// --- Join ---
 		function GameJoin() {
@@ -265,6 +280,12 @@
 			writer.u8(ready);
 			ws.send(writer.bytes())
 		}
+		// --- Game Process ---
+		function GameStarted() {
+			gameChat.style.display = "unset";
+			gameLobby.style.display = "none";
+		}
+		function GameEnded() { }
 		// --- Message processing ---
 		function HandleServerInfoUsers(reader) {
 			const viewer_count = reader.u32();
@@ -298,6 +319,7 @@
 			msg_type = reader.u8();
 			switch (msg_type) {
 				case GSMT.INFO_USERS: HandleServerInfoUsers(reader); break;
+				case GSMT.GAME_STARTED: GameStarted(); break;
 			}
 		}
 	</script>

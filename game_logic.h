@@ -136,14 +136,17 @@ bool HandleClientLobbyReady(struct mg_connection* c, ByteReader* br) {
 	uint8_t ready;
 	if (!ByteReaderU8(br, &ready))
 		nob_return_defer(false);
+	size_t ready_count = 0;
 	nob_da_foreach(GamePlayer, p, &game.players) {
-		if (p->c == c) {
-			p->ready = ready;
-			GameUsersUpdate(c->mgr);
-			nob_return_defer(true);
-		}
+		if (p->c == c) { p->ready = ready; }
+		if (p->ready) { ready_count++; }
 	}
-	nob_return_defer(false);
+	if (ready_count == game.players.count) {
+		ByteWriter bw = {0};
+		ByteWriterU8(&bw, GSMT_GAME_STARTED);
+		GameSendAll(c->mgr, &bw);
+	}
+	GameUsersUpdate(c->mgr);
 defer:
 	return result;
 }

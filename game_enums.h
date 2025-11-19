@@ -9,6 +9,7 @@
 #define GSMT \
 	X(GSMT_NO_MSG) \
 	X(GSMT_INFO_USERS) \
+	X(GSMT_GAME_STARTED) \
 	X(GSMT_LAST_) \
 
 #define X(name_) name_,
