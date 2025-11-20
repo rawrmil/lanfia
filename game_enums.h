@@ -2,14 +2,15 @@
 #define GAME_ENUMS_H
 
 #include "nob.h"
-#include "game_logic.h"
 
 // --- Game Server Message Types (GSMT) ---
 
 #define GSMT \
 	X(GSMT_NO_MSG) \
 	X(GSMT_INFO_USERS) \
-	X(GSMT_GAME_STARTED) \
+	X(GSMT_GAME_STATE) \
+	X(GSMT_ERROR) \
+	X(GSMT_CONFIRM) \
 	X(GSMT_LAST_) \
 
 #define X(name_) name_,
@@ -33,14 +34,38 @@ enum { GCMT };
 
 #define GS \
 	X(GS_LOBBY) \
-	X(GS_ROLES) \
 	X(GS_DAY) \
-	X(GS_NIGHT) \
-	X(GS_RESULTS) \
+	X(GS_MAFIA) \
+	X(GS_SERIF) \
+	X(GS_DOCTOR) \
+	X(GS_ESCORT) \
+	X(GS_MANIAC) \
+	X(GS_VOTE) \
 	X(GS_LAST_)
 
 #define X(name_) name_,
-enum { GS };
+typedef enum GameState { GS } GameState;
+#undef X
+
+// --- Game Join Error ---
+
+#define GE \
+	X(GE_JOIN_GAME_IN_PROGRESS) \
+	X(GE_LAST_) \
+
+#define X(name_) name_,
+typedef enum GameErrorType { GE } GameErrorType;
+#undef X
+
+// --- Game Confirm ---
+
+#define GC \
+	X(GC_JOIN_SUCCESS) \
+	X(GC_LEAVE_SUCCESS) \
+	X(GC_LAST_) \
+
+#define X(name_) name_,
+typedef enum GameConfirmType { GC } GameConfirmType;
 #undef X
 
 // --- JS ---
@@ -65,6 +90,14 @@ const char *GCMT_NAMES[] = { GCMT };
 const char *GS_NAMES[] = { GS };
 #undef X
 
+#define X(name_) #name_,
+const char *GE_NAMES[] = { GE };
+#undef X
+
+#define X(name_) #name_,
+const char *GC_NAMES[] = { GC };
+#undef X
+
 Nob_String_Builder gmt_js;
 
 #define JS_ENUM_GENERATE(name_) \
@@ -80,6 +113,8 @@ void GameMessageTypesGenerateJS() {
 	JS_ENUM_GENERATE(GSMT);
 	JS_ENUM_GENERATE(GCMT);
 	JS_ENUM_GENERATE(GS);
+	JS_ENUM_GENERATE(GE);
+	JS_ENUM_GENERATE(GC);
 	nob_sb_appendf(&gmt_js, "const debug = %s;\n", game.debug ? "true" : "false");
 	nob_sb_append_null(&gmt_js);
 }

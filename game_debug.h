@@ -54,21 +54,21 @@ void MsgSeq6PlayersConnect() {
 void MsgSeq6PlayersReady() {
 	ClientMsgAdd(0, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 6, "mafia1"),    NULL);
 	ClientMsgAdd(0, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN), NULL); // Error check
-	ClientMsgAdd(0, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
 	ClientMsgAdd(1, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 6, "mafia2"),    NULL);
-	ClientMsgAdd(1, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
 	ClientMsgAdd(2, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 6, "doctor"),    NULL);
-	ClientMsgAdd(2, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
 	ClientMsgAdd(3, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, "cop"),       NULL);
-	ClientMsgAdd(3, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
 	ClientMsgAdd(4, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager1"), NULL);
-	ClientMsgAdd(4, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
 	ClientMsgAdd(5, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager2"), NULL);
+	ClientMsgAdd(0, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
+	ClientMsgAdd(1, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
+	ClientMsgAdd(2, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
+	ClientMsgAdd(3, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
+	ClientMsgAdd(4, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
 	ClientMsgAdd(5, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
 }
 
 void MsgSeqGameStart() {
-	//ClientMsgAdd(0, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 2, "m1"),    NULL);
+	ClientMsgAdd(0, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 0, ""),    NULL);
 	//ClientMsgAdd(0, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);
 	ClientMsgAdd(1, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 2, "m2"),    NULL);
 	ClientMsgAdd(1, ByteWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1), NULL);

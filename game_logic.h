@@ -25,6 +25,7 @@ typedef struct Game {
 	int users_count;
 	GamePlayers players;
 	bool debug;
+	GameState state;
 } Game;
 
 extern Game game;
@@ -36,6 +37,7 @@ void GamePlayerRemove(struct mg_connection* c);
 
 bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br);
 bool HandleClientLobbyReady(struct mg_connection* c, ByteReader* br);
+bool HandleClientLobbyLeave(struct mg_connection* c, ByteReader* br);
 
 #endif /* GAME_LOGIC_H */
 
@@ -51,6 +53,18 @@ void GameSendAll(struct mg_mgr* mgr, ByteWriter* bw) {
 	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
 		if (c->is_websocket && !c->is_client) GameSend(c, bw);
 	}
+}
+
+void GameSendError(struct mg_connection* c, GameErrorType et) {
+	uint8_t buf[2] = { (uint8_t)GSMT_ERROR, (uint8_t)et };
+	ByteWriter bw = { .sb.items=buf, .sb.count=2 };
+	GameSend(c, &bw);
+}
+
+void GameSendConfirm(struct mg_connection* c, GameConfirmType ct) {
+	uint8_t buf[2] = { (uint8_t)GSMT_CONFIRM, (uint8_t)ct };
+	ByteWriter bw = { .sb.items=buf, .sb.count=2 };
+	GameSend(c, &bw);
 }
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
@@ -106,6 +120,10 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	bool result = true;
 	uint32_t n;
 	Nob_String_Builder username = {0};
+	if (game.state == GS_DAY) {
+		GameSendError(c, GE_JOIN_GAME_IN_PROGRESS);
+		nob_return_defer(false);
+	}
 	if (!ByteReaderU32(br, &n)) { nob_return_defer(false); }
 	username = ByteReaderSBAlloc(br, n);
 	nob_da_foreach(GamePlayer, p, &game.players) {
@@ -113,6 +131,7 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 			if (game.debug) {
 				p->c = c;
 				GameUsersUpdate(c->mgr);
+				nob_return_defer(true);
 			}
 			nob_return_defer(false);
 		}
@@ -127,7 +146,11 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	nob_da_append(&game.players, player);
 	GameUsersUpdate(c->mgr);
 defer:
-	if (result == false) nob_sb_free(username);
+	if (result) { 
+		GameSendConfirm(c, GC_JOIN_SUCCESS);
+	} else {
+		nob_sb_free(username);
+	}
 	return result;
 }
 
@@ -143,12 +166,24 @@ bool HandleClientLobbyReady(struct mg_connection* c, ByteReader* br) {
 	}
 	if (ready_count == game.players.count) {
 		ByteWriter bw = {0};
-		ByteWriterU8(&bw, GSMT_GAME_STARTED);
+		ByteWriterU8(&bw, GSMT_GAME_STATE);
+		ByteWriterU8(&bw, GS_DAY);
+		game.state = GS_DAY;
 		GameSendAll(c->mgr, &bw);
+		ByteWriterFree(bw);
 	}
 	GameUsersUpdate(c->mgr);
 defer:
 	return result;
+}
+
+bool HandleClientLobbyLeave(struct mg_connection* c, ByteReader* br) {
+	if (game.state != GS_LOBBY) {
+		return false;
+	}
+	GamePlayerRemove(c);
+	GameSendConfirm(c, GC_LEAVE_SUCCESS);
+	return true;
 }
 
 #endif /* GAME_LOGIC_IMPLEMENTATION */

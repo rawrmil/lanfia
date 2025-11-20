@@ -109,7 +109,10 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 			HandleClientLobbyJoin(c, &br);
 			break;
 		case GCMT_LOBBY_LEAVE:
+			HandleClientLobbyLeave(c, &br);
+			if (game.state) {
 			GamePlayerRemove(c);
+			}
 			break;
 		case GCMT_LOBBY_READY:
 			HandleClientLobbyReady(c, &br);

@@ -164,7 +164,7 @@
 					<button id="ready_button" onclick="GameReady()" style="display: none;"></button>
 				</div>
 				<div style="display: flex; margin: 8px;">
-					<span id="game_error" style="color: tomato;"></span>
+					<span id="game_join_error" style="color: tomato;"></span>
 					<span id="players_none" style="color: var(--text-muted);">No players yet...</span>
 				</div>
 				<div id="players_list">
@@ -238,39 +238,61 @@
 		const viewersEl = document.getElementById("game_viewers");
 		const playersListEl = document.getElementById("players_list");
 		const usernameEl = document.getElementById("game_username");
-		const errorEl = document.getElementById("game_error");
+		const joinErrorEl = document.getElementById("game_join_error");
 		const readyButtonEl = document.getElementById("ready_button");
+		function ToggleJoin(state) {
+			if (state) {
+				document.getElementById("join_button").style.display  = "none";
+				document.getElementById("leave_button").style.display = "unset";
+				document.getElementById("ready_button").style.display = "unset";
+				usernameEl.disabled = true;
+			} else {
+				document.getElementById("join_button").style.display  = "unset";
+				document.getElementById("leave_button").style.display = "none";
+				document.getElementById("ready_button").style.display = "none";
+				usernameEl.disabled = false;
+			}
+		}
 		function ToggleReady(state) {
 			ready = state;
 			document.getElementById("ready_button").innerHTML = !ready ? "Ready" : "Not ready";
 		}
+		ToggleReady(false);
 		const gameLobby = document.getElementById("game_lobby");
 		const gameChat = document.getElementById("game_chat");
-		ToggleReady(false);
 		// --- Join ---
-		function GameJoin() {
-			if (player_names.includes(usernameEl.value)) {
-				errorEl.innerHTML = "Name taken";
-				if (!debug) return;
+		function GameConfirm(reader) {
+			confirm_type = reader.u8();
+			switch (confirm_type) {
+				case GC.JOIN_SUCCESS:
+					joinErrorEl.innerHTML = "";
+					ToggleJoin(true);
+					break;
+				case GC.LEAVE_SUCCESS:
+					joinErrorEl.innerHTML = "";
+					ToggleJoin(false);
+					break;
 			}
-			errorEl.innerHTML = "";
+		}
+		function GameError(reader) {
+			err_type = reader.u8();
+			switch (err_type) {
+				case GE.JOIN_GAME_IN_PROGRESS:
+					ToggleJoin(false);
+					joinErrorEl.innerHTML = "Game already started";
+					break;
+			}
+		}
+		function GameJoin() {
 			const writer = new ByteWriter();
 			writer.u8(GCMT.LOBBY_JOIN);
 			writer.strn(usernameEl.value);
 			ws.send(writer.bytes())
-			document.getElementById("join_button").style.display  = "none";
-			document.getElementById("leave_button").style.display = "unset";
-			document.getElementById("ready_button").style.display = "unset";
-			usernameEl.disabled = true;
 		}
 		function GameLeave() {
 			const writer = new ByteWriter();
 			writer.u8(GCMT.LOBBY_LEAVE);
 			ws.send(writer.bytes())
-			document.getElementById("join_button").style.display  = "unset";
-			document.getElementById("leave_button").style.display = "none";
-			document.getElementById("ready_button").style.display = "none";
-			usernameEl.disabled = false;
 			ToggleReady(false);
 		}
 		function GameReady() {
@@ -281,9 +303,17 @@
 			ws.send(writer.bytes())
 		}
 		// --- Game Process ---
-		function GameStarted() {
-			gameChat.style.display = "unset";
-			gameLobby.style.display = "none";
+		function GameChangeState(reader) {
+			const state = reader.u8();
+			switch (state) {
+				case GS.DAY:
+					gameChat.style.display = "none";
+					gameLobby.style.display = "unset";
+				case GS.LOBBY:
+					gameChat.style.display = "unset";
+					gameLobby.style.display = "none";
+					break
+			}
 		}
 		function GameEnded() { }
 		// --- Message processing ---
@@ -319,7 +349,15 @@
 			msg_type = reader.u8();
 			switch (msg_type) {
 				case GSMT.INFO_USERS: HandleServerInfoUsers(reader); break;
-				case GSMT.GAME_STARTED: GameStarted(); break;
+				case GSMT.GAME_STATE:
+					GameChangeState(reader);
+					break;
+				case GSMT.ERROR:
+					GameError(reader);
+					break;
+				case GSMT.CONFIRM:
+					GameConfirm(reader);
+					break;
 			}
 		}
 	</script>
