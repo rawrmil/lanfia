@@ -92,7 +92,13 @@ void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
 }
 
 void HandleWSClose(struct mg_connection* c, void* ev_data) {
-	GameUserRemove(c);
+	if (game.state == GS_LOBBY) {
+		GameUserRemove(c);
+		return;
+	}
+	nob_da_foreach(GamePlayer, p, &game.players) {
+		if (p->c == c) { p->c = NULL; }
+	}
 }
 
 

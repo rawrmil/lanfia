@@ -145,7 +145,7 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		// TODO: mg_strcmp
 		if (p->username.count == username.count && strncmp(p->username.items, username.items, username.count) == 0) {
-			if (game.debug) {
+			if (game.debug || p->c == NULL) {
 				p->c = c;
 				GameUsersUpdate(c->mgr);
 				nob_return_defer(true);
