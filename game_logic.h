@@ -26,6 +26,7 @@ typedef struct Game {
 	GamePlayers players;
 	bool debug;
 	GameState state;
+	ByteWriter history;
 } Game;
 
 extern Game game;
@@ -125,6 +126,29 @@ void GameSendState(struct mg_connection* c) {
 	ByteWriterFree(bw);
 }
 
+void GameSendHistory(struct mg_connection* c) {
+	ByteReader br = {
+		.sv.data = game.history.sb.items,
+		.sv.count = game.history.sb.count,
+		.i = 0
+	};
+	while (br.i < br.sv.count) {
+		uint32_t msg_count;
+		if (!ByteReaderU32(&br, &msg_count)) { return; }
+		ByteWriter bw = {
+			.sb.items = (char*)(br.sv.data + br.i),
+			.sb.count = msg_count
+		};
+		GameSend(c, &bw);
+		br.i += msg_count;
+	}
+}
+
+void GameSendAction(struct mg_connection* c, ByteWriter* bw) {
+	ByteWriterSN(&game.history, bw->sb.items, bw->sb.count);
+	GameSendAll(c->mgr, bw);
+}
+
 void GameStart(struct mg_connection* c) {
 	game.state = GS_DAY;
 	GameSendState(c);
@@ -132,14 +156,15 @@ void GameStart(struct mg_connection* c) {
 		ByteWriter bw = {0};
 		ByteWriterU8(&bw, (uint8_t)GSMT_GAME_ACTION);
 		ByteWriterU8(&bw, (uint8_t)GAT_STARTED);
-		GameSendAll(c->mgr, &bw);
-		//ByteWriterFree(bw);
-		//ByteWriter bw = {0};
+		GameSendAction(c, &bw);
 		bw.sb.count = 0;
-		ByteWriterU8(&bw, (uint8_t)GSMT_GAME_ACTION);
-		ByteWriterU8(&bw, (uint8_t)GAT_ROLE);
-		ByteWriterU8(&bw, (uint8_t)GRT_VILLAGER);
-		GameSendAll(c->mgr, &bw);
+		nob_da_foreach(GamePlayer, p, &game.players) {
+			ByteWriterU8(&bw, (uint8_t)GSMT_GAME_ACTION);
+			ByteWriterU8(&bw, (uint8_t)GAT_ROLE);
+			ByteWriterU8(&bw, (uint8_t)GRT_VILLAGER+rand()%3);
+			if (p->c == NULL) { continue; }
+			GameSend(p->c, &bw);
+		}
 		ByteWriterFree(bw);
 	}
 }
@@ -147,6 +172,7 @@ void GameStart(struct mg_connection* c) {
 // --- HANDLERS ---
 
 bool HandleClientConnect(struct mg_connection* c) {
+	GameSendHistory(c);
 	GameSendState(c);
 }
 
