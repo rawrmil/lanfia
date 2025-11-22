@@ -102,7 +102,6 @@ void GameUserAdd(struct mg_connection* c) {
 }
 
 void GameUserRemove(struct mg_connection* c) {
-	// TODO: IF PHASE == LOBBY
 	game.users_count--;
 	GamePlayerRemove(c);
 	MG_INFO(("users: %d\n", game.users_count));
@@ -157,7 +156,6 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 			nob_return_defer(false);
 		}
 		if (p->c == c) {
-			// TODO: already connected
 			nob_return_defer(false);
 		}
 	}
