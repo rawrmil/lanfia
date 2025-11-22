@@ -51,6 +51,7 @@ typedef enum GameState { GS } GameState;
 
 #define GE \
 	X(GE_JOIN_GAME_IN_PROGRESS) \
+	X(GE_JOIN_NAME_TOO_LONG) \
 	X(GE_LAST_) \
 
 #define X(name_) name_,

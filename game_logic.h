@@ -141,6 +141,10 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	uint32_t n;
 	Nob_String_Builder username = {0};
 	if (!ByteReaderU32(br, &n)) { nob_return_defer(false); }
+	if (n > 32) {
+		GameSendError(c, GE_JOIN_NAME_TOO_LONG);
+		nob_return_defer(false);
+	}
 	username = ByteReaderSBAlloc(br, n);
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		// TODO: mg_strcmp

@@ -295,8 +295,10 @@
 			err_type = reader.u8();
 			switch (err_type) {
 				case GE.JOIN_GAME_IN_PROGRESS:
-					ToggleJoin(false);
 					joinErrorEl.innerHTML = "Game already started";
+					break;
+				case GE.JOIN_NAME_TOO_LONG:
+					joinErrorEl.innerHTML = "Name too long";
 					break;
 			}
 		}
