@@ -306,13 +306,14 @@
 		function GameChangeState(reader) {
 			const state = reader.u8();
 			switch (state) {
-				case GS.DAY:
+				case GS.LOBBY:
 					gameChat.style.display = "none";
 					gameLobby.style.display = "unset";
-				case GS.LOBBY:
+					break;
+				case GS.DAY:
 					gameChat.style.display = "unset";
 					gameLobby.style.display = "none";
-					break
+					break;
 			}
 		}
 		function GameEnded() { }

@@ -114,7 +114,22 @@ void GamePlayerRemove(struct mg_connection* c) {
 	GameUsersUpdate(c->mgr);
 }
 
+void GameSendState(struct mg_connection* c) {
+	uint8_t buf[2] = { (uint8_t)GSMT_GAME_STATE, (uint8_t)game.state };
+	ByteWriter bw = { .sb.items=buf, .sb.count=2 };
+	GameSendAll(c->mgr, &bw); // TODO: return bw to dynamic again cus yeah
+}
+
+void GameStart(struct mg_connection* c) {
+	game.state = GS_DAY;
+	GameSendState(c);
+}
+
 // --- HANDLERS ---
+
+bool HandleClientConnect(struct mg_connection* c) {
+	GameSendState(c);
+}
 
 bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	bool result = true;
@@ -165,12 +180,7 @@ bool HandleClientLobbyReady(struct mg_connection* c, ByteReader* br) {
 		if (p->ready) { ready_count++; }
 	}
 	if (ready_count == game.players.count) {
-		ByteWriter bw = {0};
-		ByteWriterU8(&bw, GSMT_GAME_STATE);
-		ByteWriterU8(&bw, GS_DAY);
-		game.state = GS_DAY;
-		GameSendAll(c->mgr, &bw);
-		ByteWriterFree(bw);
+		GameStart(c);
 	}
 	GameUsersUpdate(c->mgr);
 defer:

@@ -127,6 +127,9 @@ void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
 		case MG_EV_HTTP_MSG:
 			HandleHTTPMessage(c, ev_data);
 			break;
+		case MG_EV_WS_OPEN:
+			HandleClientConnect(c);
+			break;
 		case MG_EV_WS_MSG:
 			HandleWSMessage(c, ev_data);
 			break;
