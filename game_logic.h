@@ -140,13 +140,10 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 	bool result = true;
 	uint32_t n;
 	Nob_String_Builder username = {0};
-	if (game.state == GS_DAY) {
-		GameSendError(c, GE_JOIN_GAME_IN_PROGRESS);
-		nob_return_defer(false);
-	}
 	if (!ByteReaderU32(br, &n)) { nob_return_defer(false); }
 	username = ByteReaderSBAlloc(br, n);
 	nob_da_foreach(GamePlayer, p, &game.players) {
+		// TODO: mg_strcmp
 		if (p->username.count == username.count && strncmp(p->username.items, username.items, username.count) == 0) {
 			if (game.debug) {
 				p->c = c;
@@ -158,6 +155,10 @@ bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
 		if (p->c == c) {
 			nob_return_defer(false);
 		}
+	}
+	if (game.state == GS_DAY) {
+		GameSendError(c, GE_JOIN_GAME_IN_PROGRESS);
+		nob_return_defer(false);
 	}
 	GamePlayer player = {0};
 	player.c = c;
