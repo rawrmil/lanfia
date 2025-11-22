@@ -97,7 +97,7 @@
 			box-shadow: var(--shadow-m-in);
 		}
 		.game_box input:disabled { color: var(--text-muted) }
-		.game_box button {
+		button {
 			margin: 0.1rem 0.2rem;
 			font-size: 1rem;
 			padding: 0.2rem 0.5rem;
@@ -152,6 +152,7 @@
 		<span id="game_logo">
 			LANfia
 		</span>
+		<button id="lobby_button" onclick="ToggleLobby(!is_lobby)"></button>
 	</nav>
 	<div class="game_content">
 		<div class="game_box">
@@ -234,12 +235,30 @@
 		var ready = false;
 		var player_names = [];
 		var player_states = "";
+		var game_started = false;
+		var is_lobby = true;
 		// --- Elements ---
 		const viewersEl = document.getElementById("game_viewers");
 		const playersListEl = document.getElementById("players_list");
 		const usernameEl = document.getElementById("game_username");
 		const joinErrorEl = document.getElementById("game_join_error");
 		const readyButtonEl = document.getElementById("ready_button");
+		const lobbyButtonEl = document.getElementById("lobby_button");
+		const gameLobby = document.getElementById("game_lobby");
+		const gameChat = document.getElementById("game_chat");
+		function ToggleLobby(state) {
+			if (state) {
+				gameChat.style.display = "none";
+				gameLobby.style.display = "unset";
+				lobbyButtonEl.innerHTML = "To game";
+			} else {
+				gameChat.style.display = "unset";
+				gameLobby.style.display = "none";
+				lobbyButtonEl.innerHTML = "To lobby";
+			}
+			is_lobby = state;
+		}
+		ToggleLobby(true);
 		function ToggleJoin(state) {
 			if (state) {
 				document.getElementById("join_button").style.display  = "none";
@@ -258,8 +277,6 @@
 			document.getElementById("ready_button").innerHTML = !ready ? "Ready" : "Not ready";
 		}
 		ToggleReady(false);
-		const gameLobby = document.getElementById("game_lobby");
-		const gameChat = document.getElementById("game_chat");
 		// --- Join ---
 		function GameConfirm(reader) {
 			confirm_type = reader.u8();
@@ -269,6 +286,7 @@
 					ToggleJoin(true);
 					break;
 				case GC.LEAVE_SUCCESS:
+					alert("leave");
 					joinErrorEl.innerHTML = "";
 					ToggleJoin(false);
 					break;
@@ -307,12 +325,14 @@
 			const state = reader.u8();
 			switch (state) {
 				case GS.LOBBY:
-					gameChat.style.display = "none";
-					gameLobby.style.display = "unset";
+					game_started = false;
+					readyButtonEl.disabled = false;
+					ToggleLobby(true);
 					break;
 				case GS.DAY:
-					gameChat.style.display = "unset";
-					gameLobby.style.display = "none";
+					game_started = true;
+					readyButtonEl.disabled = true;
+					ToggleLobby(false);
 					break;
 			}
 		}

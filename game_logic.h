@@ -192,9 +192,12 @@ defer:
 }
 
 bool HandleClientLobbyLeave(struct mg_connection* c, ByteReader* br) {
+	printf("GS_LOBBY: %d\n", GS_LOBBY);
+	printf("game.state: %d\n", game.state);
 	if (game.state != GS_LOBBY) {
 		return false;
 	}
+	printf("!!!\n");
 	GamePlayerRemove(c);
 	GameSendConfirm(c, GC_LEAVE_SUCCESS);
 	return true;
