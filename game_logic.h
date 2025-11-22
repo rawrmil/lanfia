@@ -56,15 +56,19 @@ void GameSendAll(struct mg_mgr* mgr, ByteWriter* bw) {
 }
 
 void GameSendError(struct mg_connection* c, GameErrorType et) {
-	uint8_t buf[2] = { (uint8_t)GSMT_ERROR, (uint8_t)et };
-	ByteWriter bw = { .sb.items=buf, .sb.count=2 };
+	ByteWriter bw = {0};
+	ByteWriterU8(&bw, (uint8_t)GSMT_ERROR);
+	ByteWriterU8(&bw, (uint8_t)et);
 	GameSend(c, &bw);
+	ByteWriterFree(bw);
 }
 
 void GameSendConfirm(struct mg_connection* c, GameConfirmType ct) {
-	uint8_t buf[2] = { (uint8_t)GSMT_CONFIRM, (uint8_t)ct };
-	ByteWriter bw = { .sb.items=buf, .sb.count=2 };
+	ByteWriter bw = {0};
+	ByteWriterU8(&bw, (uint8_t)GSMT_CONFIRM);
+	ByteWriterU8(&bw, (uint8_t)ct);
 	GameSend(c, &bw);
+	ByteWriterFree(bw);
 }
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
@@ -115,9 +119,11 @@ void GamePlayerRemove(struct mg_connection* c) {
 }
 
 void GameSendState(struct mg_connection* c) {
-	uint8_t buf[2] = { (uint8_t)GSMT_GAME_STATE, (uint8_t)game.state };
-	ByteWriter bw = { .sb.items=buf, .sb.count=2 };
-	GameSendAll(c->mgr, &bw); // TODO: return bw to dynamic again cus yeah
+	ByteWriter bw = {0};
+	ByteWriterU8(&bw, (uint8_t)GSMT_GAME_STATE);
+	ByteWriterU8(&bw, (uint8_t)game.state);
+	GameSendAll(c->mgr, &bw);
+	ByteWriterFree(bw);
 }
 
 void GameStart(struct mg_connection* c) {
