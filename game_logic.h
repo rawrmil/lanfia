@@ -128,10 +128,20 @@ void GameSendState(struct mg_connection* c) {
 void GameStart(struct mg_connection* c) {
 	game.state = GS_DAY;
 	GameSendState(c);
-	ByteWriter bw = {0};
-	ByteWriterU8(&bw, (uint8_t)GSMT_GAME_ACTION);
-	ByteWriterU8(&bw, (uint8_t)GAT_STARTED);
-	GameSendAll(c->mgr, &bw);
+	{
+		ByteWriter bw = {0};
+		ByteWriterU8(&bw, (uint8_t)GSMT_GAME_ACTION);
+		ByteWriterU8(&bw, (uint8_t)GAT_STARTED);
+		GameSendAll(c->mgr, &bw);
+		//ByteWriterFree(bw);
+		//ByteWriter bw = {0};
+		bw.sb.count = 0;
+		ByteWriterU8(&bw, (uint8_t)GSMT_GAME_ACTION);
+		ByteWriterU8(&bw, (uint8_t)GAT_ROLE);
+		ByteWriterU8(&bw, (uint8_t)GRT_VILLAGER);
+		GameSendAll(c->mgr, &bw);
+		ByteWriterFree(bw);
+	}
 }
 
 // --- HANDLERS ---

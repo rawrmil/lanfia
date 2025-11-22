@@ -74,11 +74,27 @@ typedef enum GameConfirmType { GC } GameConfirmType;
 
 #define GAT \
 	X(GAT_STARTED) \
+	X(GAT_ROLE) \
 	X(GAT_RESULTS) \
 	X(GAT_LAST_) \
 
 #define X(name_) name_,
 typedef enum GameActionType { GAT } GameActionMsgType;
+#undef X
+
+// --- Game Role Type (GRT) ---
+
+#define GRT \
+	X(GRT_VILLAGER) \
+	X(GRT_MAFIA) \
+	X(GRT_SERIF) \
+	X(GRT_DOCTOR) \
+	X(GRT_ESCORT) \
+	X(GRT_MANIAC) \
+	X(GRT_LAST_) \
+
+#define X(name_) name_,
+typedef enum GameRoleType { GRT } GameRoleType;
 #undef X
 
 // --- JS ---
@@ -115,6 +131,10 @@ const char *GC_NAMES[] = { GC };
 const char *GAT_NAMES[] = { GAT };
 #undef X
 
+#define X(name_) #name_,
+const char *GRT_NAMES[] = { GRT };
+#undef X
+
 Nob_String_Builder gmt_js;
 
 #define JS_ENUM_GENERATE(name_) \
@@ -133,7 +153,8 @@ void GameMessageTypesGenerateJS() {
 	JS_ENUM_GENERATE(GE);
 	JS_ENUM_GENERATE(GC);
 	JS_ENUM_GENERATE(GAT);
-	nob_sb_appendf(&gmt_js, "const debug = %s;\n", game.debug ? "true" : "false");
+	JS_ENUM_GENERATE(GRT);
+	nob_sb_appendf(&gmt_js, "const debug = %s;\n", game.debug ? "true" : "false"); // TODO: by flag
 	nob_sb_append_null(&gmt_js);
 }
 

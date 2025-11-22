@@ -240,6 +240,7 @@
 		var player_states = "";
 		var game_started = false;
 		var is_lobby = true;
+		var player_role = -1;
 		// --- Elements ---
 		const viewersEl = document.getElementById("game_viewers");
 		const playersListEl = document.getElementById("players_list");
@@ -342,14 +343,33 @@
 		}
 		function GameAction(reader) {
 			const action = reader.u8();
+			var msgEl = document.createElement('div');
+			msgEl.className = "game_chat_msg";
 			switch (action) {
 				case GAT.STARTED:
-					gameChat.innerHTML += "<h1>GAME STARTED</h1>";
+					msgEl.innerHTML += "<h1>GAME STARTED</h1>";
+					break;
+				case GAT.ROLE:
+					const role_type = reader.u8();
+					player_role = role_type;
+					msgEl.innerHTML += "<span>Your role is <i>"
+					switch (player_role) {
+						case GRT.VILLAGER: msgEl.innerHTML += "villager"; break;
+						case GRT.MAFIA:    msgEl.innerHTML += "mafia"; break;
+						case GRT.SERIF:    msgEl.innerHTML += "serif"; break;
+						case GRT.DOCTOR:   msgEl.innerHTML += "doctor"; break;
+						case GRT.ESCORT:   msgEl.innerHTML += "escort"; break;
+						case GRT.MANIAC:   msgEl.innerHTML += "maniac"; break;
+					}
+					msgEl.innerHTML += "</i>!</span>";
 					break;
 				case GAT.RESULTS:
-					gameChat.innerHTML += "<h1>GAME RESULTS</h1>";
+					msgEl.innerHTML += "<h1>GAME RESULTS</h1>";
 					break;
+				default:
+					return;
 			}
+			gameChat.appendChild(msgEl);
 		}
 		// --- Message processing ---
 		function HandleServerInfoUsers(reader) {
