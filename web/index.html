@@ -183,11 +183,7 @@
 				</div>
 			</div>
 			<div id="game_chat">
-				<h2>Game started</h2>
 				<div class="game_chat_content">
-					a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>
-					a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>a<br>
-					<div class="game_chat_msg">You are the impostor!</div>
 				</div>
 			</div>
 		</div>
@@ -344,7 +340,17 @@
 					break;
 			}
 		}
-		function GameEnded() { }
+		function GameAction(reader) {
+			const action = reader.u8();
+			switch (action) {
+				case GAT.STARTED:
+					gameChat.innerHTML += "<h1>GAME STARTED</h1>";
+					break;
+				case GAT.RESULTS:
+					gameChat.innerHTML += "<h1>GAME RESULTS</h1>";
+					break;
+			}
+		}
 		// --- Message processing ---
 		function HandleServerInfoUsers(reader) {
 			const viewer_count = reader.u32();
@@ -377,16 +383,11 @@
 			const reader = new ByteReader(event.data);
 			msg_type = reader.u8();
 			switch (msg_type) {
-				case GSMT.INFO_USERS: HandleServerInfoUsers(reader); break;
-				case GSMT.GAME_STATE:
-					GameChangeState(reader);
-					break;
-				case GSMT.ERROR:
-					GameError(reader);
-					break;
-				case GSMT.CONFIRM:
-					GameConfirm(reader);
-					break;
+				case GSMT.INFO_USERS:  HandleServerInfoUsers(reader); break;
+				case GSMT.GAME_STATE:  GameChangeState(reader); break;
+				case GSMT.ERROR:       GameError(reader); break;
+				case GSMT.CONFIRM:     GameConfirm(reader); break;
+				case GSMT.GAME_ACTION: GameAction(reader); break;
 			}
 		}
 	</script>

@@ -9,6 +9,7 @@
 	X(GSMT_NO_MSG) \
 	X(GSMT_INFO_USERS) \
 	X(GSMT_GAME_STATE) \
+	X(GSMT_GAME_ACTION) \
 	X(GSMT_ERROR) \
 	X(GSMT_CONFIRM) \
 	X(GSMT_LAST_) \
@@ -69,6 +70,17 @@ typedef enum GameErrorType { GE } GameErrorType;
 typedef enum GameConfirmType { GC } GameConfirmType;
 #undef X
 
+// --- Game Action Message Types (GAT) ---
+
+#define GAT \
+	X(GAT_STARTED) \
+	X(GAT_RESULTS) \
+	X(GAT_LAST_) \
+
+#define X(name_) name_,
+typedef enum GameActionType { GAT } GameActionMsgType;
+#undef X
+
 // --- JS ---
 
 extern Nob_String_Builder gmt_js;
@@ -99,6 +111,10 @@ const char *GE_NAMES[] = { GE };
 const char *GC_NAMES[] = { GC };
 #undef X
 
+#define X(name_) #name_,
+const char *GAT_NAMES[] = { GAT };
+#undef X
+
 Nob_String_Builder gmt_js;
 
 #define JS_ENUM_GENERATE(name_) \
@@ -116,6 +132,7 @@ void GameMessageTypesGenerateJS() {
 	JS_ENUM_GENERATE(GS);
 	JS_ENUM_GENERATE(GE);
 	JS_ENUM_GENERATE(GC);
+	JS_ENUM_GENERATE(GAT);
 	nob_sb_appendf(&gmt_js, "const debug = %s;\n", game.debug ? "true" : "false");
 	nob_sb_append_null(&gmt_js);
 }
