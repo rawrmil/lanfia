@@ -104,12 +104,12 @@ void HandleWSClose(struct mg_connection* c, void* ev_data) {
 
 void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	struct mg_ws_message* wm = (struct mg_ws_message*)ev_data;
-	ByteReader br = {0};
-	br.sv.count = wm->data.len;
-	br.sv.data = wm->data.buf;
+	BReader br = {0};
+	br.count = wm->data.len;
+	br.data = wm->data.buf;
 	uint8_t gcmt;
-	//mg_hexdump(br.sv.data, br.sv.count);
-	if (!ByteReaderU8(&br, &gcmt)) return;
+	//mg_hexdump(br.data, br.count);
+	if (!BReadU8(&br, &gcmt)) return;
 	switch (gcmt) {
 		case GCMT_LOBBY_JOIN:
 			HandleClientLobbyJoin(c, &br);

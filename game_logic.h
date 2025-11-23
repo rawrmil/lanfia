@@ -26,7 +26,7 @@ typedef struct Game {
 	GamePlayers players;
 	bool debug;
 	GameState state;
-	ByteWriter history;
+	BWriter history;
 } Game;
 
 extern Game game;
@@ -36,9 +36,9 @@ void GameUserAdd(struct mg_connection* c);
 void GameUserRemove(struct mg_connection* c);
 void GamePlayerRemove(struct mg_connection* c);
 
-bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br);
-bool HandleClientLobbyReady(struct mg_connection* c, ByteReader* br);
-bool HandleClientLobbyLeave(struct mg_connection* c, ByteReader* br);
+bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br);
+bool HandleClientLobbyReady(struct mg_connection* c, BReader* br);
+bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br);
 
 #endif /* GAME_LOGIC_H */
 
@@ -46,30 +46,30 @@ bool HandleClientLobbyLeave(struct mg_connection* c, ByteReader* br);
 
 Game game;
 
-void GameSend(struct mg_connection* c, ByteWriter* bw) {
-	mg_ws_send(c, bw->sb.items, bw->sb.count, WEBSOCKET_OP_BINARY);
+void GameSend(struct mg_connection* c, BWriter* bw) {
+	mg_ws_send(c, bw->items, bw->count, WEBSOCKET_OP_BINARY);
 }
 
-void GameSendAll(struct mg_mgr* mgr, ByteWriter* bw) {
+void GameSendAll(struct mg_mgr* mgr, BWriter* bw) {
 	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
 		if (c->is_websocket && !c->is_client) GameSend(c, bw);
 	}
 }
 
 void GameSendError(struct mg_connection* c, GameErrorType et) {
-	ByteWriter bw = {0};
-	ByteWriterU8(&bw, (uint8_t)GSMT_ERROR);
-	ByteWriterU8(&bw, (uint8_t)et);
+	BWriter bw = {0};
+	BWriteU8(&bw, (uint8_t)GSMT_ERROR);
+	BWriteU8(&bw, (uint8_t)et);
 	GameSend(c, &bw);
-	ByteWriterFree(bw);
+	BWriterFree(bw);
 }
 
 void GameSendConfirm(struct mg_connection* c, GameConfirmType ct) {
-	ByteWriter bw = {0};
-	ByteWriterU8(&bw, (uint8_t)GSMT_CONFIRM);
-	ByteWriterU8(&bw, (uint8_t)ct);
+	BWriter bw = {0};
+	BWriteU8(&bw, (uint8_t)GSMT_CONFIRM);
+	BWriteU8(&bw, (uint8_t)ct);
 	GameSend(c, &bw);
-	ByteWriterFree(bw);
+	BWriterFree(bw);
 }
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
@@ -82,14 +82,14 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		nob_da_append(&player_names, '\0');
 		nob_da_append(&player_states, player->ready ? '1' : '0');
 	}
-	ByteWriter bw = ByteWriterBuild(NULL,
+	BWriter bw = BWriterBuild(NULL,
 		BU8, GSMT_INFO_USERS,
 		BU32, viewers_count,
 		BU32, game.players.count,
 		BSN, player_names.count, player_names.items,
 		BSN, player_states.count, player_states.items);
 	GameSendAll(mgr, &bw);
-	ByteWriterFree(bw);
+	BWriterFree(bw);
 	nob_sb_free(player_names);
 }
 
@@ -119,33 +119,33 @@ void GamePlayerRemove(struct mg_connection* c) {
 }
 
 void GameSendState(struct mg_connection* c) {
-	ByteWriter bw = {0};
-	ByteWriterU8(&bw, (uint8_t)GSMT_GAME_STATE);
-	ByteWriterU8(&bw, (uint8_t)game.state);
+	BWriter bw = {0};
+	BWriteU8(&bw, (uint8_t)GSMT_GAME_STATE);
+	BWriteU8(&bw, (uint8_t)game.state);
 	GameSendAll(c->mgr, &bw);
-	ByteWriterFree(bw);
+	BWriterFree(bw);
 }
 
 void GameSendHistory(struct mg_connection* c) {
-	ByteReader br = {
-		.sv.data = game.history.sb.items,
-		.sv.count = game.history.sb.count,
+	BReader br = {
+		.data = game.history.items,
+		.count = game.history.count,
 		.i = 0
 	};
-	while (br.i < br.sv.count) {
+	while (br.i < br.count) {
 		uint32_t msg_count;
-		if (!ByteReaderU32(&br, &msg_count)) { return; }
-		ByteWriter bw = {
-			.sb.items = (char*)(br.sv.data + br.i),
-			.sb.count = msg_count
+		if (!BReadU32(&br, &msg_count)) { return; }
+		BWriter bw = {
+			.items = (char*)(br.data + br.i),
+			.count = msg_count
 		};
 		GameSend(c, &bw);
 		br.i += msg_count;
 	}
 }
 
-void GameSendAction(struct mg_connection* c, ByteWriter* bw) {
-	ByteWriterSN(&game.history, bw->sb.items, bw->sb.count);
+void GameSendAction(struct mg_connection* c, BWriter* bw) {
+	BWriteSN(&game.history, bw->items, bw->count);
 	GameSendAll(c->mgr, bw);
 }
 
@@ -153,19 +153,19 @@ void GameStart(struct mg_connection* c) {
 	game.state = GS_DAY;
 	GameSendState(c);
 	{
-		ByteWriter bw = {0};
-		ByteWriterU8(&bw, (uint8_t)GSMT_GAME_ACTION);
-		ByteWriterU8(&bw, (uint8_t)GAT_STARTED);
+		BWriter bw = {0};
+		BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
+		BWriteU8(&bw, (uint8_t)GAT_STARTED);
 		GameSendAction(c, &bw);
-		bw.sb.count = 0;
+		bw.count = 0;
 		nob_da_foreach(GamePlayer, p, &game.players) {
-			ByteWriterU8(&bw, (uint8_t)GSMT_GAME_ACTION);
-			ByteWriterU8(&bw, (uint8_t)GAT_ROLE);
-			ByteWriterU8(&bw, (uint8_t)GRT_VILLAGER+rand()%3);
+			BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
+			BWriteU8(&bw, (uint8_t)GAT_ROLE);
+			BWriteU8(&bw, (uint8_t)GRT_VILLAGER+rand()%3);
 			if (p->c == NULL) { continue; }
 			GameSend(p->c, &bw);
 		}
-		ByteWriterFree(bw);
+		BWriterFree(bw);
 	}
 }
 
@@ -176,16 +176,16 @@ bool HandleClientConnect(struct mg_connection* c) {
 	GameSendState(c);
 }
 
-bool HandleClientLobbyJoin(struct mg_connection* c, ByteReader* br) {
+bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br) {
 	bool result = true;
 	uint32_t n;
 	Nob_String_Builder username = {0};
-	if (!ByteReaderU32(br, &n)) { nob_return_defer(false); }
+	if (!BReadU32(br, &n)) { nob_return_defer(false); }
 	if (n > 32) {
 		GameSendError(c, GE_JOIN_NAME_TOO_LONG);
 		nob_return_defer(false);
 	}
-	username = ByteReaderSBAlloc(br, n);
+	username = BReadSB(br, n);
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		// TODO: mg_strcmp
 		if (p->username.count == username.count && strncmp(p->username.items, username.items, username.count) == 0) {
@@ -218,10 +218,10 @@ defer:
 	return result;
 }
 
-bool HandleClientLobbyReady(struct mg_connection* c, ByteReader* br) {
+bool HandleClientLobbyReady(struct mg_connection* c, BReader* br) {
 	bool result = true;
 	uint8_t ready;
-	if (!ByteReaderU8(br, &ready))
+	if (!BReadU8(br, &ready))
 		nob_return_defer(false);
 	size_t ready_count = 0;
 	nob_da_foreach(GamePlayer, p, &game.players) {
@@ -236,7 +236,7 @@ defer:
 	return result;
 }
 
-bool HandleClientLobbyLeave(struct mg_connection* c, ByteReader* br) {
+bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br) {
 	if (game.state != GS_LOBBY) {
 		return false;
 	}

@@ -5,10 +5,11 @@
 
 #include "nob.h"
 
-typedef struct ByteReader {
-	Nob_String_View sv;
+typedef struct BReader {
+	const char *data;
+	size_t count;
 	int i;
-} ByteReader;
+} BReader;
 
 enum {
 	BNULL,
@@ -20,25 +21,27 @@ enum {
 	BSN,
 };
 
-bool ByteReaderU8(ByteReader* br, uint8_t*  out);
-bool ByteReaderU16(ByteReader* br, uint16_t* out);
-bool ByteReaderU32(ByteReader* br, uint32_t* out);
-bool ByteReaderU64(ByteReader* br, uint64_t* out);
-bool ByteReaderN(ByteReader* br, uint8_t*  out, size_t n);
-Nob_String_Builder ByteReaderSBAlloc(ByteReader* br, size_t n);
+bool BReadU8(BReader* br, uint8_t*  out);
+bool BReadU16(BReader* br, uint16_t* out);
+bool BReadU32(BReader* br, uint32_t* out);
+bool BReadU64(BReader* br, uint64_t* out);
+bool BReadN(BReader* br, uint8_t*  out, size_t n);
+Nob_String_Builder BReadSB(BReader* br, size_t n);
 
-typedef struct ByteWriter {
-	Nob_String_Builder sb;
-} ByteWriter;
+typedef struct BWriter {
+	char*  items;
+	size_t count;
+	size_t capacity;
+} BWriter;
 
-void ByteWriterU8(ByteWriter* bw, const uint8_t  in);
-void ByteWriterU16(ByteWriter* bw, const uint16_t in);
-void ByteWriterU32(ByteWriter* bw, const uint32_t in);
-void ByteWriterU64(ByteWriter* bw, const uint64_t in);
-void ByteWriterN(ByteWriter* bw, const uint8_t* in, size_t n);
-void ByteWriterSN(ByteWriter* bw, const uint8_t* in, size_t n); // [ size(4) | data(N) ]
-ByteWriter _ByteWriterBuild(ByteWriter* bw, ...);
-void ByteWriterFree(ByteWriter bw);
+void BWriteU8(BWriter* bw, const uint8_t  in);
+void BWriteU16(BWriter* bw, const uint16_t in);
+void BWriteU32(BWriter* bw, const uint32_t in);
+void BWriteU64(BWriter* bw, const uint64_t in);
+void BWriteN(BWriter* bw, const uint8_t* in, size_t n);
+void BWriteSN(BWriter* bw, const uint8_t* in, size_t n); // [ size(4) | data(N) ]
+BWriter _BWriteBuild(BWriter* bw, ...);
+void BWriterFree(BWriter bw);
 
 #endif /* BYTERW_H */
 
@@ -46,41 +49,41 @@ void ByteWriterFree(ByteWriter bw);
 
 #define BR_READ_OUT(type_, amount_) \
 	do { \
-		if (br->i + amount_ > br->sv.count) \
+		if (br->i + amount_ > br->count) \
 			return false; \
-		memcpy(out, &br->sv.data[br->i], amount_); \
+		memcpy(out, &br->data[br->i], amount_); \
 		br->i += amount_; \
 		return true; \
 	} while(0);
 
-bool ByteReaderU8(ByteReader* br, uint8_t* out) { BR_READ_OUT(uint8_t,  1); }
-bool ByteReaderU16(ByteReader* br, uint16_t* out) { BR_READ_OUT(uint16_t, 2); }
-bool ByteReaderU32(ByteReader* br, uint32_t* out) { BR_READ_OUT(uint32_t, 4); }
-bool ByteReaderU64(ByteReader* br, uint64_t* out) { BR_READ_OUT(uint64_t, 8); }
-bool ByteReaderN(ByteReader* br, uint8_t* out, size_t n) { BR_READ_OUT(uint8_t,  n); }
-Nob_String_Builder ByteReaderSBAlloc(ByteReader* br, size_t n) {
+bool BReadU8(BReader* br, uint8_t* out) { BR_READ_OUT(uint8_t,  1); }
+bool BReadU16(BReader* br, uint16_t* out) { BR_READ_OUT(uint16_t, 2); }
+bool BReadU32(BReader* br, uint32_t* out) { BR_READ_OUT(uint32_t, 4); }
+bool BReadU64(BReader* br, uint64_t* out) { BR_READ_OUT(uint64_t, 8); }
+bool BReadN(BReader* br, uint8_t* out, size_t n) { BR_READ_OUT(uint8_t,  n); }
+Nob_String_Builder BReadSB(BReader* br, size_t n) {
 	Nob_String_Builder sb = {0};
 	nob_da_reserve(&sb, n);
 	sb.count = n;
-	if (!ByteReaderN(br, sb.items, sb.count))
+	if (!BReadN(br, sb.items, sb.count))
 		return (Nob_String_Builder){ 0 };
 	return sb;
 }
 
 #define BR_WRITE_IN(in_, amount_) \
-	nob_sb_append_buf(&bw->sb, (uint8_t*)in_, amount_);
+	nob_sb_append_buf(bw, (uint8_t*)in_, amount_);
 
-void ByteWriterU8(ByteWriter* bw, const uint8_t  in) { BR_WRITE_IN(&in, 1); }
-void ByteWriterU16(ByteWriter* bw, const uint16_t in) { BR_WRITE_IN(&in, 2); }
-void ByteWriterU32(ByteWriter* bw, const uint32_t in) { BR_WRITE_IN(&in, 4); }
-void ByteWriterU64(ByteWriter* bw, const uint64_t in) { BR_WRITE_IN(&in, 8); }
-void ByteWriterN(ByteWriter* bw, const uint8_t* in, size_t n) { BR_WRITE_IN(in, n); }
-void ByteWriterSN(ByteWriter* bw, const uint8_t* in, size_t n) { // TODO: same with BR
-	ByteWriterU32(bw, (uint32_t)n);
-	ByteWriterN(bw, in, n);
+void BWriteU8(BWriter* bw, const uint8_t  in) { BR_WRITE_IN(&in, 1); }
+void BWriteU16(BWriter* bw, const uint16_t in) { BR_WRITE_IN(&in, 2); }
+void BWriteU32(BWriter* bw, const uint32_t in) { BR_WRITE_IN(&in, 4); }
+void BWriteU64(BWriter* bw, const uint64_t in) { BR_WRITE_IN(&in, 8); }
+void BWriteN(BWriter* bw, const uint8_t* in, size_t n) { BR_WRITE_IN(in, n); }
+void BWriteSN(BWriter* bw, const uint8_t* in, size_t n) { // TODO: same with BR
+	BWriteU32(bw, (uint32_t)n);
+	BWriteN(bw, in, n);
 }
-ByteWriter _ByteWriterBuild(ByteWriter* bw, ...) {
-	ByteWriter bw_new = {0};
+BWriter _BWriterBuild(BWriter* bw, ...) {
+	BWriter bw_new = {0};
 	if (bw == NULL) { bw = &bw_new; }
 	va_list args;
 	va_start(args, bw);
@@ -88,29 +91,29 @@ ByteWriter _ByteWriterBuild(ByteWriter* bw, ...) {
 		int type = va_arg(args, int);
 		switch (type) {
 			case BU8:
-				ByteWriterU8(bw, (uint8_t)va_arg(args, int));
+				BWriteU8(bw, (uint8_t)va_arg(args, int));
 				break;
 			case BU16:
-				ByteWriterU16(bw, (uint16_t)va_arg(args, int));
+				BWriteU16(bw, (uint16_t)va_arg(args, int));
 				break;
 			case BU32:
-				ByteWriterU32(bw, (uint32_t)va_arg(args, int));
+				BWriteU32(bw, (uint32_t)va_arg(args, int));
 				break;
 			case BU64:
-				ByteWriterU64(bw, (uint64_t)va_arg(args, int));
+				BWriteU64(bw, (uint64_t)va_arg(args, int));
 				break;
 			case BN:
 				{
 				uint32_t len = (uint32_t)va_arg(args, int);
 				uint8_t* buf = (uint8_t*)va_arg(args, char*);
-				ByteWriterN(bw, buf, len);
+				BWriteN(bw, buf, len);
 				}
 				break;
 			case BSN:
 				{
 				uint32_t len = (uint32_t)va_arg(args, int);
 				uint8_t* buf = (uint8_t*)va_arg(args, char*);
-				ByteWriterSN(bw, buf, len);
+				BWriteSN(bw, buf, len);
 				}
 				break;
 			case BNULL:
@@ -121,7 +124,7 @@ defer:
 	va_end(args);
 	return bw_new;
 }
-#define ByteWriterBuild(...) _ByteWriterBuild(__VA_ARGS__, BNULL)
-void ByteWriterFree(ByteWriter bw) { nob_sb_free(bw.sb); };
+#define BWriterBuild(...) _BWriterBuild(__VA_ARGS__, BNULL)
+void BWriterFree(BWriter bw) { nob_sb_free(bw); };
 
 #endif /* BYTERW_IMPLEMENTATION */
