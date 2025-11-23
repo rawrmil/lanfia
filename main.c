@@ -13,9 +13,9 @@
 #include "flag.h"
 #undef FLAG_IMPLEMENTATION
 
-#define BYTERW_IMPLEMENTATION
-#include "byterw.h"
-#undef BYTERW_IMPLEMENTATION
+#define BINARY_RW_IMPLEMENTATION
+#include "binary_rw.h"
+#undef BINARY_RW_IMPLEMENTATION
 
 // --- GAME PARTS ---
 

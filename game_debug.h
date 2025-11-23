@@ -2,7 +2,7 @@
 #define GAME_DEBUG_H
 
 #include "nob.h"
-#include "byterw.h"
+#include "binary_rw.h"
 #include "game_enums.h"
 
 typedef struct ClientMsg {

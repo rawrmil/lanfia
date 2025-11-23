@@ -1,7 +1,7 @@
 // Simple I/O Streams for bytes
 
-#ifndef BYTERW_H
-#define BYTERW_H
+#ifndef BINARY_RW_H
+#define BINARY_RW_H
 
 #include "nob.h"
 
@@ -43,9 +43,9 @@ void BWriteSN(BWriter* bw, const uint8_t* in, size_t n); // [ size(4) | data(N) 
 BWriter _BWriteBuild(BWriter* bw, ...);
 void BWriterFree(BWriter bw);
 
-#endif /* BYTERW_H */
+#endif /* BINARY_RW_H */
 
-#ifdef BYTERW_IMPLEMENTATION
+#ifdef BINARY_RW_IMPLEMENTATION
 
 #define BR_READ_OUT(type_, amount_) \
 	do { \
@@ -127,4 +127,4 @@ defer:
 #define BWriterBuild(...) _BWriterBuild(__VA_ARGS__, BNULL)
 void BWriterFree(BWriter bw) { nob_sb_free(bw); };
 
-#endif /* BYTERW_IMPLEMENTATION */
+#endif /* BINARY_RW_IMPLEMENTATION */
