@@ -37,9 +37,11 @@ void GameUserAdd(struct mg_connection* c);
 void GameUserRemove(struct mg_connection* c);
 void GamePlayerRemove(struct mg_connection* c);
 
+bool HandleClientConnect(struct mg_connection* c);
 bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br);
 bool HandleClientLobbyReady(struct mg_connection* c, BReader* br);
 bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br);
+void HandleClientDisconnect(struct mg_connection* c);
 
 void GameTestSetRoles();
 
@@ -295,6 +297,16 @@ bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br) {
 	GamePlayerRemove(c);
 	GameSendConfirm(c, GC_LEAVE_SUCCESS);
 	return true;
+}
+
+void HandleClientDisconnect(struct mg_connection* c) {
+	if (game.state == GS_LOBBY) {
+		GameUserRemove(c);
+		return;
+	}
+	nob_da_foreach(GamePlayer, p, &game.players) {
+		if (p->c == c) { p->c = NULL; }
+	}
 }
 
 #endif /* GAME_LOGIC_IMPLEMENTATION */

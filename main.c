@@ -91,17 +91,6 @@ void HandleHTTPMessage(struct mg_connection* c, void* ev_data) {
 	}
 }
 
-void HandleWSClose(struct mg_connection* c, void* ev_data) {
-	if (game.state == GS_LOBBY) {
-		GameUserRemove(c);
-		return;
-	}
-	nob_da_foreach(GamePlayer, p, &game.players) {
-		if (p->c == c) { p->c = NULL; }
-	}
-}
-
-
 void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 	struct mg_ws_message* wm = (struct mg_ws_message*)ev_data;
 	BReader br = {0};
@@ -137,7 +126,9 @@ void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
 			HandleWSMessage(c, ev_data);
 			break;
 		case MG_EV_CLOSE:
-			if (c->is_websocket) { HandleWSClose(c, ev_data); }
+			if (c->is_websocket) {
+				HandleClientDisconnect(c);
+			}
 			break;
 		case MG_EV_POLL:
 			break;
