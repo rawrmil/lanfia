@@ -80,11 +80,33 @@ void MsgSeqGameStart() {
 	ClientMsgAdd(5, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
 }
 
+void MsgSeq4Players() {
+	ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 0, ""));
+	//ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
+	ClientMsgAdd(1, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, "1"));
+	ClientMsgAdd(1, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
+	ClientMsgAdd(2, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, "2"));
+	ClientMsgAdd(2, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
+	ClientMsgAdd(3, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, "3"));
+	ClientMsgAdd(3, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
+}
+
+void MsgSeq10PlayersReady() {
+	for (int i = 0; i < 10; i++) {
+		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, nob_temp_sprintf("%d", i)));
+	}
+	for (int i = 0; i < 10; i++) {
+		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
+	}
+}
+
 void MsgSeqInit(int state) {
 	switch (state) {
 		case 1: MsgSeq6PlayersConnect(); break;
 		case 2: MsgSeq6PlayersReady(); break;
 		case 3: MsgSeqGameStart(); break;
+		case 4: MsgSeq4Players(); break;
+		case 5: MsgSeq10PlayersReady(); break;
 	}
 }
 

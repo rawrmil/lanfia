@@ -147,7 +147,7 @@ void EventHandler(struct mg_connection* c, int ev, void* ev_data) {
 // --- MAIN ---
 
 int main(int argc, char* argv[]) {
-
+	srand(nob_nanos_since_unspecified_epoch());
 
 	AppParseFlags(argc, argv);
 

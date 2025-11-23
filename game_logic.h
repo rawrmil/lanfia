@@ -13,6 +13,7 @@ typedef struct GamePlayer {
 	struct mg_connection* c;
 	Nob_String_Builder username;
 	bool ready;
+	GameRoleType role;
 } GamePlayer;
 
 typedef struct GamePlayers {
@@ -39,6 +40,8 @@ void GamePlayerRemove(struct mg_connection* c);
 bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br);
 bool HandleClientLobbyReady(struct mg_connection* c, BReader* br);
 bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br);
+
+void GameTestSetRoles();
 
 #endif /* GAME_LOGIC_H */
 
@@ -149,7 +152,56 @@ void GameSendAction(struct mg_connection* c, BWriter* bw) {
 	GameSendAll(c->mgr, bw);
 }
 
+int GameSetRolesCount(int* count_lookup, int n) {
+	int mafia_count = n / 3;
+	int town_count = n - mafia_count;
+	count_lookup[GRT_MAFIA]    = mafia_count;
+	count_lookup[GRT_SERIF]    = 1 + town_count / 6;
+	count_lookup[GRT_DOCTOR]   = 1 + town_count / 6;
+	count_lookup[GRT_ESCORT]   = town_count / 7;
+	count_lookup[GRT_MANIAC]   = town_count / 7;
+	count_lookup[GRT_VILLAGER] = n;
+	for (int i = 1; i < GRT_LAST_; i++) {
+		count_lookup[GRT_VILLAGER] -= count_lookup[i];
+	}
+	printf("Players: %d\n", n);
+	for (int i = 0; i < GRT_LAST_; i++) {
+		printf("  %s: %d\n", GRT_NAMES[i], count_lookup[i]);
+	}
+}
+
+void GameTestSetRoles() {
+	int count_lookup[GRT_LAST_];
+	for (int i = 5; i < 100; i++) {
+		GameSetRolesCount(count_lookup, i);
+	}
+}
+
 void GameStart(struct mg_connection* c) {
+	if (game.players.count < 5) { return; }
+	// Give Roles
+	int count_lookup[GRT_LAST_];
+	GameSetRolesCount(count_lookup, game.players.count);
+	int role = 0;
+	nob_da_foreach(GamePlayer, p, &game.players) {
+		if (count_lookup[role] == 0) { role++; }
+		if (role == GRT_LAST_) { NOB_UNREACHABLE("count_lookup ended"); }
+		p->role = role;
+		count_lookup[role]--;
+	}
+	// Shuffle
+	for (int i = 0; i < game.players.count; i++) {
+		int j = rand() % GAT_LAST_;
+		GameRoleType* i_role = &game.players.items[i].role;
+		GameRoleType* j_role = &game.players.items[j].role;
+		GameRoleType tmp = *i_role;
+		*i_role = *j_role;
+		*j_role = tmp;
+	}
+	//for (int i = 0; i < game.players.count; i++) {
+	//	printf("Player %d: %s\n", i, GRT_NAMES[game.players.items[i].role]);
+	//}
+	// Send
 	game.state = GS_DAY;
 	GameSendState(c);
 	{
@@ -161,7 +213,7 @@ void GameStart(struct mg_connection* c) {
 		nob_da_foreach(GamePlayer, p, &game.players) {
 			BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
 			BWriteU8(&bw, (uint8_t)GAT_ROLE);
-			BWriteU8(&bw, (uint8_t)GRT_VILLAGER+rand()%3);
+			BWriteU8(&bw, (uint8_t)p->role);
 			if (p->c == NULL) { continue; }
 			GameSend(p->c, &bw);
 		}

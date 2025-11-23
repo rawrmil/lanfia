@@ -97,6 +97,9 @@ typedef enum GameActionType { GAT } GameActionMsgType;
 typedef enum GameRoleType { GRT } GameRoleType;
 #undef X
 
+// --- Names ---
+extern const char *GRT_NAMES[];
+
 // --- JS ---
 
 extern Nob_String_Builder gmt_js;
