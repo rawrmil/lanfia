@@ -40,64 +40,45 @@ void ClientMsgAdd(int conn_index, BWriter msg) {
 	nob_da_append(&batch, cm);
 }
 
+void MsgJoinNPlayers(int n) {
+	for (int i = 0; i < n; i++) {
+		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, nob_temp_sprintf("%03d", i)));
+	}
+}
+void MsgReadyNPlayers(int n) {
+	for (int i = 0; i < n; i++) {
+		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
+	}
+}
+
 void MsgSeq6PlayersConnect() {
-	ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 6, "mafia1"));
-	ClientMsgAdd(1, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 6, "mafia2"));
-	ClientMsgAdd(2, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 6, "doctor"));
-	ClientMsgAdd(3, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, "cop"));
-	ClientMsgAdd(4, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager1"));
-	ClientMsgAdd(5, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager2"));
+	MsgJoinNPlayers(6);
 }
 
 void MsgSeq6PlayersReady() {
-	ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 6, "mafia1"));
+	MsgJoinNPlayers(6);
+	ClientMsgAdd(6, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 0, ""));
+	MsgReadyNPlayers(6);
 	ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN)); // Error check
-	ClientMsgAdd(1, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 6, "mafia2"));
-	ClientMsgAdd(2, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 6, "doctor"));
-	ClientMsgAdd(3, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, "cop"));
-	ClientMsgAdd(4, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager1"));
-	ClientMsgAdd(5, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 9, "villager2"));
-	ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(1, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(2, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(3, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(4, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(5, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
 }
 
 void MsgSeqGameStart() {
-	ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 0, ""));
-	//ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(1, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 2, "m2"));
-	ClientMsgAdd(1, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(2, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, "d"));
-	ClientMsgAdd(2, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(3, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, "c"));
-	ClientMsgAdd(3, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(4, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, "v1"));
-	ClientMsgAdd(4, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(5, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, "v2"));
-	ClientMsgAdd(5, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
+	MsgJoinNPlayers(6);
+	MsgReadyNPlayers(6);
 }
 
 void MsgSeq4Players() {
-	ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 0, ""));
-	//ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(1, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, "1"));
-	ClientMsgAdd(1, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(2, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, "2"));
-	ClientMsgAdd(2, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	ClientMsgAdd(3, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, "3"));
-	ClientMsgAdd(3, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
+	MsgJoinNPlayers(4);
 }
 
 void MsgSeq10PlayersReady() {
-	for (int i = 0; i < 10; i++) {
-		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 1, nob_temp_sprintf("%d", i)));
-	}
-	for (int i = 0; i < 10; i++) {
-		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
-	}
+	MsgJoinNPlayers(10);
+	MsgReadyNPlayers(10);
+}
+
+void MsgSeq32PlayersReady() {
+	MsgJoinNPlayers(32);
+	MsgReadyNPlayers(32);
 }
 
 void MsgSeqInit(int state) {
@@ -107,6 +88,7 @@ void MsgSeqInit(int state) {
 		case 3: MsgSeqGameStart(); break;
 		case 4: MsgSeq4Players(); break;
 		case 5: MsgSeq10PlayersReady(); break;
+		case 6: MsgSeq32PlayersReady(); break;
 	}
 }
 
