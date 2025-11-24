@@ -288,10 +288,12 @@
 				case GC.JOIN_SUCCESS:
 					joinErrorEl.innerHTML = "";
 					ToggleJoin(true);
+					ToggleReady(false);
 					break;
 				case GC.LEAVE_SUCCESS:
 					joinErrorEl.innerHTML = "";
 					ToggleJoin(false);
+					ToggleReady(false);
 					break;
 			}
 		}
@@ -316,7 +318,6 @@
 			const writer = new ByteWriter();
 			writer.u8(GCMT.LOBBY_LEAVE);
 			ws.send(writer.bytes())
-			ToggleReady(false);
 		}
 		function GameReady() {
 			const writer = new ByteWriter();
