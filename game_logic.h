@@ -51,13 +51,13 @@ void GameTestSetRoles();
 
 Game game;
 
-void GameSend(struct mg_connection* c, BWriter* bw) {
-	mg_ws_send(c, bw->items, bw->count, WEBSOCKET_OP_BINARY);
+void GameSend(struct mg_connection* c, Nob_String_View sv) {
+	mg_ws_send(c, sv.data, sv.count, WEBSOCKET_OP_BINARY);
 }
 
-void GameSendAll(struct mg_mgr* mgr, BWriter* bw) {
+void GameSendAll(struct mg_mgr* mgr, Nob_String_View sv) {
 	for (struct mg_connection* c = mgr->conns; c != NULL; c = c->next) {
-		if (c->is_websocket && !c->is_client) GameSend(c, bw);
+		if (c->is_websocket && !c->is_client) { GameSend(c, sv); }
 	}
 }
 
@@ -65,7 +65,7 @@ void GameSendError(struct mg_connection* c, GameErrorType et) {
 	BWriter bw = {0};
 	BWriteU8(&bw, (uint8_t)GSMT_ERROR);
 	BWriteU8(&bw, (uint8_t)et);
-	GameSend(c, &bw);
+	GameSend(c, nob_sb_to_sv(bw));
 	BWriterFree(bw);
 }
 
@@ -73,7 +73,7 @@ void GameSendConfirm(struct mg_connection* c, GameConfirmType ct) {
 	BWriter bw = {0};
 	BWriteU8(&bw, (uint8_t)GSMT_CONFIRM);
 	BWriteU8(&bw, (uint8_t)ct);
-	GameSend(c, &bw);
+	GameSend(c, nob_sb_to_sv(bw));
 	BWriterFree(bw);
 }
 
@@ -92,7 +92,7 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		BU32, game.players.count,
 		BSN, player_names.count, player_names.items,
 		BSN, player_states.count, player_states.items);
-	GameSendAll(mgr, &bw);
+	GameSendAll(mgr, nob_sb_to_sv(bw));
 	BWriterFree(bw);
 	nob_sb_free(player_names);
 }
@@ -124,7 +124,7 @@ void GameSendState(struct mg_connection* c) {
 	BWriter bw = {0};
 	BWriteU8(&bw, (uint8_t)GSMT_GAME_STATE);
 	BWriteU8(&bw, (uint8_t)game.state);
-	GameSendAll(c->mgr, &bw);
+	GameSendAll(c->mgr, nob_sb_to_sv(bw));
 	BWriterFree(bw);
 }
 
@@ -141,14 +141,14 @@ void GameSendHistory(struct mg_connection* c) {
 			.items = (char*)(br.data + br.i),
 			.count = msg_count
 		};
-		GameSend(c, &bw);
+		GameSend(c, nob_sb_to_sv(bw));
 		br.i += msg_count;
 	}
 }
 
-void GameSendAction(struct mg_connection* c, BWriter* bw) {
-	BWriteSN(&game.history, bw->items, bw->count);
-	GameSendAll(c->mgr, bw);
+void GameSendAction(struct mg_connection* c, Nob_String_View sv) {
+	BWriteSN(&game.history, sv.data, sv.count);
+	GameSendAll(c->mgr, sv);
 }
 
 int GameSetRolesCount(int* count_lookup, int n) {
@@ -207,14 +207,14 @@ void GameStart(struct mg_connection* c) {
 		BWriter bw = {0};
 		BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
 		BWriteU8(&bw, (uint8_t)GAT_STARTED);
-		GameSendAction(c, &bw);
+		GameSendAction(c, nob_sb_to_sv(bw));
 		bw.count = 0;
 		nob_da_foreach(GamePlayer, p, &game.players) {
 			BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
 			BWriteU8(&bw, (uint8_t)GAT_ROLE);
 			BWriteU8(&bw, (uint8_t)p->role);
 			if (p->c == NULL) { continue; }
-			GameSend(p->c, &bw);
+			GameSend(p->c, nob_sb_to_sv(bw));
 		}
 		BWriterFree(bw);
 	}
