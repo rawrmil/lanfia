@@ -50,6 +50,11 @@ void MsgReadyNPlayers(int n) {
 		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
 	}
 }
+void MsgReadyNextNPlayers(int n) {
+	for (int i = 0; i < n; i++) {
+		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_READY_NEXT, BU8, 1));
+	}
+}
 
 void MsgSeq6PlayersConnect() {
 	MsgJoinNPlayers(6);
@@ -81,6 +86,12 @@ void MsgSeq32PlayersReady() {
 	MsgReadyNPlayers(32);
 }
 
+void MsgSeq6PlayersReadyNext() {
+	MsgJoinNPlayers(6);
+	MsgReadyNPlayers(6);
+	MsgReadyNextNPlayers(6);
+}
+
 void MsgSeqInit(int state) {
 	switch (state) {
 		case 1: MsgSeq6PlayersConnect(); break;
@@ -89,6 +100,7 @@ void MsgSeqInit(int state) {
 		case 4: MsgSeq4Players(); break;
 		case 5: MsgSeq10PlayersReady(); break;
 		case 6: MsgSeq32PlayersReady(); break;
+		case 7: MsgSeq6PlayersReadyNext(); break;
 	}
 }
 

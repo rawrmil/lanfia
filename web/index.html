@@ -241,6 +241,7 @@
 		var game_started = false;
 		var is_lobby = true;
 		var player_role = -1;
+		var is_player = false;
 		// --- Elements ---
 		const viewersEl = document.getElementById("game_viewers");
 		const playersListEl = document.getElementById("players_list");
@@ -289,11 +290,13 @@
 					joinErrorEl.innerHTML = "";
 					ToggleJoin(true);
 					ToggleReady(false);
+					is_player = true;
 					break;
 				case GC.LEAVE_SUCCESS:
 					joinErrorEl.innerHTML = "";
 					ToggleJoin(false);
 					ToggleReady(false);
+					is_player = false;
 					break;
 			}
 		}
@@ -327,6 +330,13 @@
 			ws.send(writer.bytes())
 		}
 		// --- Game Process ---
+		function GameReadyNext() {
+			const writer = new ByteWriter();
+			ToggleReady(!ready);
+			writer.u8(GCMT.READY_NEXT);
+			writer.u8(ready);
+			ws.send(writer.bytes())
+		}
 		function GameChangeState(reader) {
 			const state = reader.u8();
 			switch (state) {
@@ -335,10 +345,11 @@
 					readyButtonEl.disabled = false;
 					ToggleLobby(true);
 					break;
-				case GS.DAY:
+				case GS.FIRST_DAY:
 					game_started = true;
 					readyButtonEl.disabled = true;
 					ToggleLobby(false);
+					readyButtonEl.style.display = "none";
 					break;
 			}
 		}
@@ -348,7 +359,28 @@
 			msgEl.className = "game_chat_msg";
 			switch (action) {
 				case GAT.STARTED:
-					msgEl.innerHTML += "<h1>GAME STARTED</h1>";
+					msgEl.innerHTML +=
+					`
+						<h1>
+							GAME STARTED
+						</h1>
+					`
+					if (is_player) {
+						msgEl.innerHTML +=
+						`
+							<p>
+								Become familiar with your role and let's get started!
+							</p>
+							<p>
+								Press "Ready" button
+							</p>
+						`;
+					} else {
+						msgEl.innerHTML +=
+							`
+								<p>You are a spectator!</p>
+							`;
+					}
 					break;
 				case GAT.ROLE:
 					const role_type = reader.u8();
@@ -363,6 +395,21 @@
 						case GRT.MANIAC:   msgEl.innerHTML += "maniac"; break;
 					}
 					msgEl.innerHTML += "</i>!</span>";
+					break;
+				case GAT.DAY_ENDED:
+					if (is_player) {
+						msgEl.innerHTML =
+						`
+							<div style="display: flex; justify-content: center;">
+								<button onclick="GameReadyNext()">
+									Ready
+								</button>
+							</div>
+						`;
+					}
+					break;
+				case GAT.NIGHT_STARTED:
+					msgEl.innerHTML += "<h3>NIGHT STARTED</h3>";
 					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "<h1>GAME RESULTS</h1>";

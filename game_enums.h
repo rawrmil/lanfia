@@ -25,6 +25,7 @@ enum { GSMT };
 	X(GCMT_LOBBY_JOIN) \
 	X(GCMT_LOBBY_LEAVE) \
 	X(GCMT_LOBBY_READY) \
+	X(GCMT_READY_NEXT) \
 	X(GCMT_LAST_) \
 
 #define X(name_) name_,
@@ -35,6 +36,7 @@ enum { GCMT };
 
 #define GS \
 	X(GS_LOBBY) \
+	X(GS_FIRST_DAY) \
 	X(GS_DAY) \
 	X(GS_MAFIA) \
 	X(GS_SERIF) \
@@ -75,6 +77,8 @@ typedef enum GameConfirmType { GC } GameConfirmType;
 #define GAT \
 	X(GAT_STARTED) \
 	X(GAT_ROLE) \
+	X(GAT_DAY_ENDED) \
+	X(GAT_NIGHT_STARTED) \
 	X(GAT_RESULTS) \
 	X(GAT_LAST_) \
 

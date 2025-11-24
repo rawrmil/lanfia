@@ -13,6 +13,7 @@ typedef struct GamePlayer {
 	struct mg_connection* c;
 	Nob_String_Builder username;
 	bool ready;
+	bool ready_next;
 	GameRoleType role;
 } GamePlayer;
 
@@ -42,6 +43,7 @@ bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br);
 bool HandleClientLobbyReady(struct mg_connection* c, BReader* br);
 bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br);
 void HandleClientDisconnect(struct mg_connection* c);
+bool HandleClientReadyNext(struct mg_connection* c, BReader* br);
 
 void GameTestSetRoles();
 
@@ -201,7 +203,7 @@ void GameStart(struct mg_connection* c) {
 	//	printf("Player %d: %s\n", i, GRT_NAMES[game.players.items[i].role]);
 	//}
 	// Send
-	game.state = GS_DAY;
+	game.state = GS_FIRST_DAY;
 	GameSendState(c);
 	{
 		BWriter bw = {0};
@@ -210,10 +212,15 @@ void GameStart(struct mg_connection* c) {
 		GameSendAction(c, nob_sb_to_sv(bw));
 		nob_da_foreach(GamePlayer, p, &game.players) {
 			bw.count = 0;
+			p->ready = 0;
 			BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
 			if (p->c == NULL) { continue; }
 			GameSend(p->c, nob_sb_to_sv(bw));
 		}
+		bw.count = 0;
+		BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_DAY_ENDED);
+		GameSendAction(c, nob_sb_to_sv(bw));
+		GameUsersUpdate(c->mgr);
 		BWriterFree(bw);
 	}
 }
@@ -255,7 +262,7 @@ bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br) {
 			nob_return_defer(false);
 		}
 	}
-	if (game.state == GS_DAY) {
+	if (game.state != GS_LOBBY) {
 		GameSendError(c, GE_JOIN_GAME_IN_PROGRESS);
 		nob_return_defer(false);
 	}
@@ -285,6 +292,27 @@ bool HandleClientLobbyReady(struct mg_connection* c, BReader* br) {
 	}
 	if (ready_count == game.players.count) {
 		GameStart(c);
+	}
+	GameUsersUpdate(c->mgr);
+defer:
+	return result;
+}
+
+bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
+	bool result = true;
+	uint8_t ready;
+	if (!BReadU8(br, &ready))
+		nob_return_defer(false);
+	size_t ready_count = 0;
+	nob_da_foreach(GamePlayer, p, &game.players) {
+		if (p->c == c) { p->ready_next = ready; }
+		if (p->ready_next) { ready_count++; }
+	}
+	if (ready_count == game.players.count) {
+		BWriter bw = {0};
+		BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
+		GameSendAction(c, nob_sb_to_sv(bw));
+		BWriterFree(bw);
 	}
 	GameUsersUpdate(c->mgr);
 defer:
