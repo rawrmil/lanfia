@@ -208,8 +208,8 @@ void GameStart(struct mg_connection* c) {
 		BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
 		BWriteU8(&bw, (uint8_t)GAT_STARTED);
 		GameSendAction(c, nob_sb_to_sv(bw));
-		bw.count = 0;
 		nob_da_foreach(GamePlayer, p, &game.players) {
+			bw.count = 0;
 			BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
 			if (p->c == NULL) { continue; }
 			GameSend(p->c, nob_sb_to_sv(bw));
