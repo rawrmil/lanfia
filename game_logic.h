@@ -79,7 +79,6 @@ void GameSendConfirm(struct mg_connection* c, GameConfirmType ct) {
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
 	uint32_t viewers_count = game.users_count > game.players.count ? game.users_count - game.players.count : 0;
-	MG_INFO(("viewers: %d\n", viewers_count));
 	Nob_String_Builder player_names = {0};
 	Nob_String_Builder player_states = {0};
 	nob_da_foreach(GamePlayer, player, &game.players) {
@@ -104,13 +103,11 @@ void GameUserAdd(struct mg_connection* c) {
 	user->c = c;
 	game.users_count++;
 	GameUsersUpdate(c->mgr);
-	MG_INFO(("users: %d\n", game.users_count));
 }
 
 void GameUserRemove(struct mg_connection* c) {
 	game.users_count--;
 	GamePlayerRemove(c);
-	MG_INFO(("users: %d\n", game.users_count));
 }
 
 void GamePlayerRemove(struct mg_connection* c) {
