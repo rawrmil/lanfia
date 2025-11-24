@@ -210,9 +210,7 @@ void GameStart(struct mg_connection* c) {
 		GameSendAction(c, nob_sb_to_sv(bw));
 		bw.count = 0;
 		nob_da_foreach(GamePlayer, p, &game.players) {
-			BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
-			BWriteU8(&bw, (uint8_t)GAT_ROLE);
-			BWriteU8(&bw, (uint8_t)p->role);
+			BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
 			if (p->c == NULL) { continue; }
 			GameSend(p->c, nob_sb_to_sv(bw));
 		}
@@ -243,6 +241,12 @@ bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br) {
 			if (game.debug || p->c == NULL) {
 				p->c = c;
 				GameUsersUpdate(c->mgr);
+				if (game.state != GS_LOBBY) {
+					BWriter bw = {0};
+					BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
+					GameSend(p->c, nob_sb_to_sv(bw));
+					BWriterFree(bw);
+				}
 				nob_return_defer(true);
 			}
 			nob_return_defer(false);
