@@ -136,21 +136,38 @@ void GameSendHistory(struct mg_connection* c) {
 		.count = game.history.count,
 		.i = 0
 	};
+
+	size_t curr_player_index = -1;
+	for (int i = 0; i < game.players.count; i++) {
+		if (game.players.items[i].c == c) {
+			curr_player_index = i;
+		}
+	}
 	while (br.i < br.count) {
+		uint32_t player_index;
+		if (!BReadU32(&br, &player_index)) { return; }
 		uint32_t msg_count;
 		if (!BReadU32(&br, &msg_count)) { return; }
 		BWriter bw = {
 			.items = (char*)(br.data + br.i),
 			.count = msg_count
 		};
-		GameSend(c, nob_sb_to_sv(bw));
+		if (player_index == -1 || player_index == curr_player_index) {
+			GameSend(c, nob_sb_to_sv(bw));
+		}
 		br.i += msg_count;
 	}
 }
 
-void GameSendAction(struct mg_connection* c, Nob_String_View sv) {
+void GameSendAction(struct mg_connection* c, Nob_String_View sv, int player_index) {
+	BWriteU32(&game.history, player_index);
+	if (player_index == -1) {
+		BWriteSN(&game.history, sv.data, sv.count);
+		GameSendAll(c->mgr, sv);
+		return;
+	}
 	BWriteSN(&game.history, sv.data, sv.count);
-	GameSendAll(c->mgr, sv);
+	GameSend(game.players.items[player_index].c, sv);
 }
 
 int GameSetRolesCount(int* count_lookup, int n) {
@@ -209,17 +226,19 @@ void GameStart(struct mg_connection* c) {
 		BWriter bw = {0};
 		BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
 		BWriteU8(&bw, (uint8_t)GAT_STARTED);
-		GameSendAction(c, nob_sb_to_sv(bw));
+		GameSendAction(c, nob_sb_to_sv(bw), -1);
+		int i = 0;
 		nob_da_foreach(GamePlayer, p, &game.players) {
 			bw.count = 0;
 			p->ready = 0;
 			BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
 			if (p->c == NULL) { continue; }
-			GameSend(p->c, nob_sb_to_sv(bw));
+			GameSendAction(c, nob_sb_to_sv(bw), i);
+			i++;
 		}
 		bw.count = 0;
 		BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_DAY_ENDED);
-		GameSendAction(c, nob_sb_to_sv(bw));
+		GameSendAction(c, nob_sb_to_sv(bw), -1);
 		GameUsersUpdate(c->mgr);
 		BWriterFree(bw);
 	}
@@ -229,7 +248,6 @@ void GameStart(struct mg_connection* c) {
 
 bool HandleClientConnect(struct mg_connection* c) {
 	GameSendHistory(c);
-	GameSendState(c);
 }
 
 bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br) {
@@ -273,6 +291,7 @@ bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br) {
 	GameUsersUpdate(c->mgr);
 defer:
 	if (result) { 
+		GameSendHistory(c);
 		GameSendConfirm(c, GC_JOIN_SUCCESS);
 	} else {
 		nob_sb_free(username);
@@ -311,7 +330,7 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 	if (ready_count == game.players.count) {
 		BWriter bw = {0};
 		BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
-		GameSendAction(c, nob_sb_to_sv(bw));
+		GameSendAction(c, nob_sb_to_sv(bw), -1);
 		BWriterFree(bw);
 	}
 	GameUsersUpdate(c->mgr);
