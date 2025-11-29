@@ -342,12 +342,10 @@
 			switch (state) {
 				case GS.LOBBY:
 					game_started = false;
-					readyButtonEl.disabled = false;
 					ToggleLobby(true);
 					break;
 				case GS.FIRST_DAY:
 					game_started = true;
-					readyButtonEl.disabled = true;
 					ToggleLobby(false);
 					readyButtonEl.style.display = "none";
 					break;
@@ -359,6 +357,7 @@
 			msgEl.className = "game_chat_msg";
 			switch (action) {
 				case GAT.STARTED:
+					readyButtonEl.disabled = true;
 					msgEl.innerHTML +=
 					`
 						<h1>
@@ -414,6 +413,8 @@
 				case GAT.RESULTS:
 					msgEl.innerHTML += "<h1>GAME RESULTS</h1>";
 					break;
+				// TODO: on end:
+				// readyButtonEl.disabled = false;
 				default:
 					return;
 			}
