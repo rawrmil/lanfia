@@ -216,6 +216,10 @@ void GameStart(struct mg_connection* c) {
 	{
 		BWriter bw = {0};
 		BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
+		BWriteU8(&bw, (uint8_t)GAT_CLEAR);
+		GameSendAction(c, nob_sb_to_sv(bw), -1);
+		bw.count = 0;
+		BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
 		BWriteU8(&bw, (uint8_t)GAT_STARTED);
 		GameSendAction(c, nob_sb_to_sv(bw), -1);
 		int i = 0;

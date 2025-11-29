@@ -342,6 +342,9 @@
 			var msgEl = document.createElement('div');
 			msgEl.className = "game_chat_msg";
 			switch (action) {
+				case GAT.CLEAR:
+					gameChat.innerHTML = "";
+					return;
 				case GAT.STARTED:
 					readyButtonEl.disabled = true;
 					game_started = true;

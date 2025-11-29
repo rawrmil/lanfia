@@ -74,6 +74,7 @@ typedef enum GameConfirmType { GC } GameConfirmType;
 // --- Game Action Message Types (GAT) ---
 
 #define GAT \
+	X(GAT_CLEAR) \
 	X(GAT_STARTED) \
 	X(GAT_ROLE) \
 	X(GAT_DAY_ENDED) \
