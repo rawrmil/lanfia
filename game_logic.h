@@ -122,14 +122,6 @@ void GamePlayerRemove(struct mg_connection* c) {
 	GameUsersUpdate(c->mgr);
 }
 
-void GameSendState(struct mg_connection* c) {
-	BWriter bw = {0};
-	BWriteU8(&bw, (uint8_t)GSMT_GAME_STATE);
-	BWriteU8(&bw, (uint8_t)game.state);
-	GameSendAll(c->mgr, nob_sb_to_sv(bw));
-	BWriterFree(bw);
-}
-
 void GameSendHistory(struct mg_connection* c) {
 	BReader br = {
 		.data = game.history.items,
@@ -221,7 +213,6 @@ void GameStart(struct mg_connection* c) {
 	//}
 	// Send
 	game.state = GS_FIRST_DAY;
-	GameSendState(c);
 	{
 		BWriter bw = {0};
 		BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
@@ -266,12 +257,6 @@ bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br) {
 			if (game.debug || p->c == NULL) {
 				p->c = c;
 				GameUsersUpdate(c->mgr);
-				if (game.state != GS_LOBBY) {
-					BWriter bw = {0};
-					BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
-					GameSend(p->c, nob_sb_to_sv(bw));
-					BWriterFree(bw);
-				}
 				nob_return_defer(true);
 			}
 			nob_return_defer(false);

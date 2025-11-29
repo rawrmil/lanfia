@@ -337,20 +337,6 @@
 			writer.u8(ready);
 			ws.send(writer.bytes())
 		}
-		function GameChangeState(reader) {
-			const state = reader.u8();
-			switch (state) {
-				case GS.LOBBY:
-					game_started = false;
-					ToggleLobby(true);
-					break;
-				case GS.FIRST_DAY:
-					game_started = true;
-					ToggleLobby(false);
-					readyButtonEl.style.display = "none";
-					break;
-			}
-		}
 		function GameAction(reader) {
 			const action = reader.u8();
 			var msgEl = document.createElement('div');
@@ -358,6 +344,9 @@
 			switch (action) {
 				case GAT.STARTED:
 					readyButtonEl.disabled = true;
+					game_started = true;
+					ToggleLobby(false);
+					readyButtonEl.style.display = "none";
 					msgEl.innerHTML +=
 					`
 						<h1>
@@ -415,6 +404,8 @@
 					break;
 				// TODO: on end:
 				// readyButtonEl.disabled = false;
+				// game_started = false;
+				// ToggleLobby(true);
 				default:
 					return;
 			}
@@ -453,7 +444,6 @@
 			msg_type = reader.u8();
 			switch (msg_type) {
 				case GSMT.INFO_USERS:  HandleServerInfoUsers(reader); break;
-				case GSMT.GAME_STATE:  GameChangeState(reader); break;
 				case GSMT.ERROR:       GameError(reader); break;
 				case GSMT.CONFIRM:     GameConfirm(reader); break;
 				case GSMT.GAME_ACTION: GameAction(reader); break;
