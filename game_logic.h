@@ -27,6 +27,7 @@ typedef struct GamePlayers {
 typedef struct Game {
 	int users_count;
 	GamePlayers players;
+	size_t ready_next_count;
 	bool debug;
 	GameState state;
 	BWriter history;
@@ -94,6 +95,13 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		BSN, player_states.count, player_states.items);
 	GameSendAll(mgr, nob_sb_to_sv(bw_temp));
 	nob_sb_free(player_names);
+	// Update Ready Next
+	bw_temp.count = 0;
+	BWriterAppend(&bw_temp,
+		BU8, GSMT_INFO_READY_NEXT,
+		BU8, game.ready_next_count == game.players.count,
+		BU32, game.ready_next_count);
+	GameSendAll(mgr, nob_sb_to_sv(bw_temp));
 }
 
 void GameUserAdd(struct mg_connection* c) {
@@ -305,12 +313,12 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 	uint8_t ready;
 	if (!BReadU8(br, &ready))
 		nob_return_defer(false);
-	size_t ready_count = 0;
+	game.ready_next_count = 0;
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		if (p->c == c) { p->ready_next = ready; }
-		if (p->ready_next) { ready_count++; }
+		if (p->ready_next) { game.ready_next_count++; }
 	}
-	if (ready_count == game.players.count) {
+	if (game.ready_next_count == game.players.count) {
 		bw_temp.count = 0;
 		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
@@ -319,12 +327,6 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 	GameUsersUpdate(c->mgr);
 defer:
 	if (result == true) {
-		bw_temp.count = 0;
-		BWriterAppend(&bw_temp,
-			BU8, GSMT_INFO_READY_NEXT,
-			BU8, ready_count == game.players.count,
-			BU32, ready_count);
-		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 	}
 	return result;
 }

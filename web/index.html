@@ -256,6 +256,7 @@
 		function ReadyNextButtonUpdate() {
 			const readyNextButton = document.getElementById("ready_next_button")
 			if (!readyNextButton) { return; }
+			ready_next_button.disabled = !is_player;
 			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${player_next_count}/${player_names.length})`;
 		}
 		function ToggleLobby(state) {
@@ -323,6 +324,7 @@
 			writer.u8(GCMT.LOBBY_JOIN);
 			writer.strn(usernameEl.value);
 			ws.send(writer.bytes())
+			ReadyNextButtonUpdate();
 		}
 		function GameLeave() {
 			const writer = new ByteWriter();
@@ -395,15 +397,16 @@
 					msgEl.innerHTML += "</i>!</span>";
 					break;
 				case GAT.DAY_ENDED:
-					if (is_player) {
-						msgEl.innerHTML =
-						`
-							<div style="display: flex; justify-content: center;">
-								<button id="ready_next_button" onclick="GameReadyNext()">
-									Ready
-								</button>
-							</div>
-						`;
+					msgEl.innerHTML =
+					`
+						<div style="display: flex; justify-content: center;">
+							<button id="ready_next_button" onclick="GameReadyNext()">
+								Ready
+							</button>
+						</div>
+					`;
+					if (!is_player) {
+						ReadyNextButtonUpdate();
 					}
 					break;
 				case GAT.NIGHT_STARTED:
