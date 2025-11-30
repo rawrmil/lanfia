@@ -42,17 +42,17 @@ void ClientMsgAdd(int conn_index, BWriter msg) {
 
 void MsgJoinNPlayers(int n) {
 	for (int i = 0; i < n; i++) {
-		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, nob_temp_sprintf("%03d", i)));
+		ClientMsgAdd(i, BWriterAppend(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, nob_temp_sprintf("%03d", i)));
 	}
 }
 void MsgReadyNPlayers(int n) {
 	for (int i = 0; i < n; i++) {
-		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
+		ClientMsgAdd(i, BWriterAppend(NULL, BU8, GCMT_LOBBY_READY, BU8, 1));
 	}
 }
 void MsgReadyNextNPlayers(int n) {
 	for (int i = 0; i < n; i++) {
-		ClientMsgAdd(i, BWriterBuild(NULL, BU8, GCMT_READY_NEXT, BU8, 1));
+		ClientMsgAdd(i, BWriterAppend(NULL, BU8, GCMT_READY_NEXT, BU8, 1));
 	}
 }
 
@@ -62,9 +62,9 @@ void MsgSeq6PlayersConnect() {
 
 void MsgSeq6PlayersReady() {
 	MsgJoinNPlayers(6);
-	ClientMsgAdd(6, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 0, ""));
+	ClientMsgAdd(6, BWriterAppend(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 0, ""));
 	MsgReadyNPlayers(6);
-	ClientMsgAdd(0, BWriterBuild(NULL, BU8, GCMT_LOBBY_JOIN)); // Error check
+	ClientMsgAdd(0, BWriterAppend(NULL, BU8, GCMT_LOBBY_JOIN)); // Error check
 }
 
 void MsgSeqGameStart() {

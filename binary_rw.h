@@ -86,7 +86,7 @@ void BWriteSN(BWriter* bw, const uint8_t* in, size_t n) { // TODO: same with BR
 	BWriteU32(bw, (uint32_t)n);
 	BWriteN(bw, in, n);
 }
-BWriter _BWriterBuild(BWriter* bw, ...) {
+BWriter _BWriterAppend(BWriter* bw, ...) {
 	BWriter bw_new = {0};
 	if (bw == NULL) { bw = &bw_new; }
 	va_list args;
@@ -128,7 +128,7 @@ defer:
 	va_end(args);
 	return bw_new;
 }
-#define BWriterBuild(...) _BWriterBuild(__VA_ARGS__, BNULL)
+#define BWriterAppend(...) _BWriterAppend(__VA_ARGS__, BNULL)
 void BWriterFree(BWriter bw) { nob_sb_free(bw); };
 
 #endif /* BINARY_RW_IMPLEMENTATION */
