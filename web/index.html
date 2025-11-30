@@ -239,6 +239,7 @@
 		var ready_next = false;
 		var player_names = [];
 		var player_states = "";
+		var player_next_count = 0;
 		var game_started = false;
 		var is_lobby = true;
 		var player_role = -1;
@@ -252,6 +253,11 @@
 		const lobbyButtonEl = document.getElementById("lobby_button");
 		const gameLobby = document.getElementById("game_lobby");
 		const gameChat = document.getElementById("game_chat");
+		function ReadyNextButtonUpdate() {
+			const readyNextButton = document.getElementById("ready_next_button")
+			if (!readyNextButton) { return; }
+			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${player_next_count}/${player_names.length})`;
+		}
 		function ToggleLobby(state) {
 			if (state) {
 				gameChat.style.display = "none";
@@ -414,6 +420,7 @@
 					return;
 			}
 			gameChat.appendChild(msgEl);
+			ReadyNextButtonUpdate();
 		}
 		// --- Message processing ---
 		function HandleServerInfoUsers(reader) {
@@ -439,10 +446,9 @@
 		}
 		function HandleServerInfoReadyNext(reader) {
 			const all_ready = reader.u8();
-			const ready_count = reader.u32();
+			player_next_count = reader.u32();
 			if (all_ready) { ready_next = false; }
-			const readyNextButton = document.getElementById("ready_next_button")
-			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${ready_count}/${player_names.length})`;
+			ReadyNextButtonUpdate();
 		}
 		// --- WebSockets ---
 		const ws = new WebSocket(`ws://${location.host}/ws`);
