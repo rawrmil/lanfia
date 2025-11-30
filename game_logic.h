@@ -320,6 +320,7 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 		bw_temp.count = 0;
 		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+		//nob_da_foreach(GamePlayer, p, &game.players) { p->ready_next = 0; }
 	}
 defer:
 	GameUsersUpdate(c->mgr);

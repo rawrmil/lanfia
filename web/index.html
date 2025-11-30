@@ -254,10 +254,14 @@
 		const gameLobby = document.getElementById("game_lobby");
 		const gameChat = document.getElementById("game_chat");
 		function ReadyNextButtonUpdate() {
-			const readyNextButton = document.getElementById("ready_next_button")
+			const readyNextButton = document.getElementById("ready_next_button");
 			if (!readyNextButton) { return; }
 			ready_next_button.disabled = !is_player;
 			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${player_next_count}/${player_names.length})`;
+		}
+		function ReadyNextButtonDelete() {
+			const readyNextButton = document.getElementById("ready_next_button");
+			readyNextButton.remove();
 		}
 		function ToggleLobby(state) {
 			if (state) {
@@ -406,6 +410,7 @@
 					`;
 					break;
 				case GAT.NIGHT_STARTED:
+					ReadyNextButtonDelete();
 					msgEl.innerHTML += "<h3>NIGHT STARTED</h3>";
 					break;
 				case GAT.RESULTS:

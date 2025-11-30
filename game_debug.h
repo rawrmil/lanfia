@@ -89,7 +89,7 @@ void MsgSeq32PlayersReady() {
 void MsgSeq6PlayersReadyNext() {
 	MsgJoinNPlayers(6);
 	MsgReadyNPlayers(6);
-	MsgReadyNextNPlayers(6);
+	MsgReadyNextNPlayers(5);
 }
 
 void MsgSeqInit(int state) {
