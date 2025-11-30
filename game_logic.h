@@ -4,6 +4,7 @@
 #include "nob.h"
 #include "mongoose.h"
 #include "game_enums.h"
+#include "binary_rw.h"
 
 typedef struct GameUser {
 	struct mg_connection* c;
@@ -64,19 +65,17 @@ void GameSendAll(struct mg_mgr* mgr, Nob_String_View sv) {
 }
 
 void GameSendError(struct mg_connection* c, GameErrorType et) {
-	BWriter bw = {0};
-	BWriteU8(&bw, (uint8_t)GSMT_ERROR);
-	BWriteU8(&bw, (uint8_t)et);
-	GameSend(c, nob_sb_to_sv(bw));
-	BWriterFree(bw);
+	bw_temp.count = 0;
+	BWriteU8(&bw_temp, (uint8_t)GSMT_ERROR);
+	BWriteU8(&bw_temp, (uint8_t)et);
+	GameSend(c, nob_sb_to_sv(bw_temp));
 }
 
 void GameSendConfirm(struct mg_connection* c, GameConfirmType ct) {
-	BWriter bw = {0};
-	BWriteU8(&bw, (uint8_t)GSMT_CONFIRM);
-	BWriteU8(&bw, (uint8_t)ct);
-	GameSend(c, nob_sb_to_sv(bw));
-	BWriterFree(bw);
+	bw_temp.count = 0;
+	BWriteU8(&bw_temp, (uint8_t)GSMT_CONFIRM);
+	BWriteU8(&bw_temp, (uint8_t)ct);
+	GameSend(c, nob_sb_to_sv(bw_temp));
 }
 
 void GameUsersUpdate(struct mg_mgr* mgr) {
@@ -88,14 +87,14 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		nob_da_append(&player_names, '\0');
 		nob_da_append(&player_states, player->ready ? '1' : '0');
 	}
-	BWriter bw = BWriterBuild(NULL,
+	bw_temp.count = 0;
+	BWriterBuild(&bw_temp,
 		BU8, GSMT_INFO_USERS,
 		BU32, viewers_count,
 		BU32, game.players.count,
 		BSN, player_names.count, player_names.items,
 		BSN, player_states.count, player_states.items);
-	GameSendAll(mgr, nob_sb_to_sv(bw));
-	BWriterFree(bw);
+	GameSendAll(mgr, nob_sb_to_sv(bw_temp));
 	nob_sb_free(player_names);
 }
 
@@ -214,28 +213,27 @@ void GameStart(struct mg_connection* c) {
 	// Send
 	game.state = GS_FIRST_DAY;
 	{
-		BWriter bw = {0};
-		BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
-		BWriteU8(&bw, (uint8_t)GAT_CLEAR);
-		GameSendAction(c, nob_sb_to_sv(bw), -1);
-		bw.count = 0;
-		BWriteU8(&bw, (uint8_t)GSMT_GAME_ACTION);
-		BWriteU8(&bw, (uint8_t)GAT_STARTED);
-		GameSendAction(c, nob_sb_to_sv(bw), -1);
+		bw_temp.count = 0;
+		BWriteU8(&bw_temp, (uint8_t)GSMT_GAME_ACTION);
+		BWriteU8(&bw_temp, (uint8_t)GAT_CLEAR);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+		bw_temp.count = 0;
+		BWriteU8(&bw_temp, (uint8_t)GSMT_GAME_ACTION);
+		BWriteU8(&bw_temp, (uint8_t)GAT_STARTED);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 		int i = 0;
 		nob_da_foreach(GamePlayer, p, &game.players) {
-			bw.count = 0;
+			bw_temp.count = 0;
 			p->ready = 0;
-			BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
+			BWriterBuild(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
 			if (p->c == NULL) { continue; }
-			GameSendAction(c, nob_sb_to_sv(bw), i);
+			GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 			i++;
 		}
-		bw.count = 0;
-		BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_DAY_ENDED);
-		GameSendAction(c, nob_sb_to_sv(bw), -1);
+		bw_temp.count = 0;
+		BWriterBuild(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_DAY_ENDED);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 		GameUsersUpdate(c->mgr);
-		BWriterFree(bw);
 	}
 }
 
@@ -317,21 +315,20 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 		if (p->ready_next) { ready_count++; }
 	}
 	if (ready_count == game.players.count) {
-		BWriter bw = {0};
-		BWriterBuild(&bw, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
-		GameSendAction(c, nob_sb_to_sv(bw), -1);
-		BWriterFree(bw);
+		bw_temp.count = 0;
+		BWriterBuild(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+		BWriterFree(bw_temp);
 	}
 	GameUsersUpdate(c->mgr);
 defer:
 	if (result == true) {
-		BWriter bw = {0};
-		BWriterBuild(&bw,
+		bw_temp.count = 0;
+		BWriterBuild(&bw_temp,
 			BU8, GSMT_INFO_READY_NEXT,
 			BU8, ready_count == game.players.count,
 			BU32, ready_count);
-		GameSendAction(c, nob_sb_to_sv(bw), -1);
-		BWriterFree(bw);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 	}
 	return result;
 }

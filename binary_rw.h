@@ -34,6 +34,8 @@ typedef struct BWriter {
 	size_t capacity;
 } BWriter;
 
+extern BWriter bw_temp;
+
 void BWriteU8(BWriter* bw, const uint8_t  in);
 void BWriteU16(BWriter* bw, const uint16_t in);
 void BWriteU32(BWriter* bw, const uint32_t in);
@@ -69,6 +71,8 @@ Nob_String_Builder BReadSB(BReader* br, size_t n) {
 		return (Nob_String_Builder){ 0 };
 	return sb;
 }
+
+BWriter bw_temp;
 
 #define BR_WRITE_IN(in_, amount_) \
 	nob_sb_append_buf(bw, (uint8_t*)in_, amount_);
