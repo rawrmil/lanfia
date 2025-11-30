@@ -324,6 +324,15 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 	}
 	GameUsersUpdate(c->mgr);
 defer:
+	if (result == true) {
+		BWriter bw = {0};
+		BWriterBuild(&bw,
+			BU8, GSMT_INFO_READY_NEXT,
+			BU8, ready_count == game.players.count,
+			BU32, ready_count);
+		GameSendAction(c, nob_sb_to_sv(bw), -1);
+		BWriterFree(bw);
+	}
 	return result;
 }
 

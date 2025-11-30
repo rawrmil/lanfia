@@ -236,6 +236,7 @@
 		}
 		// --- Variables ---
 		var ready = false;
+		var ready_next = false;
 		var player_names = [];
 		var player_states = "";
 		var game_started = false;
@@ -332,9 +333,9 @@
 		// --- Game Process ---
 		function GameReadyNext() {
 			const writer = new ByteWriter();
-			ToggleReady(!ready);
+			ready_next = !ready_next;
 			writer.u8(GCMT.READY_NEXT);
-			writer.u8(ready);
+			writer.u8(ready_next);
 			ws.send(writer.bytes())
 		}
 		function GameAction(reader) {
@@ -392,7 +393,7 @@
 						msgEl.innerHTML =
 						`
 							<div style="display: flex; justify-content: center;">
-								<button onclick="GameReadyNext()">
+								<button id="ready_next_button" onclick="GameReadyNext()">
 									Ready
 								</button>
 							</div>
@@ -436,6 +437,13 @@
 			}
 			viewersEl.textContent = viewer_count;
 		}
+		function HandleServerInfoReadyNext(reader) {
+			const all_ready = reader.u8();
+			const ready_count = reader.u32();
+			if (all_ready) { ready_next = false; }
+			const readyNextButton = document.getElementById("ready_next_button")
+			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${ready_count}/${player_names.length})`;
+		}
 		// --- WebSockets ---
 		const ws = new WebSocket(`ws://${location.host}/ws`);
 		ws.binaryType = "arraybuffer";
@@ -446,10 +454,11 @@
 			const reader = new ByteReader(event.data);
 			msg_type = reader.u8();
 			switch (msg_type) {
-				case GSMT.INFO_USERS:  HandleServerInfoUsers(reader); break;
-				case GSMT.ERROR:       GameError(reader); break;
-				case GSMT.CONFIRM:     GameConfirm(reader); break;
-				case GSMT.GAME_ACTION: GameAction(reader); break;
+				case GSMT.INFO_USERS:      HandleServerInfoUsers(reader); break;
+				case GSMT.INFO_READY_NEXT: HandleServerInfoReadyNext(reader); break;
+				case GSMT.ERROR:           GameError(reader); break;
+				case GSMT.CONFIRM:         GameConfirm(reader); break;
+				case GSMT.GAME_ACTION:     GameAction(reader); break;
 			}
 		}
 	</script>
