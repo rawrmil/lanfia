@@ -66,15 +66,13 @@ void GameSendAll(struct mg_mgr* mgr, Nob_String_View sv) {
 
 void GameSendError(struct mg_connection* c, GameErrorType et) {
 	bw_temp.count = 0;
-	BWriteU8(&bw_temp, (uint8_t)GSMT_ERROR);
-	BWriteU8(&bw_temp, (uint8_t)et);
+	BWriterBuild(&bw_temp, BU8, GSMT_ERROR, BU8, et);
 	GameSend(c, nob_sb_to_sv(bw_temp));
 }
 
 void GameSendConfirm(struct mg_connection* c, GameConfirmType ct) {
 	bw_temp.count = 0;
-	BWriteU8(&bw_temp, (uint8_t)GSMT_CONFIRM);
-	BWriteU8(&bw_temp, (uint8_t)ct);
+	BWriterBuild(&bw_temp, BU8, GSMT_CONFIRM, BU8, ct);
 	GameSend(c, nob_sb_to_sv(bw_temp));
 }
 
@@ -214,12 +212,10 @@ void GameStart(struct mg_connection* c) {
 	game.state = GS_FIRST_DAY;
 	{
 		bw_temp.count = 0;
-		BWriteU8(&bw_temp, (uint8_t)GSMT_GAME_ACTION);
-		BWriteU8(&bw_temp, (uint8_t)GAT_CLEAR);
+		BWriterBuild(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_CLEAR);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 		bw_temp.count = 0;
-		BWriteU8(&bw_temp, (uint8_t)GSMT_GAME_ACTION);
-		BWriteU8(&bw_temp, (uint8_t)GAT_STARTED);
+		BWriterBuild(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_STARTED);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 		int i = 0;
 		nob_da_foreach(GamePlayer, p, &game.players) {
