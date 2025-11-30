@@ -279,8 +279,8 @@ bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br) {
 	nob_da_append(&game.players, player);
 defer:
 	if (result) {
-		GameSendHistory(c);
 		GameSendConfirm(c, GC_JOIN_SUCCESS);
+		GameSendHistory(c);
 	} else {
 		nob_sb_free(username);
 	}
