@@ -165,9 +165,9 @@
 				<div class="game_join" style="">
 					<label for="game_username"></label>
 					<input id="game_username" type="text" autocomplete="off" spellcheck="false" placeholder="Username"></input>
-					<button id="join_button" onclick="GameJoin()">Join</button>
-					<button id="leave_button" onclick="GameLeave()" style="display: none;">Leave</button>
-					<button id="ready_button" onclick="GameReady()" style="display: none;"></button>
+					<button id="join_button" onclick="SendGameJoin()">Join</button>
+					<button id="leave_button" onclick="SendGameLeave()" style="display: none;">Leave</button>
+					<button id="ready_button" onclick="SendGameReady()" style="display: none;"></button>
 				</div>
 				<div style="display: flex; margin: 8px;">
 					<span id="game_join_error" style="color: tomato;"></span>
@@ -290,63 +290,62 @@
 			document.getElementById("ready_button").innerHTML = !ready ? "Ready" : "Not ready";
 		}
 		ToggleReady(false);
-		// --- Join ---
-		function GameConfirm(reader) {
-			confirm_type = reader.u8();
-			switch (confirm_type) {
-				case GC.JOIN_SUCCESS:
-					joinErrorEl.innerHTML = "";
-					ToggleJoin(true);
-					ToggleReady(false);
-					is_player = true;
-					break;
-				case GC.LEAVE_SUCCESS:
-					joinErrorEl.innerHTML = "";
-					ToggleJoin(false);
-					ToggleReady(false);
-					is_player = false;
-					break;
-			}
-		}
-		function GameError(reader) {
-			err_type = reader.u8();
-			switch (err_type) {
-				case GE.JOIN_GAME_IN_PROGRESS:
-					joinErrorEl.innerHTML = "Game already started";
-					break;
-				case GE.JOIN_NAME_TOO_LONG:
-					joinErrorEl.innerHTML = "Name too long";
-					break;
-			}
-		}
-		function GameJoin() {
+		// --- Server Message Send ---
+		function SendGameJoin() {
 			const writer = new ByteWriter();
 			writer.u8(GCMT.LOBBY_JOIN);
 			writer.strn(usernameEl.value);
 			ws.send(writer.bytes())
 			ReadyNextButtonUpdate();
 		}
-		function GameLeave() {
+		function SendGameLeave() {
 			const writer = new ByteWriter();
 			writer.u8(GCMT.LOBBY_LEAVE);
 			ws.send(writer.bytes())
 		}
-		function GameReady() {
+		function SendGameReady() {
 			const writer = new ByteWriter();
 			ToggleReady(!ready);
 			writer.u8(GCMT.LOBBY_READY);
 			writer.u8(ready);
 			ws.send(writer.bytes())
 		}
-		// --- Game Process ---
-		function GameReadyNext() {
+		function SendGameReadyNext() {
 			const writer = new ByteWriter();
 			ready_next = !ready_next;
 			writer.u8(GCMT.READY_NEXT);
 			writer.u8(ready_next);
 			ws.send(writer.bytes())
 		}
-		function GameAction(reader) {
+		// --- Server Message Handlers ---
+		function HandleServerInfoUsers(reader) {
+			const viewer_count = reader.u32();
+			const player_count = reader.u32();
+			player_names = reader.strn().split('\0');
+			player_states = reader.strn();
+			player_names.pop();
+			playersListEl.innerHTML = "";
+			const playersNoneEl = document.getElementById("players_none");
+			playersNoneEl.style.display = player_names.length == 0 ? "unset" : "none";
+			for (const i in player_names) {
+				playersListEl.innerHTML +=
+					`<div class='player_entry'>
+						<span class='player_number'>${Number(i)+1}.</span>
+						&nbsp;
+						<span class='player_name'>${Escaped(player_names[i]+"\n")}</span>
+						&nbsp;
+						<span class='player_name'>${player_states[i] != "0" ? "(ready)" : ""}</span>
+					</div>\n`;
+			}
+			viewersEl.textContent = viewer_count;
+		}
+		function HandleServerInfoReadyNext(reader) {
+			const all_ready = reader.u8();
+			player_next_count = reader.u32();
+			if (all_ready) { ready_next = false; }
+			ReadyNextButtonUpdate();
+		}
+		function HandleServerGameAction(reader) {
 			const action = reader.u8();
 			var msgEl = document.createElement('div');
 			msgEl.className = "game_chat_msg";
@@ -400,14 +399,11 @@
 					msgEl.innerHTML =
 					`
 						<div style="display: flex; justify-content: center;">
-							<button id="ready_next_button" onclick="GameReadyNext()">
+							<button id="ready_next_button" onclick="SendGameReadyNext()">
 								Ready
 							</button>
 						</div>
 					`;
-					if (!is_player) {
-						ReadyNextButtonUpdate();
-					}
 					break;
 				case GAT.NIGHT_STARTED:
 					msgEl.innerHTML += "<h3>NIGHT STARTED</h3>";
@@ -425,33 +421,33 @@
 			gameChat.appendChild(msgEl);
 			ReadyNextButtonUpdate();
 		}
-		// --- Message processing ---
-		function HandleServerInfoUsers(reader) {
-			const viewer_count = reader.u32();
-			const player_count = reader.u32();
-			player_names = reader.strn().split('\0');
-			player_states = reader.strn();
-			player_names.pop();
-			playersListEl.innerHTML = "";
-			const playersNoneEl = document.getElementById("players_none");
-			playersNoneEl.style.display = player_names.length == 0 ? "unset" : "none";
-			for (const i in player_names) {
-				playersListEl.innerHTML +=
-					`<div class='player_entry'>
-						<span class='player_number'>${Number(i)+1}.</span>
-						&nbsp;
-						<span class='player_name'>${Escaped(player_names[i]+"\n")}</span>
-						&nbsp;
-						<span class='player_name'>${player_states[i] != "0" ? "(ready)" : ""}</span>
-					</div>\n`;
+		function HandleServerGameConfirm(reader) {
+			confirm_type = reader.u8();
+			switch (confirm_type) {
+				case GC.JOIN_SUCCESS:
+					joinErrorEl.innerHTML = "";
+					ToggleJoin(true);
+					ToggleReady(false);
+					is_player = true;
+					break;
+				case GC.LEAVE_SUCCESS:
+					joinErrorEl.innerHTML = "";
+					ToggleJoin(false);
+					ToggleReady(false);
+					is_player = false;
+					break;
 			}
-			viewersEl.textContent = viewer_count;
 		}
-		function HandleServerInfoReadyNext(reader) {
-			const all_ready = reader.u8();
-			player_next_count = reader.u32();
-			if (all_ready) { ready_next = false; }
-			ReadyNextButtonUpdate();
+		function HandleServerGameError(reader) {
+			err_type = reader.u8();
+			switch (err_type) {
+				case GE.JOIN_GAME_IN_PROGRESS:
+					joinErrorEl.innerHTML = "Game already started";
+					break;
+				case GE.JOIN_NAME_TOO_LONG:
+					joinErrorEl.innerHTML = "Name too long";
+					break;
+			}
 		}
 		// --- WebSockets ---
 		const ws = new WebSocket(`ws://${location.host}/ws`);
@@ -465,9 +461,9 @@
 			switch (msg_type) {
 				case GSMT.INFO_USERS:      HandleServerInfoUsers(reader); break;
 				case GSMT.INFO_READY_NEXT: HandleServerInfoReadyNext(reader); break;
-				case GSMT.ERROR:           GameError(reader); break;
-				case GSMT.CONFIRM:         GameConfirm(reader); break;
-				case GSMT.GAME_ACTION:     GameAction(reader); break;
+				case GSMT.ERROR:           HandleServerGameError(reader); break;
+				case GSMT.CONFIRM:         HandleServerGameConfirm(reader); break;
+				case GSMT.GAME_ACTION:     HandleServerGameAction(reader); break;
 			}
 		}
 	</script>
