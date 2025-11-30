@@ -258,11 +258,9 @@ bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br) {
 	}
 	username = BReadSB(br, n);
 	nob_da_foreach(GamePlayer, p, &game.players) {
-		// TODO: mg_strcmp
-		if (p->username.count == username.count && strncmp(p->username.items, username.items, username.count) == 0) {
+		if (nob_sv_eq(nob_sb_to_sv(p->username), nob_sb_to_sv(username))) {
 			if (game.debug || p->c == NULL) {
 				p->c = c;
-				GameUsersUpdate(c->mgr);
 				nob_return_defer(true);
 			}
 			nob_return_defer(false);
@@ -279,14 +277,14 @@ bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br) {
 	player.c = c;
 	player.username = username; // TODO: check username
 	nob_da_append(&game.players, player);
-	GameUsersUpdate(c->mgr);
 defer:
-	if (result) { 
+	if (result) {
 		GameSendHistory(c);
 		GameSendConfirm(c, GC_JOIN_SUCCESS);
 	} else {
 		nob_sb_free(username);
 	}
+	GameUsersUpdate(c->mgr);
 	return result;
 }
 
@@ -324,10 +322,8 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 		BWriterFree(bw_temp);
 	}
-	GameUsersUpdate(c->mgr);
 defer:
-	if (result == true) {
-	}
+	GameUsersUpdate(c->mgr);
 	return result;
 }
 
