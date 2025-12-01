@@ -452,6 +452,9 @@
 				case GE.JOIN_NAME_TOO_LONG:
 					joinErrorEl.innerHTML = "Name too long";
 					break;
+				case GE.LEAVE_GAME_IN_PROGRESS:
+					joinErrorEl.innerHTML = "Game already started";
+					break;
 			}
 		}
 		// --- WebSockets ---

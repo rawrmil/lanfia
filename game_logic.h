@@ -329,6 +329,7 @@ defer:
 
 bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br) {
 	if (game.state != GS_LOBBY) {
+		GameSendError(c, GE_LEAVE_GAME_IN_PROGRESS);
 		return false;
 	}
 	GamePlayerRemove(c);
