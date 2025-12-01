@@ -38,13 +38,14 @@ enum { GCMT };
 	X(GS_LOBBY) \
 	X(GS_FIRST_DAY) \
 	X(GS_DAY) \
-	X(GS_MAFIA) \
-	X(GS_SERIF) \
-	X(GS_DOCTOR) \
-	X(GS_ESCORT) \
-	X(GS_MANIAC) \
-	X(GS_VOTE) \
+	X(GS_NIGHT) \
 	X(GS_LAST_)
+
+//X(GS_MAFIA) \
+//X(GS_SERIF) \
+//X(GS_DOCTOR) \
+//X(GS_ESCORT) \
+//X(GS_MANIAC) \
 
 #define X(name_) name_,
 typedef enum GameState { GS } GameState;
@@ -81,6 +82,7 @@ typedef enum GameConfirmType { GC } GameConfirmType;
 	X(GAT_ROLE) \
 	X(GAT_DAY_ENDED) \
 	X(GAT_NIGHT_STARTED) \
+	X(GAT_NIGHT_VILLAGER) \
 	X(GAT_RESULTS) \
 	X(GAT_LAST_) \
 

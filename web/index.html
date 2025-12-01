@@ -413,6 +413,10 @@
 					ReadyNextButtonDelete();
 					msgEl.innerHTML += "<h3>NIGHT STARTED</h3>";
 					break;
+				case GAT.NIGHT_VILLAGER:
+					msgEl.innerHTML += "<h3>Villager Task</h3>";
+					msgEl.innerHTML += "<p>Just stare at the screen bro</p>";
+					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "<h1>GAME RESULTS</h1>";
 					break;
@@ -447,13 +451,11 @@
 			err_type = reader.u8();
 			switch (err_type) {
 				case GE.JOIN_GAME_IN_PROGRESS:
+				case GE.LEAVE_GAME_IN_PROGRESS:
 					joinErrorEl.innerHTML = "Game already started";
 					break;
 				case GE.JOIN_NAME_TOO_LONG:
 					joinErrorEl.innerHTML = "Name too long";
-					break;
-				case GE.LEAVE_GAME_IN_PROGRESS:
-					joinErrorEl.innerHTML = "Game already started";
 					break;
 			}
 		}

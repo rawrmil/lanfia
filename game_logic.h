@@ -193,6 +193,7 @@ void GameTestSetRoles() {
 }
 
 void GameStart(struct mg_connection* c) {
+	game.state = GS_FIRST_DAY;
 	if (game.players.count < 5) { return; }
 	// Give Roles
 	int count_lookup[GRT_LAST_];
@@ -217,27 +218,43 @@ void GameStart(struct mg_connection* c) {
 	//	printf("Player %d: %s\n", i, GRT_NAMES[game.players.items[i].role]);
 	//}
 	// Send
-	game.state = GS_FIRST_DAY;
-	{
+	bw_temp.count = 0;
+	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_CLEAR);
+	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	bw_temp.count = 0;
+	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_STARTED);
+	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	int i = 0;
+	nob_da_foreach(GamePlayer, p, &game.players) {
 		bw_temp.count = 0;
-		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_CLEAR);
-		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
-		bw_temp.count = 0;
-		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_STARTED);
-		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
-		int i = 0;
-		nob_da_foreach(GamePlayer, p, &game.players) {
-			bw_temp.count = 0;
-			p->ready = 0;
-			BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
-			if (p->c == NULL) { continue; }
-			GameSendAction(c, nob_sb_to_sv(bw_temp), i);
-			i++;
+		p->ready = 0;
+		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
+		if (p->c == NULL) { continue; }
+		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
+		i++;
+	}
+	bw_temp.count = 0;
+	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_DAY_ENDED);
+	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	GameUsersUpdate(c->mgr);
+}
+
+// TODO: proper prefix for this funcs
+void GameNight(struct mg_connection* c) {
+	game.state = GS_NIGHT;
+	nob_da_foreach(GamePlayer, p, &game.players) { p->ready_next = 0; }
+	bw_temp.count = 0;
+	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
+	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	for (int i = 0; i < game.players.count; i++) {
+		GamePlayer p = game.players.items[i];
+		switch (p.role) {
+			case GRT_VILLAGER:
+				bw_temp.count = 0;
+				BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_VILLAGER);
+				GameSendAction(c, nob_sb_to_sv(bw_temp), i);
+				break;
 		}
-		bw_temp.count = 0;
-		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_DAY_ENDED);
-		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
-		GameUsersUpdate(c->mgr);
 	}
 }
 
@@ -317,10 +334,7 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 		if (p->ready_next) { game.ready_next_count++; }
 	}
 	if (game.ready_next_count == game.players.count) {
-		bw_temp.count = 0;
-		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
-		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
-		//nob_da_foreach(GamePlayer, p, &game.players) { p->ready_next = 0; }
+		GameNight(c);
 	}
 defer:
 	GameUsersUpdate(c->mgr);
