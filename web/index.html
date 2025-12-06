@@ -189,51 +189,9 @@
 		</div>
 	</div>
 	<script src="gmt.js"></script>
+	<script src="utils.js"></script>
+	<script src="templates.js"></script>
 	<script>
-		// --- Utils ---
-		function Escaped(str) {
-			return str.replace(/&/g, '&amp;')
-				.replace(/</g, '&lt;')
-				.replace(/>/g, '&gt;')
-				.replace(/"/g, '&quot;')
-				.replace(/'/g, '&#39;');
-		}
-		// --- ByteReader/ByteWriter (stream I/O) ---
-		class ByteReader {
-			constructor(buffer) {
-				this.dv = new DataView(buffer);
-				this.i = 0;
-			}
-			u8()   { const r = this.dv.getUint8(this.i);        this.i += 1; return r; }
-			u16()  { const r = this.dv.getUint16(this.i, true); this.i += 2; return r; }
-			u32()  { const r = this.dv.getUint32(this.i, true); this.i += 4; return r; }
-			u64()  { const r = this.dv.getUint64(this.i, true); this.i += 8; return r; }
-			str(n) {
-				const str = new TextDecoder().decode(new Uint8Array(this.dv.buffer, this.i, n));
-				this.i += n;
-				return str;
-			}
-			strn() {
-				var n = this.u32();
-				return this.str(n);
-			}
-		}
-		class ByteWriter {
-			constructor() {
-				this.arr = [];
-				this.dv = new DataView(new ArrayBuffer(8))
-			}
-			bytes() { return new Uint8Array(this.arr); }
-			u8(v)  { this.arr.push(v); }
-			u16(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 2)); }
-			u32(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 4)); }
-			u64(v) { this.dv.setUint16(0, v, true); this.arr.push(...new Uint8Array(this.dv.buffer, 0, 8)); }
-			strn(s) {
-				const te = new TextEncoder().encode(s);
-				this.u32(te.length);
-				this.arr.push(...te);
-			}
-		}
 		// --- Variables ---
 		var ready = false;
 		var ready_next = false;
@@ -322,13 +280,7 @@
 		}
 		// --- Generate HTML ---
 		function GetTextReadyNext() {
-			return `
-					<div style="display: flex; justify-content: center;">
-						<button id="ready_next_button" onclick="SendGameReadyNext()">
-							Ready
-						</button>
-					</div>
-				`;
+			return templReadyNextButton;
 		}
 		// --- Server Message Handlers ---
 		function HandleServerInfoUsers(reader) {
@@ -341,14 +293,7 @@
 			const playersNoneEl = document.getElementById("players_none");
 			playersNoneEl.style.display = player_names.length == 0 ? "unset" : "none";
 			for (const i in player_names) {
-				playersListEl.innerHTML +=
-					`<div class='player_entry'>
-						<span class='player_number'>${Number(i)+1}.</span>
-						&nbsp;
-						<span class='player_name'>${Escaped(player_names[i]+"\n")}</span>
-						&nbsp;
-						<span class='player_name'>${player_states[i] != "0" ? "(ready)" : ""}</span>
-					</div>\n`;
+				playersListEl.innerHTML += eval(`\`${templPlayerListEntry}\``);
 			}
 			viewersEl.textContent = viewer_count;
 		}
@@ -371,46 +316,30 @@
 					game_started = true;
 					ToggleLobby(false);
 					readyButtonEl.style.display = "none";
-					msgEl.innerHTML +=
-					`
-						<h1>
-							GAME STARTED
-						</h1>
-					`
+					msgEl.innerHTML += templGameStarted;
 					if (is_player) {
-						msgEl.innerHTML +=
-						`
-							<p>
-								Become familiar with your role and let's get started!
-							</p>
-							<p>
-								Press "Ready" button
-							</p>
-						`;
+						msgEl.innerHTML += templGameStartedPlayerNote;
 					} else {
-						msgEl.innerHTML +=
-							`
-								<p>You are a spectator!</p>
-							`;
+						msgEl.innerHTML += templGameStartedSpectatorNote;
 					}
 					break;
 				case GAT.ROLE:
 					const role_type = reader.u8();
 					player_role = role_type;
-					msgEl.innerHTML += "<span>Your role is <i>"
+					role_name = "";
 					switch (player_role) {
-						case GRT.VILLAGER: msgEl.innerHTML += "villager"; break;
-						case GRT.MAFIA:    msgEl.innerHTML += "mafia"; break;
-						case GRT.SERIF:    msgEl.innerHTML += "serif"; break;
-						case GRT.DOCTOR:   msgEl.innerHTML += "doctor"; break;
-						case GRT.ESCORT:   msgEl.innerHTML += "escort"; break;
-						case GRT.MANIAC:   msgEl.innerHTML += "maniac"; break;
+						case GRT.VILLAGER: role_name += templRoleVillager; break;
+						case GRT.MAFIA:    role_name += templRoleMafia; break;
+						case GRT.SERIF:    role_name += templRoleSerif; break;
+						case GRT.DOCTOR:   role_name += templRoleDoctor; break;
+						case GRT.ESCORT:   role_name += templRoleEscort; break;
+						case GRT.MANIAC:   role_name += templRoleManiac; break;
 					}
-					msgEl.innerHTML += "</i>!</span>";
+					msgEl.innerHTML += eval(`\`${templGameActionRole}\``);
 					break;
 				case GAT.DAY_STARTED:
 					ReadyNextButtonDelete();
-					msgEl.innerHTML += `<h3>DAY STARTED</h3>`
+					msgEl.innerHTML += templDayStarted;
 					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.DAY_ENDED:
@@ -418,43 +347,32 @@
 					break;
 				case GAT.NIGHT_STARTED:
 					ReadyNextButtonDelete();
-					msgEl.innerHTML += "<h3>NIGHT STARTED</h3>";
+					msgEl.innerHTML += templNightStarted;
 					if (!is_player) {
-						msgEl.innerHTML += "Players are doing their choices!";
+						msgEl.innerHTML += templChoicesNote;
 					}
 					break;
 				case GAT.NIGHT_ROLE_ACTION:
 					var role = reader.u8();
+					msgEl.innerHTML += templRoleTasks[role];
 					switch (role) {
 						case GRT.VILLAGER:
-							msgEl.innerHTML += "<h3>Villager Task</h3>";
-							msgEl.innerHTML += "<p>Just stare at the screen bro</p>";
 							break;
 						case GRT.MAFIA:
-							msgEl.innerHTML += "<h3>Mafia Task</h3>";
-							msgEl.innerHTML += "<p>There will be a poll</p>";
 							break;
 						case GRT.SERIF:
-							msgEl.innerHTML += "<h3>Serif Task</h3>";
-							msgEl.innerHTML += "<p>There will be a poll with response</p>";
 							break;
 						case GRT.DOCTOR:
-							msgEl.innerHTML += "<h3>Doctor Task</h3>";
-							msgEl.innerHTML += "<p>There will be a poll</p>";
 							break;
 						case GRT.ESCORT:
-							msgEl.innerHTML += "<h3>Escort Task</h3>";
-							msgEl.innerHTML += "<p>There will be a poll</p>";
 							break;
 						case GRT.MANIAC:
-							msgEl.innerHTML += "<h3>Maniac Task</h3>";
-							msgEl.innerHTML += "<p>There will be a poll</p>";
 							break;
 					}
 					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.RESULTS:
-					msgEl.innerHTML += "<h1>GAME RESULTS</h1>";
+					msgEl.innerHTML += "";
 					break;
 				// TODO: on end:
 				// readyButtonEl.disabled = false;
