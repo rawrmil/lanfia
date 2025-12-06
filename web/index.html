@@ -10,7 +10,7 @@
 		<span id="game_logo">
 			LANfia
 		</span>
-		<button id="lobby_button" onclick="ToggleLobby(!is_lobby)"></button>
+		<button id="lobby_button" onclick="UIToggleLobby(!is_lobby)"></button>
 	</nav>
 	<div class="game_content">
 		<div class="game_box">
@@ -64,17 +64,10 @@
 		const lobbyButtonEl = document.getElementById("lobby_button");
 		const gameLobby = document.getElementById("game_lobby");
 		const gameChat = document.getElementById("game_chat");
-		function ReadyNextButtonUpdate() {
-			const readyNextButton = document.getElementById("ready_next_button");
-			if (!readyNextButton) { return; }
-			ready_next_button.disabled = !is_player;
-			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${player_next_count}/${player_names.length})`;
-		}
-		function ReadyNextButtonDelete() {
-			var readyNextButton = document.getElementById("ready_next_button");
-			if (readyNextButton) { readyNextButton.remove(); }
-		}
-		function ToggleLobby(state) {
+		// --- UI Handlers ---
+		UIToggleLobby(true);
+		UIToggleReady(false);
+		function UIToggleLobby(state) {
 			if (state) {
 				gameChat.style.display = "none";
 				gameLobby.style.display = "unset";
@@ -86,8 +79,7 @@
 			}
 			is_lobby = state;
 		}
-		ToggleLobby(true);
-		function ToggleJoin(state) {
+		function UIToggleJoin(state) {
 			if (state) {
 				document.getElementById("join_button").style.display  = "none";
 				document.getElementById("leave_button").style.display = "unset";
@@ -100,11 +92,20 @@
 				usernameEl.disabled = false;
 			}
 		}
-		function ToggleReady(state) {
+		function UIToggleReady(state) {
 			ready = state;
 			document.getElementById("ready_button").innerHTML = !ready ? "Ready" : "Not ready";
 		}
-		ToggleReady(false);
+		function UIReadyNextButtonUpdate() {
+			const readyNextButton = document.getElementById("ready_next_button");
+			if (!readyNextButton) { return; }
+			ready_next_button.disabled = !is_player;
+			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${player_next_count}/${player_names.length})`;
+		}
+		function UIReadyNextButtonDelete() {
+			var readyNextButton = document.getElementById("ready_next_button");
+			if (readyNextButton) { readyNextButton.remove(); }
+		}
 		// --- Server Message Send ---
 		function SendGameJoin() {
 			const writer = new ByteWriter();
@@ -119,7 +120,7 @@
 		}
 		function SendGameReady() {
 			const writer = new ByteWriter();
-			ToggleReady(!ready);
+			UIToggleReady(!ready);
 			writer.u8(GCMT.LOBBY_READY);
 			writer.u8(ready);
 			ws.send(writer.bytes())
@@ -154,7 +155,7 @@
 			const all_ready = reader.u8();
 			player_next_count = reader.u32();
 			if (all_ready) { ready_next = false; }
-			ReadyNextButtonUpdate();
+			UIReadyNextButtonUpdate();
 		}
 		function HandleServerGameAction(reader) {
 			const action = reader.u8();
@@ -167,7 +168,7 @@
 				case GAT.STARTED:
 					readyButtonEl.disabled = true;
 					game_started = true;
-					ToggleLobby(false);
+					UIToggleLobby(false);
 					readyButtonEl.style.display = "none";
 					msgEl.innerHTML += templGameStarted;
 					if (is_player) {
@@ -191,7 +192,7 @@
 					msgEl.innerHTML += eval(`\`${templGameActionRole}\``);
 					break;
 				case GAT.DAY_STARTED:
-					ReadyNextButtonDelete();
+					UIReadyNextButtonDelete();
 					msgEl.innerHTML += templDayStarted;
 					msgEl.innerHTML += GetTextReadyNext();
 					break;
@@ -199,7 +200,7 @@
 					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.NIGHT_STARTED:
-					ReadyNextButtonDelete();
+					UIReadyNextButtonDelete();
 					msgEl.innerHTML += templNightStarted;
 					if (!is_player) {
 						msgEl.innerHTML += templChoicesNote;
@@ -230,26 +231,26 @@
 				// TODO: on end:
 				// readyButtonEl.disabled = false;
 				// game_started = false;
-				// ToggleLobby(true);
+				// UIToggleLobby(true);
 				default:
 					return;
 			}
 			gameChat.appendChild(msgEl);
-			ReadyNextButtonUpdate();
+			UIReadyNextButtonUpdate();
 		}
 		function HandleServerGameConfirm(reader) {
 			confirm_type = reader.u8();
 			switch (confirm_type) {
 				case GC.JOIN_SUCCESS:
 					joinErrorEl.innerHTML = "";
-					ToggleJoin(true);
-					ToggleReady(false);
+					UIToggleJoin(true);
+					UIToggleReady(false);
 					is_player = true;
 					break;
 				case GC.LEAVE_SUCCESS:
 					joinErrorEl.innerHTML = "";
-					ToggleJoin(false);
-					ToggleReady(false);
+					UIToggleJoin(false);
+					UIToggleReady(false);
 					is_player = false;
 					break;
 			}
