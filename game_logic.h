@@ -259,13 +259,9 @@ void GameNight(struct mg_connection* c) {
 	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 	for (int i = 0; i < game.players.count; i++) {
 		GamePlayer p = game.players.items[i];
-		switch (p.role) {
-			case GRT_VILLAGER:
-				bw_temp.count = 0;
-				BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_VILLAGER);
-				GameSendAction(c, nob_sb_to_sv(bw_temp), i);
-				break;
-		}
+		bw_temp.count = 0;
+		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_VILLAGER + p.role);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 	}
 }
 
