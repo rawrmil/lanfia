@@ -81,6 +81,7 @@ typedef enum GameConfirmType { GC } GameConfirmType;
 	X(GAT_CLEAR) \
 	X(GAT_STARTED) \
 	X(GAT_ROLE) \
+	X(GAT_DAY_STARTED) \
 	X(GAT_DAY_ENDED) \
 	X(GAT_NIGHT_STARTED) \
 	X(GAT_NIGHT_VILLAGER) \

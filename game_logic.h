@@ -266,9 +266,17 @@ void GameNight(struct mg_connection* c) {
 		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_VILLAGER + p.role);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 	}
-	game.ready_next_count = 0;
 	GameUpdateReadyNext(c->mgr);
 }
+
+void GameDay(struct mg_connection* c) {
+	game.state = GS_DAY;
+	bw_temp.count = 0;
+	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_DAY_STARTED);
+	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	GameUsersUpdate(c->mgr);
+}
+
 
 // --- HANDLERS ---
 
@@ -346,7 +354,19 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 		if (p->ready_next) { game.ready_next_count++; }
 	}
 	if (game.ready_next_count == game.players.count) {
-		GameNight(c);
+		nob_da_foreach(GamePlayer, p, &game.players) {
+			p->ready_next = 0;
+		}
+		game.ready_next_count = 0;
+		switch (game.state) {
+			case GS_FIRST_DAY:
+			case GS_DAY:
+				GameNight(c);
+				break;
+			case GS_NIGHT:
+				GameDay(c);
+				break;
+		}
 	}
 defer:
 	GameUsersUpdate(c->mgr);

@@ -408,6 +408,11 @@
 					}
 					msgEl.innerHTML += "</i>!</span>";
 					break;
+				case GAT.DAY_STARTED:
+					ReadyNextButtonDelete();
+					msgEl.innerHTML += `<h3>DAY STARTED</h3>`
+					msgEl.innerHTML += GetTextReadyNext();
+					break;
 				case GAT.DAY_ENDED:
 					msgEl.innerHTML += GetTextReadyNext();
 					break;
