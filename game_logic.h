@@ -263,7 +263,7 @@ void GameNight(struct mg_connection* c) {
 	for (int i = 0; i < game.players.count; i++) {
 		GamePlayer p = game.players.items[i];
 		bw_temp.count = 0;
-		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_VILLAGER + p.role);
+		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_ROLE_ACTION, BU8, p.role);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 	}
 	GameUpdateReadyNext(c->mgr);

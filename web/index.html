@@ -423,34 +423,34 @@
 						msgEl.innerHTML += "Players are doing their choices!";
 					}
 					break;
-				case GAT.NIGHT_VILLAGER:
-					msgEl.innerHTML += "<h3>Villager Task</h3>";
-					msgEl.innerHTML += "<p>Just stare at the screen bro</p>";
-					msgEl.innerHTML += GetTextReadyNext();
-					break;
-				case GAT.NIGHT_MAFIA:
-					msgEl.innerHTML += "<h3>Mafia Task</h3>";
-					msgEl.innerHTML += "<p>There will be a poll</p>";
-					msgEl.innerHTML += GetTextReadyNext();
-					break;
-				case GAT.NIGHT_SERIF:
-					msgEl.innerHTML += "<h3>Serif Task</h3>";
-					msgEl.innerHTML += "<p>There will be a poll with response</p>";
-					msgEl.innerHTML += GetTextReadyNext();
-					break;
-				case GAT.NIGHT_DOCTOR:
-					msgEl.innerHTML += "<h3>Doctor Task</h3>";
-					msgEl.innerHTML += "<p>There will be a poll</p>";
-					msgEl.innerHTML += GetTextReadyNext();
-					break;
-				case GAT.NIGHT_ESCORT:
-					msgEl.innerHTML += "<h3>Escort Task</h3>";
-					msgEl.innerHTML += "<p>There will be a poll</p>";
-					msgEl.innerHTML += GetTextReadyNext();
-					break;
-				case GAT.NIGHT_MANIAC:
-					msgEl.innerHTML += "<h3>Maniac Task</h3>";
-					msgEl.innerHTML += "<p>There will be a poll</p>";
+				case GAT.NIGHT_ROLE_ACTION:
+					var role = reader.u8();
+					switch (role) {
+						case GRT.VILLAGER:
+							msgEl.innerHTML += "<h3>Villager Task</h3>";
+							msgEl.innerHTML += "<p>Just stare at the screen bro</p>";
+							break;
+						case GRT.MAFIA:
+							msgEl.innerHTML += "<h3>Mafia Task</h3>";
+							msgEl.innerHTML += "<p>There will be a poll</p>";
+							break;
+						case GRT.SERIF:
+							msgEl.innerHTML += "<h3>Serif Task</h3>";
+							msgEl.innerHTML += "<p>There will be a poll with response</p>";
+							break;
+						case GRT.DOCTOR:
+							msgEl.innerHTML += "<h3>Doctor Task</h3>";
+							msgEl.innerHTML += "<p>There will be a poll</p>";
+							break;
+						case GRT.ESCORT:
+							msgEl.innerHTML += "<h3>Escort Task</h3>";
+							msgEl.innerHTML += "<p>There will be a poll</p>";
+							break;
+						case GRT.MANIAC:
+							msgEl.innerHTML += "<h3>Maniac Task</h3>";
+							msgEl.innerHTML += "<p>There will be a poll</p>";
+							break;
+					}
 					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.RESULTS:
