@@ -92,6 +92,22 @@ void MsgSeq6PlayersReadyNext() {
 	MsgReadyNextNPlayers(5);
 }
 
+void MsgSeq6FixedRoles() {
+	ClientMsgAdd(0, BWriterAppend(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, "vil"));
+	ClientMsgAdd(1, BWriterAppend(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, "maf"));
+	ClientMsgAdd(2, BWriterAppend(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, "ser"));
+	ClientMsgAdd(3, BWriterAppend(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, "doc"));
+	ClientMsgAdd(4, BWriterAppend(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, "esc"));
+	ClientMsgAdd(5, BWriterAppend(NULL, BU8, GCMT_LOBBY_JOIN, BSN, 3, "man"));
+	ClientMsgAdd(0, BWriterAppend(NULL, BU8, GCMT_DEBUG_SET_ROLE, BU8, GRT_VILLAGER));
+	ClientMsgAdd(1, BWriterAppend(NULL, BU8, GCMT_DEBUG_SET_ROLE, BU8, GRT_MAFIA));
+	ClientMsgAdd(2, BWriterAppend(NULL, BU8, GCMT_DEBUG_SET_ROLE, BU8, GRT_SERIF));
+	ClientMsgAdd(3, BWriterAppend(NULL, BU8, GCMT_DEBUG_SET_ROLE, BU8, GRT_DOCTOR));
+	ClientMsgAdd(4, BWriterAppend(NULL, BU8, GCMT_DEBUG_SET_ROLE, BU8, GRT_ESCORT));
+	ClientMsgAdd(5, BWriterAppend(NULL, BU8, GCMT_DEBUG_SET_ROLE, BU8, GRT_MANIAC));
+	MsgReadyNPlayers(6);
+}
+
 void MsgSeqInit(int state) {
 	switch (state) {
 		case 1: MsgSeq6PlayersConnect(); break;
@@ -101,6 +117,7 @@ void MsgSeqInit(int state) {
 		case 5: MsgSeq10PlayersReady(); break;
 		case 6: MsgSeq32PlayersReady(); break;
 		case 7: MsgSeq6PlayersReadyNext(); break;
+		case 8: MsgSeq6FixedRoles(); break;
 	}
 }
 

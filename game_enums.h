@@ -26,6 +26,7 @@ enum { GSMT };
 	X(GCMT_LOBBY_LEAVE) \
 	X(GCMT_LOBBY_READY) \
 	X(GCMT_READY_NEXT) \
+	X(GCMT_DEBUG_SET_ROLE) \
 	X(GCMT_LAST_) \
 
 #define X(name_) name_,

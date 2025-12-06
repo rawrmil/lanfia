@@ -29,12 +29,14 @@ typedef struct Game {
 	GamePlayers players;
 	size_t ready_next_count;
 	bool debug;
+	bool manual_roles;
 	GameState state;
 	BWriter history;
 } Game;
 
 extern Game game;
 
+GamePlayer* GameGetPlayer(struct mg_connection* c);
 void GameUsersUpdate(struct mg_mgr* mgr);
 void GameUserAdd(struct mg_connection* c);
 void GameUserRemove(struct mg_connection* c);
@@ -54,6 +56,13 @@ void GameTestSetRoles();
 #ifdef GAME_LOGIC_IMPLEMENTATION
 
 Game game;
+
+GamePlayer* GameGetPlayer(struct mg_connection* c) {
+	nob_da_foreach(GamePlayer, p, &game.players) {
+		if (c == p->c) { return p; }
+	}
+	return NULL;
+}
 
 void GameSend(struct mg_connection* c, Nob_String_View sv) {
 	mg_ws_send(c, sv.data, sv.count, WEBSOCKET_OP_BINARY);
@@ -195,24 +204,26 @@ void GameTestSetRoles() {
 void GameStart(struct mg_connection* c) {
 	game.state = GS_FIRST_DAY;
 	if (game.players.count < 5) { return; }
-	// Give Roles
-	int count_lookup[GRT_LAST_];
-	GameSetRolesCount(count_lookup, game.players.count);
-	int role = 0;
-	nob_da_foreach(GamePlayer, p, &game.players) {
-		if (count_lookup[role] == 0) { role++; }
-		if (role == GRT_LAST_) { NOB_UNREACHABLE("count_lookup ended"); }
-		p->role = role;
-		count_lookup[role]--;
-	}
-	// Shuffle
-	for (int i = 0; i < game.players.count; i++) {
-		int j = rand() % GAT_LAST_;
-		GameRoleType* i_role = &game.players.items[i].role;
-		GameRoleType* j_role = &game.players.items[j].role;
-		GameRoleType tmp = *i_role;
-		*i_role = *j_role;
-		*j_role = tmp;
+	if (!game.manual_roles) {
+		// Give Roles
+		int count_lookup[GRT_LAST_];
+		GameSetRolesCount(count_lookup, game.players.count);
+		int role = GRT_VILLAGER;
+		nob_da_foreach(GamePlayer, p, &game.players) {
+			if (count_lookup[role] == 0) { role++; }
+			if (role == GRT_LAST_) { NOB_UNREACHABLE("count_lookup ended"); }
+			p->role = role;
+			count_lookup[role]--;
+		}
+		// Shuffle
+		for (int i = 0; i < game.players.count; i++) {
+			int j = rand() % GAT_LAST_;
+			GameRoleType* i_role = &game.players.items[i].role;
+			GameRoleType* j_role = &game.players.items[j].role;
+			GameRoleType tmp = *i_role;
+			*i_role = *j_role;
+			*j_role = tmp;
+		}
 	}
 	//for (int i = 0; i < game.players.count; i++) {
 	//	printf("Player %d: %s\n", i, GRT_NAMES[game.players.items[i].role]);
