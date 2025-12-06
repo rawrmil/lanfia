@@ -260,7 +260,7 @@
 			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${player_next_count}/${player_names.length})`;
 		}
 		function ReadyNextButtonDelete() {
-			const readyNextButton = document.getElementById("ready_next_button");
+			var readyNextButton = document.getElementById("ready_next_button");
 			readyNextButton.remove();
 		}
 		function ToggleLobby(state) {
@@ -300,7 +300,6 @@
 			writer.u8(GCMT.LOBBY_JOIN);
 			writer.strn(usernameEl.value);
 			ws.send(writer.bytes())
-			ReadyNextButtonUpdate();
 		}
 		function SendGameLeave() {
 			const writer = new ByteWriter();
@@ -320,6 +319,16 @@
 			writer.u8(GCMT.READY_NEXT);
 			writer.u8(ready_next);
 			ws.send(writer.bytes())
+		}
+		// --- Generate HTML ---
+		function GetTextReadyNext() {
+			return `
+					<div style="display: flex; justify-content: center;">
+						<button id="ready_next_button" onclick="SendGameReadyNext()">
+							Ready
+						</button>
+					</div>
+				`;
 		}
 		// --- Server Message Handlers ---
 		function HandleServerInfoUsers(reader) {
@@ -400,42 +409,44 @@
 					msgEl.innerHTML += "</i>!</span>";
 					break;
 				case GAT.DAY_ENDED:
-					msgEl.innerHTML =
-					`
-						<div style="display: flex; justify-content: center;">
-							<button id="ready_next_button" onclick="SendGameReadyNext()">
-								Ready
-							</button>
-						</div>
-					`;
+					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.NIGHT_STARTED:
 					ReadyNextButtonDelete();
 					msgEl.innerHTML += "<h3>NIGHT STARTED</h3>";
+					if (!is_player) {
+						msgEl.innerHTML += "Players are doing their choices!";
+					}
 					break;
 				case GAT.NIGHT_VILLAGER:
 					msgEl.innerHTML += "<h3>Villager Task</h3>";
 					msgEl.innerHTML += "<p>Just stare at the screen bro</p>";
+					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.NIGHT_MAFIA:
 					msgEl.innerHTML += "<h3>Mafia Task</h3>";
 					msgEl.innerHTML += "<p>There will be a poll</p>";
+					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.NIGHT_SERIF:
 					msgEl.innerHTML += "<h3>Serif Task</h3>";
 					msgEl.innerHTML += "<p>There will be a poll with response</p>";
+					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.NIGHT_DOCTOR:
 					msgEl.innerHTML += "<h3>Doctor Task</h3>";
 					msgEl.innerHTML += "<p>There will be a poll</p>";
+					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.NIGHT_ESCORT:
 					msgEl.innerHTML += "<h3>Escort Task</h3>";
 					msgEl.innerHTML += "<p>There will be a poll</p>";
+					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.NIGHT_MANIAC:
 					msgEl.innerHTML += "<h3>Maniac Task</h3>";
 					msgEl.innerHTML += "<p>There will be a poll</p>";
+					msgEl.innerHTML += GetTextReadyNext();
 					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "<h1>GAME RESULTS</h1>";

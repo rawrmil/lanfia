@@ -86,6 +86,15 @@ void GameSendConfirm(struct mg_connection* c, GameConfirmType ct) {
 	GameSend(c, nob_sb_to_sv(bw_temp));
 }
 
+void GameUpdateReadyNext(struct mg_mgr* mgr) {
+	bw_temp.count = 0;
+	BWriterAppend(&bw_temp,
+		BU8, GSMT_INFO_READY_NEXT,
+		BU8, game.ready_next_count == game.players.count,
+		BU32, game.ready_next_count);
+	GameSendAll(mgr, nob_sb_to_sv(bw_temp));
+}
+
 void GameUsersUpdate(struct mg_mgr* mgr) {
 	uint32_t viewers_count = game.users_count > game.players.count ? game.users_count - game.players.count : 0;
 	Nob_String_Builder player_names = {0};
@@ -104,13 +113,7 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		BSN, player_states.count, player_states.items);
 	GameSendAll(mgr, nob_sb_to_sv(bw_temp));
 	nob_sb_free(player_names);
-	// Update Ready Next
-	bw_temp.count = 0;
-	BWriterAppend(&bw_temp,
-		BU8, GSMT_INFO_READY_NEXT,
-		BU8, game.ready_next_count == game.players.count,
-		BU32, game.ready_next_count);
-	GameSendAll(mgr, nob_sb_to_sv(bw_temp));
+	GameUpdateReadyNext(mgr);
 }
 
 void GameUserAdd(struct mg_connection* c) {
@@ -263,6 +266,8 @@ void GameNight(struct mg_connection* c) {
 		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_VILLAGER + p.role);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 	}
+	game.ready_next_count = 0;
+	GameUpdateReadyNext(c->mgr);
 }
 
 // --- HANDLERS ---
