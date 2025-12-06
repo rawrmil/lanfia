@@ -261,7 +261,7 @@
 		}
 		function ReadyNextButtonDelete() {
 			var readyNextButton = document.getElementById("ready_next_button");
-			readyNextButton.remove();
+			if (readyNextButton) { readyNextButton.remove(); }
 		}
 		function ToggleLobby(state) {
 			if (state) {
