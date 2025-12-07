@@ -53,24 +53,32 @@ const templRoleTasks = Object.freeze({
     `,
     [GRT.MAFIA]: `
         <h3>Mafia Task</h3>
-        <p>There will be a poll</p>
+        <p>Last Mafia to vote locks the kill target</p>
     `,
     [GRT.SERIF]: `
         <h3>Serif Task</h3>
-        <p>There will be a poll with response</p>
     `,
     [GRT.DOCTOR]: `
         <h3>Doctor Task</h3>
-        <p>There will be a poll</p>
     `,
     [GRT.ESCORT]: `
         <h3>Escort Task</h3>
-        <p>There will be a poll</p>
     `,
     [GRT.MANIAC]: `
         <h3>Maniac Task</h3>
-        <p>There will be a poll</p>
     `
 });
 
 templGameEnded = `<h1>GAME RESULTS</h1>`;
+
+templGamePoll =
+	`
+		Choose:
+		\${GeneratePoll()}
+	`;
+
+templGamePollMafiaChose =
+	`
+		Player '\${player_names[voter_index]}' chose to kill
+		'\${player_names[chosen_index]}'
+	`;

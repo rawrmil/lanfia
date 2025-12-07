@@ -131,9 +131,23 @@
 			writer.u8(GCMT.READY_NEXT);
 			ws.send(writer.bytes())
 		}
-		// --- Generate HTML ---
+		function SendGamePoll(index) {
+			const writer = new ByteWriter();
+			writer.u8(GCMT.POLL);
+			writer.u32(index);
+			ws.send(writer.bytes())
+		}
+		// --- Generate HTML --- // TODO: move up
 		function GetTextReadyNext() {
+			UIReadyNextButtonDelete();
 			return templReadyNextButton;
+		}
+		function GeneratePoll() {
+			var s = "";
+			for (const i in player_names) {
+				s += `<button onclick="SendGamePoll(${i})">${player_names[i]}</button>`
+			}
+			return s;
 		}
 		// --- Server Message Handlers ---
 		function HandleServerInfoPlayer(reader) {
@@ -226,6 +240,15 @@
 							break;
 					}
 					msgEl.innerHTML += GetTextReadyNext();
+					break;
+				case GAT.POLL:
+					msgEl.innerHTML += eval(`\`${templGamePoll}\``)
+					msgEl.innerHTML += GetTextReadyNext();
+					break;
+				case GAT.POLL_MAFIA_CHOSE:
+					voter_index = reader.u32();
+					chosen_index = reader.u32();
+					msgEl.innerHTML += eval(`\`${templGamePollMafiaChose}\``)
 					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "";

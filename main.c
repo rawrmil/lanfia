@@ -112,6 +112,9 @@ void HandleWSMessage(struct mg_connection* c, void* ev_data) {
 		case GCMT_READY_NEXT:
 			HandleClientReadyNext(c, &br);
 			break;
+		case GCMT_POLL:
+			HandleClientLobbyPoll(c, &br);
+			break;
 		case GCMT_DEBUG_SET_ROLE:
 			if (!game.debug) { break; }
 			game.manual_roles = true;

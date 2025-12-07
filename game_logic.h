@@ -32,6 +32,7 @@ typedef struct Game {
 	bool manual_roles;
 	GameState state;
 	BWriter history;
+	int mafia_chose;
 } Game;
 
 extern Game game;
@@ -45,9 +46,10 @@ void GamePlayerRemove(struct mg_connection* c);
 void HandleClientConnect(struct mg_connection* c);
 bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br);
 bool HandleClientLobbyReady(struct mg_connection* c, BReader* br);
-bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br);
-void HandleClientDisconnect(struct mg_connection* c);
 bool HandleClientReadyNext(struct mg_connection* c, BReader* br);
+bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br);
+void HandleClientLobbyPoll(struct mg_connection* c, BReader* br);
+void HandleClientDisconnect(struct mg_connection* c);
 
 void GameTestSetRoles();
 
@@ -62,6 +64,15 @@ GamePlayer* GameGetPlayer(struct mg_connection* c) {
 		if (c == p->c) { return p; }
 	}
 	return NULL;
+}
+
+int GameGetPlayerIndex(struct mg_connection* c) {
+	int i = 0;
+	nob_da_foreach(GamePlayer, p, &game.players) {
+		if (c == p->c) { return i; }
+		i++;
+	}
+	return -1;
 }
 
 void GameSend(struct mg_connection* c, Nob_String_View sv) {
@@ -100,6 +111,7 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 	uint32_t viewers_count = game.users_count > game.players.count ? game.users_count - game.players.count : 0;
 	Nob_String_Builder player_names = {0};
 	Nob_String_Builder player_states = {0};
+	Nob_String_Builder player_dead = {0};
 	nob_da_foreach(GamePlayer, player, &game.players) {
 		bw_temp.count = 0;
 		BWriterAppend(&bw_temp, BU8, GSMT_INFO_PLAYER, BU8, player->ready_next);
@@ -107,6 +119,7 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		nob_sb_append_buf(&player_names, player->username.items, player->username.count);
 		nob_da_append(&player_names, '\0');
 		nob_da_append(&player_states, player->ready ? '1' : '0');
+		//nob_da_append(&player_dead, player->is_dead ? '1' : '0');
 	}
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp,
@@ -114,7 +127,7 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		BU32, viewers_count,
 		BU32, game.players.count,
 		BSN, player_names.count, player_names.items,
-		BSN, player_states.count, player_states.items);
+		BSN, player_dead.count, player_dead.items);
 	GameSendAll(mgr, nob_sb_to_sv(bw_temp));
 	nob_sb_free(player_names);
 	GameUpdateReadyNext(mgr);
@@ -247,7 +260,6 @@ void GameStart(struct mg_connection* c) {
 		bw_temp.count = 0;
 		p->ready = 0;
 		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
-		if (p->c == NULL) { continue; }
 		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 		i++;
 	}
@@ -260,6 +272,7 @@ void GameStart(struct mg_connection* c) {
 // TODO: proper prefix for this funcs
 void GameNight(struct mg_connection* c) {
 	game.state = GS_NIGHT;
+	game.mafia_chose = -1;
 	nob_da_foreach(GamePlayer, p, &game.players) { p->ready_next = 0; }
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
@@ -269,6 +282,15 @@ void GameNight(struct mg_connection* c) {
 		bw_temp.count = 0;
 		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_ROLE_ACTION, BU8, p.role);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
+		switch (p.role) {
+			case GRT_MAFIA:
+				bw_temp.count = 0;
+				BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_POLL);
+				GameSendAction(c, nob_sb_to_sv(bw_temp), i);
+				break;
+			default:
+				break;
+		}
 	}
 	GameUpdateReadyNext(c->mgr);
 }
@@ -386,6 +408,38 @@ bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br) {
 	GamePlayerRemove(c);
 	GameSendConfirm(c, GC_LEAVE_SUCCESS);
 	return true;
+}
+
+void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
+	uint32_t index;
+	if (!BReadU32(br, &index)) { return; }
+	if (index >= game.players.count) { return; }
+	int voter_index = GameGetPlayerIndex(c);
+	if (voter_index == -1) { return; }
+	GamePlayer* p = &game.players.items[voter_index];
+	//if (p->is_dead) { return; }
+	if (game.state == GS_NIGHT) {
+		switch (p->role) {
+			case GRT_MAFIA:
+				game.mafia_chose = index;
+				bw_temp.count = 0;
+				BWriterAppend(&bw_temp,
+					BU8, GSMT_GAME_ACTION,
+					BU8, GAT_POLL_MAFIA_CHOSE,
+					BU32, voter_index,
+					BU32, game.mafia_chose);
+				int i = 0;
+				nob_da_foreach(GamePlayer, p, &game.players) {
+					if (p->role == GRT_MAFIA) { GameSendAction(c, nob_sb_to_sv(bw_temp), i); }
+					i++;
+				}
+				printf("MAFIA CHOSE: %d\n", game.mafia_chose);
+				break;
+			default:
+				break;
+		}
+	}
+	GameUsersUpdate(c->mgr);
 }
 
 void HandleClientDisconnect(struct mg_connection* c) {
