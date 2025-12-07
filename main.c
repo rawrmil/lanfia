@@ -157,8 +157,8 @@ int main(int argc, char* argv[]) {
 	Nob_String_Builder ip_sb = {0};
 	nob_sb_append_cstr(&ip_sb, "http://");
 	GetIpSB(&ip_sb);
-	nob_sb_appendf(&ip_sb, ":%d", *flags.port);
-	printf("Address: %.*s\n", ip_sb.count, ip_sb.items);
+	nob_sb_appendf(&ip_sb, ":%lu", *flags.port);
+	printf("Address: %.*s\n", (int)ip_sb.count, ip_sb.items);
 
 	Nob_String_Builder ip_qrcode = {0}; // as a bitmap
 	int bitmap_size;
@@ -170,21 +170,21 @@ int main(int argc, char* argv[]) {
 
 	printf("log_level: %d\n", mg_log_level);
 	printf("flags.web_dir: %s\n", *flags.web_dir);
-	printf("flags.port: %d\n", *flags.port);
+	printf("flags.port: %lu\n", *flags.port);
 
 	struct mg_mgr mgr;
 	mg_mgr_init(&mgr);
 
 	char addrstr[32];
-	snprintf(addrstr, sizeof(addrstr), "http://0.0.0.0:%d", *flags.port);
+	snprintf(addrstr, sizeof(addrstr), "http://0.0.0.0:%lu", *flags.port);
 
 	mg_http_listen(&mgr, addrstr, EventHandler, NULL);
 
 	if (*flags.state != 0) {
 		game.debug = true;
 		MsgSeqInit(*flags.state);
-		snprintf(addrstr, sizeof(addrstr), "ws://0.0.0.0:%d/ws", *flags.port);
-		for (int i = 0; i < sizeof(debug_conns)/sizeof(*debug_conns); i++)
+		snprintf(addrstr, sizeof(addrstr), "ws://0.0.0.0:%lu/ws", *flags.port);
+		for (size_t i = 0; i < sizeof(debug_conns)/sizeof(*debug_conns); i++)
 			debug_conns[i] = mg_ws_connect(&mgr, addrstr, DebugEventHandler, NULL, NULL);
 	}
 

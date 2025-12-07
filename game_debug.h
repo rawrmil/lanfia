@@ -189,14 +189,15 @@ void SeqStep(struct mg_connection* c) {
 	ClientMsg cm = batch.items[batch.index];
 	if (debug_conns[cm.conn_index] != c) return;
 	if (cm.desc.count > 0) {
-		printf("[ %d/%d ]: ", batch.index, batch.count);
-		printf("'%.*s'\n", cm.desc.count, cm.desc.items);
+		printf("[ %zu/%zu ]: ", batch.index, batch.count);
+		printf("'%.*s'\n", (int)cm.desc.count, cm.desc.items);
 	}
 	mg_ws_send(debug_conns[cm.conn_index], cm.msg.items, cm.msg.count, WEBSOCKET_OP_BINARY);
 	batch.index++;
 }
 
 void DebugEventHandler(struct mg_connection* c, int ev, void* ev_data) {
+	(void)ev_data;
 	if (!c->is_client)
 		return;
 	switch (ev) {

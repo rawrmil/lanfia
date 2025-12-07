@@ -42,12 +42,6 @@ enum { GCMT };
 	X(GS_NIGHT) \
 	X(GS_LAST_)
 
-//X(GS_MAFIA) \
-//X(GS_SERIF) \
-//X(GS_DOCTOR) \
-//X(GS_ESCORT) \
-//X(GS_MANIAC) \
-
 #define X(name_) name_,
 typedef enum GameState { GS } GameState;
 #undef X

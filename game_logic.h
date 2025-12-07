@@ -25,7 +25,7 @@ typedef struct GamePlayers {
 } GamePlayers; // nob.h dynamic array
 
 typedef struct Game {
-	int users_count;
+	size_t users_count;
 	GamePlayers players;
 	size_t ready_next_count;
 	bool debug;
@@ -42,7 +42,7 @@ void GameUserAdd(struct mg_connection* c);
 void GameUserRemove(struct mg_connection* c);
 void GamePlayerRemove(struct mg_connection* c);
 
-bool HandleClientConnect(struct mg_connection* c);
+void HandleClientConnect(struct mg_connection* c);
 bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br);
 bool HandleClientLobbyReady(struct mg_connection* c, BReader* br);
 bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br);
@@ -147,7 +147,7 @@ void GameSendHistory(struct mg_connection* c) {
 	};
 
 	size_t curr_player_index = -1;
-	for (int i = 0; i < game.players.count; i++) {
+	for (size_t i = 0; i < game.players.count; i++) {
 		if (game.players.items[i].c == c) {
 			curr_player_index = i;
 		}
@@ -161,7 +161,7 @@ void GameSendHistory(struct mg_connection* c) {
 			.items = (char*)(br.data + br.i),
 			.count = msg_count
 		};
-		if (player_index == -1 || player_index == curr_player_index) {
+		if (player_index == (unsigned int)-1 || player_index == curr_player_index) {
 			GameSend(c, nob_sb_to_sv(bw));
 		}
 		br.i += msg_count;
@@ -179,7 +179,7 @@ void GameSendAction(struct mg_connection* c, Nob_String_View sv, int player_inde
 	GameSend(game.players.items[player_index].c, sv);
 }
 
-int GameSetRolesCount(int* count_lookup, int n) {
+void GameSetRolesCount(int* count_lookup, int n) {
 	int mafia_count = n / 3;
 	int town_count = n - mafia_count;
 	count_lookup[GRT_MAFIA]    = mafia_count;
@@ -219,7 +219,7 @@ void GameStart(struct mg_connection* c) {
 			count_lookup[role]--;
 		}
 		// Shuffle
-		for (int i = 0; i < game.players.count; i++) {
+		for (size_t i = 0; i < game.players.count; i++) {
 			int j = rand() % GAT_LAST_;
 			GameRoleType* i_role = &game.players.items[i].role;
 			GameRoleType* j_role = &game.players.items[j].role;
@@ -260,7 +260,7 @@ void GameNight(struct mg_connection* c) {
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
 	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
-	for (int i = 0; i < game.players.count; i++) {
+	for (size_t i = 0; i < game.players.count; i++) {
 		GamePlayer p = game.players.items[i];
 		bw_temp.count = 0;
 		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_ROLE_ACTION, BU8, p.role);
@@ -280,7 +280,7 @@ void GameDay(struct mg_connection* c) {
 
 // --- HANDLERS ---
 
-bool HandleClientConnect(struct mg_connection* c) {
+void HandleClientConnect(struct mg_connection* c) {
 	GameSendHistory(c);
 }
 
@@ -366,6 +366,8 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 			case GS_NIGHT:
 				GameDay(c);
 				break;
+			default:
+				break;
 		}
 	}
 defer:
@@ -374,6 +376,7 @@ defer:
 }
 
 bool HandleClientLobbyLeave(struct mg_connection* c, BReader* br) {
+	(void)br;
 	if (game.state != GS_LOBBY) {
 		GameSendError(c, GE_LEAVE_GAME_IN_PROGRESS);
 		return false;
