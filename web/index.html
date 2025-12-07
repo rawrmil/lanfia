@@ -129,7 +129,6 @@
 			const writer = new ByteWriter();
 			ready_next = !ready_next;
 			writer.u8(GCMT.READY_NEXT);
-			writer.u8(ready_next);
 			ws.send(writer.bytes())
 		}
 		// --- Generate HTML ---
@@ -137,6 +136,9 @@
 			return templReadyNextButton;
 		}
 		// --- Server Message Handlers ---
+		function HandleServerInfoPlayer(reader) {
+			ready_next = reader.u8();
+		}
 		function HandleServerInfoUsers(reader) {
 			const viewer_count = reader.u32();
 			const player_count = reader.u32();
@@ -277,6 +279,7 @@
 			const reader = new ByteReader(event.data);
 			msg_type = reader.u8();
 			switch (msg_type) {
+				case GSMT.INFO_PLAYER:     HandleServerInfoPlayer(reader); break;
 				case GSMT.INFO_USERS:      HandleServerInfoUsers(reader); break;
 				case GSMT.INFO_READY_NEXT: HandleServerInfoReadyNext(reader); break;
 				case GSMT.ERROR:           HandleServerGameError(reader); break;

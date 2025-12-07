@@ -65,6 +65,7 @@ GamePlayer* GameGetPlayer(struct mg_connection* c) {
 }
 
 void GameSend(struct mg_connection* c, Nob_String_View sv) {
+	if (!c) { return; }
 	mg_ws_send(c, sv.data, sv.count, WEBSOCKET_OP_BINARY);
 }
 
@@ -100,6 +101,9 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 	Nob_String_Builder player_names = {0};
 	Nob_String_Builder player_states = {0};
 	nob_da_foreach(GamePlayer, player, &game.players) {
+		bw_temp.count = 0;
+		BWriterAppend(&bw_temp, BU8, GSMT_INFO_PLAYER, BU8, player->ready_next);
+		GameSend(player->c, nob_sb_to_sv(bw_temp));
 		nob_sb_append_buf(&player_names, player->username.items, player->username.count);
 		nob_da_append(&player_names, '\0');
 		nob_da_append(&player_states, player->ready ? '1' : '0');
@@ -344,13 +348,11 @@ defer:
 }
 
 bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
+	(void)br;
 	bool result = true;
-	uint8_t ready;
-	if (!BReadU8(br, &ready))
-		nob_return_defer(false);
 	game.ready_next_count = 0;
 	nob_da_foreach(GamePlayer, p, &game.players) {
-		if (p->c == c) { p->ready_next = ready; }
+		if (p->c == c) { p->ready_next = !p->ready_next; }
 		if (p->ready_next) { game.ready_next_count++; }
 	}
 	if (game.ready_next_count == game.players.count) {
@@ -370,7 +372,7 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 				break;
 		}
 	}
-defer:
+	GameUpdateReadyNext(c->mgr);
 	GameUsersUpdate(c->mgr);
 	return result;
 }
