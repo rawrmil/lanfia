@@ -117,6 +117,7 @@ void BuildApp() {
 	switch (target) {
 		case T_LINUX:
 			nob_cmd_append(&cmd, *flags.cc, "main.c");
+			nob_cmd_append(&cmd, "-Wall", "-Wextra", "-Wpedantic");
 			nob_cmd_append(&cmd, "out/mongoose_linux.o");
 			nob_cmd_append(&cmd, "out/qrcodegen_linux.o");
 			nob_cmd_append(&cmd, "-I"MONGOOSE);
@@ -134,6 +135,7 @@ void BuildApp() {
 			break;
 		case T_WINDOWS:
 			nob_cmd_append(&cmd, *flags.cc, "main.c");
+			nob_cmd_append(&cmd, "-Wall", "-Wextra", "-Wpedantic");
 			nob_cmd_append(&cmd, "out/mongoose_windows.o");
 			nob_cmd_append(&cmd, "out/qrcodegen_windows.o");
 			nob_cmd_append(&cmd, "-I"MONGOOSE);
