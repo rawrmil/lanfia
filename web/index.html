@@ -276,6 +276,11 @@
 					chosen_index = reader.u32();
 					msgEl.innerHTML += eval(`\`${templGamePollMafiaChose}\``)
 					break;
+				case GAT.POLL_DOCTOR_CHOSE:
+					voter_index = reader.u32();
+					chosen_index = reader.u32();
+					msgEl.innerHTML += eval(`\`${templGamePollDoctorChose}\``)
+					break;
 				case GAT.POLL_KICK_CHOSE:
 					voter_index = reader.u32();
 					chosen_index = reader.u32();
@@ -284,6 +289,10 @@
 				case GAT.PLAYER_KILLED:
 					chosen_index = reader.u32();
 					msgEl.innerHTML += eval(`\`${templPlayerKilled}\``)
+					break;
+				case GAT.PLAYER_HEALED:
+					chosen_index = reader.u32();
+					msgEl.innerHTML += eval(`\`${templPlayerHealed}\``)
 					break;
 				case GAT.PLAYER_KICKED:
 					chosen_index = reader.u32();

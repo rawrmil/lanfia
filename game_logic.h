@@ -35,6 +35,7 @@ typedef struct Game {
 	GameState state;
 	BWriter history;
 	int mafia_chose;
+	int doctor_chose;
 } Game;
 
 extern Game game;
@@ -279,6 +280,7 @@ void GameStart(struct mg_connection* c) {
 void GameNight(struct mg_connection* c) {
 	game.state = GS_NIGHT;
 	game.mafia_chose = -1;
+	game.doctor_chose = -1;
 	nob_da_foreach(GamePlayer, p, &game.players) { p->ready_next = 0; }
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
@@ -294,6 +296,10 @@ void GameNight(struct mg_connection* c) {
 				BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_POLL);
 				GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 				break;
+			case GRT_DOCTOR:
+				bw_temp.count = 0;
+				BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_POLL);
+				GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 			default:
 				break;
 		}
@@ -310,13 +316,22 @@ void GameDay(struct mg_connection* c) {
 	// MAFIA KILL
 	GamePlayer* player_killed = &game.players.items[game.mafia_chose];
 	if (game.mafia_chose != -1) {
-		player_killed->is_dead = true;
-		bw_temp.count = 0;
-		BWriterAppend(&bw_temp,
+		if (game.mafia_chose != game.doctor_chose) {
+			player_killed->is_dead = true;
+			bw_temp.count = 0;
+			BWriterAppend(&bw_temp,
 				BU8, GSMT_GAME_ACTION,
 				BU8, GAT_PLAYER_KILLED,
 				BU32, game.mafia_chose);
-		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+		} else {
+			bw_temp.count = 0;
+			BWriterAppend(&bw_temp,
+				BU8, GSMT_GAME_ACTION,
+				BU8, GAT_PLAYER_HEALED,
+				BU32, game.doctor_chose);
+			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+		}
 	}
 	// VOTE
 	for (size_t i = 0; i < game.players.count; i++) {
@@ -512,10 +527,24 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 					BU8, GAT_POLL_MAFIA_CHOSE,
 					BU32, voter_index,
 					BU32, game.mafia_chose);
-				int i = 0;
-				nob_da_foreach(GamePlayer, p, &game.players) {
-					if (p->role == GRT_MAFIA) { GameSendAction(c, nob_sb_to_sv(bw_temp), i); }
-					i++;
+				for (size_t i = 0; i < game.players.count; i++) {
+					if (game.players.items[i].role == GRT_MAFIA) {
+						GameSendAction(c, nob_sb_to_sv(bw_temp), i);
+					}
+				}
+				break;
+			case GRT_DOCTOR:
+				game.doctor_chose = index;
+				bw_temp.count = 0;
+				BWriterAppend(&bw_temp,
+					BU8, GSMT_GAME_ACTION,
+					BU8, GAT_POLL_DOCTOR_CHOSE,
+					BU32, voter_index,
+					BU32, game.doctor_chose);
+				for (size_t i = 0; i < game.players.count; i++) {
+					if (game.players.items[i].role == GRT_DOCTOR) {
+						GameSendAction(c, nob_sb_to_sv(bw_temp), i);
+					}
 				}
 				break;
 			default:

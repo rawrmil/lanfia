@@ -85,6 +85,12 @@ templGamePollMafiaChose =
 		'\${player_names[chosen_index]}'
 	`;
 
+templGamePollDoctorChose =
+	`
+		Player '\${player_names[voter_index]}' chose to heal
+		'\${player_names[chosen_index]}'
+	`;
+
 templGamePollKickChose =
 	`
 		Player '\${player_names[voter_index]}' chose to kick
@@ -99,4 +105,9 @@ templPlayerKilled =
 templPlayerKicked =
 	`
 		Player '\${player_names[chosen_index]}' kicked.
+	`;
+
+templPlayerHealed =
+	`
+		Player '\${player_names[chosen_index]}' healed.
 	`;
