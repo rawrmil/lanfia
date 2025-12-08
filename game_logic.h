@@ -456,7 +456,7 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 		if (p->ready_next) { game.ready_next_count++; }
 		if (!p->is_dead) { not_dead_count++; }
 	}
-	if (game.ready_next_count == not_dead_count) {
+	if (game.ready_next_count >= not_dead_count) {
 		nob_da_foreach(GamePlayer, p, &game.players) {
 			p->ready_next = 0;
 		}
