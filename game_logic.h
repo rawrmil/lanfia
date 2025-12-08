@@ -200,12 +200,12 @@ void GameSendAction(struct mg_connection* c, Nob_String_View sv, int player_inde
 
 void GameSetRolesCount(int* count_lookup, int n) {
 	int mafia_count = n / 3;
-	int town_count = n - mafia_count;
+	//int town_count = n - mafia_count;
 	count_lookup[GRT_MAFIA]    = mafia_count;
-	count_lookup[GRT_SERIF]    = 1 + town_count / 6;
-	count_lookup[GRT_DOCTOR]   = 1 + town_count / 6;
-	count_lookup[GRT_ESCORT]   = town_count / 7;
-	count_lookup[GRT_MANIAC]   = town_count / 7;
+	count_lookup[GRT_SERIF]    = 1;
+	count_lookup[GRT_DOCTOR]   = 1;
+	count_lookup[GRT_ESCORT]   = 1;
+	count_lookup[GRT_MANIAC]   = n > 7 ? 1 : 0;
 	count_lookup[GRT_VILLAGER] = n;
 	for (int i = 1; i < GRT_LAST_; i++) {
 		count_lookup[GRT_VILLAGER] -= count_lookup[i];
