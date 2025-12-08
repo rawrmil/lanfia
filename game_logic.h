@@ -45,6 +45,7 @@ void GameUsersUpdate(struct mg_mgr* mgr);
 void GameUserAdd(struct mg_connection* c);
 void GameUserRemove(struct mg_connection* c);
 void GamePlayerRemove(struct mg_connection* c);
+void GameChangeState(struct mg_connection* c);
 
 void HandleClientConnect(struct mg_connection* c);
 bool HandleClientLobbyJoin(struct mg_connection* c, BReader* br);
@@ -380,6 +381,48 @@ void GameDay(struct mg_connection* c) {
 	}
 }
 
+void GameChangeState(struct mg_connection* c) {
+	nob_da_foreach(GamePlayer, p, &game.players) {
+		p->ready_next = 0;
+	}
+	game.ready_next_count = 0;
+	switch (game.state) {
+		case GS_FIRST_DAY:
+			GameNight(c);
+			break;
+		case GS_DAY:
+			int lkp[256];
+			for (size_t i = 0; i < game.players.count; i++) { lkp[i] = -1; }
+			nob_da_foreach(GamePlayer, p, &game.players) {
+				if (p->voted_for > -1) {
+					if (lkp[p->voted_for] == -1) { lkp[p->voted_for] = 0; }
+					lkp[p->voted_for] += 1;
+				}
+			}
+			int mxi = -1;
+			int mx = -1;
+			for (int i = 0; i < (int)game.players.count; i++) {
+				if (lkp[i] > mx) { mx = lkp[i]; mxi = i; }
+			}
+			if (mxi != -1) {
+				game.players.items[mxi].is_dead = true;
+				bw_temp.count = 0;
+				BWriterAppend(&bw_temp,
+						BU8, GSMT_GAME_ACTION,
+						BU8, GAT_PLAYER_KICKED,
+						BU32, (uint32_t)mxi);
+				GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+			}
+			GameNight(c);
+			break;
+		case GS_NIGHT:
+			GameDay(c);
+			break;
+		default:
+			break;
+	}
+}
+
 
 // --- HANDLERS ---
 
@@ -457,45 +500,7 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 		if (!p->is_dead) { not_dead_count++; }
 	}
 	if (game.ready_next_count >= not_dead_count) {
-		nob_da_foreach(GamePlayer, p, &game.players) {
-			p->ready_next = 0;
-		}
-		game.ready_next_count = 0;
-		switch (game.state) {
-			case GS_FIRST_DAY:
-				GameNight(c);
-				break;
-			case GS_DAY:
-				int lkp[256];
-				for (size_t i = 0; i < game.players.count; i++) { lkp[i] = -1; }
-				nob_da_foreach(GamePlayer, p, &game.players) {
-					if (p->voted_for > -1) {
-						if (lkp[p->voted_for] == -1) { lkp[p->voted_for] = 0; }
-						lkp[p->voted_for] += 1;
-					}
-				}
-				int mxi = -1;
-				int mx = -1;
-				for (int i = 0; i < (int)game.players.count; i++) {
-					if (lkp[i] > mx) { mx = lkp[i]; mxi = i; }
-				}
-				if (mxi != -1) {
-					game.players.items[mxi].is_dead = true;
-					bw_temp.count = 0;
-					BWriterAppend(&bw_temp,
-						BU8, GSMT_GAME_ACTION,
-						BU8, GAT_PLAYER_KICKED,
-						BU32, (uint32_t)mxi);
-					GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
-				}
-				GameNight(c);
-				break;
-			case GS_NIGHT:
-				GameDay(c);
-				break;
-			default:
-				break;
-		}
+		GameChangeState(c);
 	}
 	GameUpdateReadyNext(c->mgr);
 	GameUsersUpdate(c->mgr);
