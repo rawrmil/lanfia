@@ -162,7 +162,9 @@
 		function GeneratePoll() {
 			var s = "";
 			for (const i in player_names) {
-				s += `<button onclick="SendGamePoll(${i})">${player_names[i]}</button>`
+				var dis = player_dead[i] == "1" ? "disabled" : ""
+				var pname = player_names[i]
+				s += `<button ${dis} onclick="SendGamePoll(${i})">${pname}</button>`
 			}
 			return s;
 		}
