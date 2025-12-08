@@ -289,6 +289,15 @@
 					chosen_index = reader.u32();
 					msgEl.innerHTML += eval(`\`${templPlayerKicked}\``)
 					break;
+				case GAT.MAFIA_WON:
+					msgEl.innerHTML += "<h1>MAFIA WON</h1>"
+					break;
+				case GAT.TOWN_WON:
+					msgEl.innerHTML += "<h1>TOWN WON</h1>"
+					break;
+				case GAT.MANIAC_WON:
+					msgEl.innerHTML += "<h1>MANIAC WON</h1>"
+					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "";
 					break;

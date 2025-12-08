@@ -333,6 +333,39 @@ void GameDay(struct mg_connection* c) {
 		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 	}
 	GameUsersUpdate(c->mgr);
+	// GAME ENDED OR WHAT
+	size_t lkp[GRT_LAST_];
+	for (size_t i = 0; i < GRT_LAST_; i++) { lkp[i] = 0; }
+	nob_da_foreach(GamePlayer, p, &game.players) {
+		lkp[p->role] += !p->is_dead;
+	}
+	size_t mafia = lkp[GRT_MAFIA];
+	lkp[GRT_MAFIA] = 0;
+	size_t maniac = lkp[GRT_MANIAC];
+	lkp[GRT_MANIAC] = 0;
+	size_t town = 0;
+	for (size_t i = 0; i < GRT_LAST_; i++) { town += lkp[i]; }
+	if (mafia == 0) {
+		if (town == 0) {
+			bw_temp.count = 0;
+			BWriterAppend(&bw_temp,
+				BU8, GSMT_GAME_ACTION,
+				BU8, GAT_MANIAC_WON);
+			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+		} else if (maniac == 0) {
+			bw_temp.count = 0;
+			BWriterAppend(&bw_temp,
+				BU8, GSMT_GAME_ACTION,
+				BU8, GAT_TOWN_WON);
+			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+		}
+	} else if (town == 0) {
+		bw_temp.count = 0;
+		BWriterAppend(&bw_temp,
+				BU8, GSMT_GAME_ACTION,
+				BU8, GAT_MAFIA_WON);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	}
 }
 
 
