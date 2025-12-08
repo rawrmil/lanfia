@@ -81,13 +81,13 @@ templGamePoll =
 
 templGamePollMafiaChose =
 	`
-		Player '\${player_names[voter_index]}' chose to kill
+		Anonymous note: Player '\${player_names[voter_index]}' chose to kill
 		'\${player_names[chosen_index]}'
 	`;
 
 templGamePollDoctorChose =
 	`
-		Player '\${player_names[voter_index]}' chose to heal
+		Anonymous note: Player '\${player_names[voter_index]}' chose to heal
 		'\${player_names[chosen_index]}'
 	`;
 
