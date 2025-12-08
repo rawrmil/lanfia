@@ -85,6 +85,12 @@ templGamePollMafiaChose =
 		'\${player_names[chosen_index]}'
 	`;
 
+templGamePollKickChose =
+	`
+		Player '\${player_names[voter_index]}' chose to kick
+		'\${player_names[chosen_index]}'
+	`;
+
 templPlayerKilled =
 	`
 		Player '\${player_names[chosen_index]}' killed.

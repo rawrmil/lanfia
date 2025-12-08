@@ -324,7 +324,13 @@ void GameDay(struct mg_connection* c) {
 			BU8, GAT_PLAYER_KILLED,
 			BU32, game.mafia_chose);
 	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
-
+	// VOTE
+	for (size_t i = 0; i < game.players.count; i++) {
+		//GamePlayer* p = &game.players.items[i];
+		bw_temp.count = 0;
+		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_POLL);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
+	}
 	GameUsersUpdate(c->mgr);
 }
 
@@ -462,6 +468,14 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 			default:
 				break;
 		}
+	} else if (game.state == GS_DAY) {
+		bw_temp.count = 0;
+		BWriterAppend(&bw_temp,
+			BU8, GSMT_GAME_ACTION,
+			BU8, GAT_POLL_KICK_CHOSE,
+			BU32, voter_index,
+			BU32, index);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 	}
 	GameUsersUpdate(c->mgr);
 }
