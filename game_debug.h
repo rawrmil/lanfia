@@ -239,6 +239,7 @@ void SeqStep(struct mg_connection* c) {
 		printf("'%.*s'\n", (int)cm.desc.count, cm.desc.items);
 	}
 	mg_ws_send(debug_conns[cm.conn_index], cm.msg.items, cm.msg.count, WEBSOCKET_OP_BINARY);
+	BWriterFree(cm.msg);
 	batch.index++;
 }
 
