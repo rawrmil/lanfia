@@ -203,7 +203,16 @@ void MsgSeq6VoteTest() {
 	ClientMsgAdd(6, BWriterAppend(NULL, BU8, GCMT_DEBUG_SET_ROLE, BU8, GRT_MAFIA));
 	MsgReadyNPlayers(7);
 	MsgReadyNextNPlayers(7);
-	ClientMsgAdd(5, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 1));
+	ClientMsgAdd(5, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 3));
+	ClientMsgAdd(6, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 3));
+	MsgReadyNextNPlayers(7);
+	ClientMsgAdd(0, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 0));
+	ClientMsgAdd(1, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 0));
+	ClientMsgAdd(2, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 2));
+	ClientMsgAdd(3, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 2));
+	ClientMsgAdd(4, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 2)); // Dead one
+	ClientMsgAdd(5, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 2));
+	ClientMsgAdd(6, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 2));
 	MsgReadyNextNPlayers(7);
 }
 

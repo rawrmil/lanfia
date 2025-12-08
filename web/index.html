@@ -285,6 +285,10 @@
 					chosen_index = reader.u32();
 					msgEl.innerHTML += eval(`\`${templPlayerKilled}\``)
 					break;
+				case GAT.PLAYER_KICKED:
+					chosen_index = reader.u32();
+					msgEl.innerHTML += eval(`\`${templPlayerKicked}\``)
+					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "";
 					break;

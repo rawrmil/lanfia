@@ -16,6 +16,7 @@ typedef struct GamePlayer {
 	bool ready;
 	bool ready_next;
 	bool is_dead;
+	int voted_for;
 	GameRoleType role;
 } GamePlayer;
 
@@ -415,7 +416,31 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 		game.ready_next_count = 0;
 		switch (game.state) {
 			case GS_FIRST_DAY:
+				GameNight(c);
+				break;
 			case GS_DAY:
+				int lkp[256];
+				for (size_t i = 0; i < game.players.count; i++) { lkp[i] = -1; }
+				nob_da_foreach(GamePlayer, p, &game.players) {
+					if (p->voted_for > -1) {
+						if (lkp[p->voted_for] == -1) { lkp[p->voted_for] = 0; }
+						lkp[p->voted_for] += 1;
+					}
+				}
+				int mxi = -1;
+				int mx = -1;
+				for (int i = 0; i < (int)game.players.count; i++) {
+					if (lkp[i] > mx) { mx = lkp[i]; mxi = i; }
+				}
+				if (mxi != -1) {
+					game.players.items[mxi].is_dead = true;
+					bw_temp.count = 0;
+					BWriterAppend(&bw_temp,
+						BU8, GSMT_GAME_ACTION,
+						BU8, GAT_PLAYER_KICKED,
+						BU32, (uint32_t)mxi);
+					GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+				}
 				GameNight(c);
 				break;
 			case GS_NIGHT:
@@ -469,6 +494,7 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 				break;
 		}
 	} else if (game.state == GS_DAY) {
+		p->voted_for = index;
 		bw_temp.count = 0;
 		BWriterAppend(&bw_temp,
 			BU8, GSMT_GAME_ACTION,

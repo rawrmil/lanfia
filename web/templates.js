@@ -95,3 +95,8 @@ templPlayerKilled =
 	`
 		Player '\${player_names[chosen_index]}' killed.
 	`;
+
+templPlayerKicked =
+	`
+		Player '\${player_names[chosen_index]}' kicked.
+	`;
