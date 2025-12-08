@@ -59,6 +59,7 @@
 		var is_lobby = true;
 		var player_role = -1;
 		var is_player = false;
+		var player_index = -1;
 		// --- Elements ---
 		const viewersEl = document.getElementById("game_viewers");
 		const playersListEl = document.getElementById("players_list");
@@ -107,7 +108,9 @@
 		}
 		function UIPollSpawn() {
 			UIPollDelete();
-			gameChatUnder.innerHTML += eval(`\`${templGamePoll}\``)
+			if (player_dead[player_index] == '0') {
+				gameChatUnder.innerHTML += eval(`\`${templGamePoll}\``)
+			}
 		}
 		function UIPollDelete() {
 			var pollButton = document.getElementById("game_poll");
@@ -120,7 +123,7 @@
 		function UIReadyNextButtonUpdate() {
 			const readyNextButton = document.getElementById("ready_next_button");
 			if (!readyNextButton) { return; }
-			ready_next_button.disabled = !is_player;
+			ready_next_button.disabled = !is_player || player_dead[player_index] == '1';
 			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${player_next_count}/${player_dead.split('0').length-1})`;
 		}
 		function UIReadyNextButtonDelete() {
@@ -208,6 +211,7 @@
 					gameChatContent.innerHTML = "";
 					return;
 				case GAT.STARTED:
+					player_index = -1;
 					readyButtonEl.disabled = true;
 					game_started = true;
 					UIToggleLobby(false);
@@ -221,6 +225,7 @@
 					break;
 				case GAT.ROLE:
 					const role_type = reader.u8();
+					player_index = reader.u32();
 					player_role = role_type;
 					role_name = "";
 					switch (player_role) {

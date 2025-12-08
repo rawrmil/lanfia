@@ -266,7 +266,11 @@ void GameStart(struct mg_connection* c) {
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		bw_temp.count = 0;
 		p->ready = 0;
-		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_ROLE, BU8, p->role);
+		BWriterAppend(&bw_temp,
+			BU8, GSMT_GAME_ACTION,
+			BU8, GAT_ROLE,
+			BU8, p->role,
+			BU32, i);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 		i++;
 	}
@@ -333,6 +337,7 @@ void GameDay(struct mg_connection* c) {
 			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 		}
 	}
+	GameUsersUpdate(c->mgr);
 	// VOTE
 	for (size_t i = 0; i < game.players.count; i++) {
 		//GamePlayer* p = &game.players.items[i];
@@ -340,7 +345,6 @@ void GameDay(struct mg_connection* c) {
 		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_POLL);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 	}
-	GameUsersUpdate(c->mgr);
 	// GAME ENDED OR WHAT
 	size_t lkp[GRT_LAST_];
 	for (size_t i = 0; i < GRT_LAST_; i++) { lkp[i] = 0; }
