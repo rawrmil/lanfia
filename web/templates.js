@@ -73,8 +73,10 @@ templGameEnded = `<h1>GAME RESULTS</h1>`;
 
 templGamePoll =
 	`
-		Choose:
-		\${GeneratePoll()}
+		<div id="game_poll">
+			Choose:
+			\${GeneratePoll()}
+		</div>
 	`;
 
 templGamePollMafiaChose =

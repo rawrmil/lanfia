@@ -36,7 +36,10 @@
 				</div>
 			</div>
 			<div id="game_chat">
-				<div class="game_chat_content">
+				<div id="game_chat_content">
+				</div>
+				<hr>
+				<div id="game_chat_under">
 				</div>
 			</div>
 		</div>
@@ -65,6 +68,8 @@
 		const lobbyButtonEl = document.getElementById("lobby_button");
 		const gameLobby = document.getElementById("game_lobby");
 		const gameChat = document.getElementById("game_chat");
+		const gameChatContent = document.getElementById("game_chat_content");
+		const gameChatUnder = document.getElementById("game_chat_under");
 		// --- UI Handlers ---
 		UIToggleLobby(true);
 		UIToggleReady(false);
@@ -96,6 +101,21 @@
 		function UIToggleReady(state) {
 			ready = state;
 			document.getElementById("ready_button").innerHTML = !ready ? "Ready" : "Not ready";
+		}
+		function UIClearChatUnder() {
+			gameChatUnder.innerHTML = "";
+		}
+		function UIPollSpawn() {
+			UIPollDelete();
+			gameChatUnder.innerHTML += eval(`\`${templGamePoll}\``)
+		}
+		function UIPollDelete() {
+			var pollButton = document.getElementById("game_poll");
+			if (pollButton) { readyNextButton.remove(); }
+		}
+		function UIReadyNextButtonSpawn() {
+			UIReadyNextButtonDelete();
+			gameChatUnder.innerHTML += templReadyNextButton;
 		}
 		function UIReadyNextButtonUpdate() {
 			const readyNextButton = document.getElementById("ready_next_button");
@@ -139,10 +159,6 @@
 			ws.send(writer.bytes())
 		}
 		// --- Generate HTML --- // TODO: move up
-		function GetTextReadyNext() {
-			UIReadyNextButtonDelete();
-			return templReadyNextButton;
-		}
 		function GeneratePoll() {
 			var s = "";
 			for (const i in player_names) {
@@ -187,7 +203,7 @@
 			msgEl.className = "game_chat_msg";
 			switch (action) {
 				case GAT.CLEAR:
-					gameChat.innerHTML = "";
+					gameChatContent.innerHTML = "";
 					return;
 				case GAT.STARTED:
 					readyButtonEl.disabled = true;
@@ -216,15 +232,15 @@
 					msgEl.innerHTML += eval(`\`${templGameActionRole}\``);
 					break;
 				case GAT.DAY_STARTED:
-					UIReadyNextButtonDelete();
+					UIClearChatUnder();
 					msgEl.innerHTML += templDayStarted;
-					msgEl.innerHTML += GetTextReadyNext();
+					UIReadyNextButtonSpawn();
 					break;
 				case GAT.DAY_ENDED:
-					msgEl.innerHTML += GetTextReadyNext();
+					UIReadyNextButtonSpawn();
 					break;
 				case GAT.NIGHT_STARTED:
-					UIReadyNextButtonDelete();
+					UIClearChatUnder();
 					msgEl.innerHTML += templNightStarted;
 					if (!is_player) {
 						msgEl.innerHTML += templChoicesNote;
@@ -247,11 +263,11 @@
 						case GRT.MANIAC:
 							break;
 					}
-					msgEl.innerHTML += GetTextReadyNext();
-					break;
+					UIReadyNextButtonSpawn();
+					break//;
 				case GAT.POLL:
-					msgEl.innerHTML += eval(`\`${templGamePoll}\``)
-					msgEl.innerHTML += GetTextReadyNext();
+					UIPollSpawn();
+					UIReadyNextButtonSpawn();
 					break;
 				case GAT.POLL_MAFIA_CHOSE:
 					voter_index = reader.u32();
@@ -271,7 +287,7 @@
 				default:
 					return;
 			}
-			gameChat.appendChild(msgEl);
+			gameChatContent.appendChild(msgEl);
 			UIReadyNextButtonUpdate();
 		}
 		function HandleServerGameConfirm(reader) {
