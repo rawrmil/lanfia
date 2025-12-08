@@ -14,7 +14,7 @@ templPlayerListEntry =
 			&nbsp;
 			<span class='player_name'>\${Escaped(player_names[i]+"\\n")}</span>
 			&nbsp;
-			<span class='player_name'>\${player_states[i] != "0" ? "(ready)" : ""}</span>
+			<span class='player_name'>\${GetPlayerStatus(i)}</span>
 		</div>
 	`
 
@@ -81,4 +81,9 @@ templGamePollMafiaChose =
 	`
 		Player '\${player_names[voter_index]}' chose to kill
 		'\${player_names[chosen_index]}'
+	`;
+
+templPlayerKilled =
+	`
+		Player '\${player_names[chosen_index]}' killed.
 	`;

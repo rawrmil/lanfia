@@ -15,6 +15,7 @@ typedef struct GamePlayer {
 	Nob_String_Builder username;
 	bool ready;
 	bool ready_next;
+	bool is_dead;
 	GameRoleType role;
 } GamePlayer;
 
@@ -119,7 +120,7 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		nob_sb_append_buf(&player_names, player->username.items, player->username.count);
 		nob_da_append(&player_names, '\0');
 		nob_da_append(&player_states, player->ready ? '1' : '0');
-		//nob_da_append(&player_dead, player->is_dead ? '1' : '0');
+		nob_da_append(&player_dead, player->is_dead ? '1' : '0');
 	}
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp,
@@ -127,6 +128,7 @@ void GameUsersUpdate(struct mg_mgr* mgr) {
 		BU32, viewers_count,
 		BU32, game.players.count,
 		BSN, player_names.count, player_names.items,
+		BSN, player_states.count, player_states.items,
 		BSN, player_dead.count, player_dead.items);
 	GameSendAll(mgr, nob_sb_to_sv(bw_temp));
 	nob_sb_free(player_names);
@@ -297,9 +299,29 @@ void GameNight(struct mg_connection* c) {
 
 void GameDay(struct mg_connection* c) {
 	game.state = GS_DAY;
+	if (game.mafia_chose == -1) {
+		for (size_t i = 0; i < game.players.count; i++) {
+			GamePlayer* p = &game.players.items[i];
+			if (!p->is_dead && p->role != GRT_MAFIA) {
+				game.mafia_chose = i;
+			}
+		}
+		if (game.mafia_chose == -1) { NOB_UNREACHABLE("mafia autokill"); }
+	}
+	// MESSAGE
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_DAY_STARTED);
 	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	// MAFIA KILL
+	GamePlayer* player_killed = &game.players.items[game.mafia_chose];
+	player_killed->is_dead = true;
+	bw_temp.count = 0;
+	BWriterAppend(&bw_temp,
+			BU8, GSMT_GAME_ACTION,
+			BU8, GAT_PLAYER_KILLED,
+			BU32, game.mafia_chose);
+	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+
 	GameUsersUpdate(c->mgr);
 }
 
@@ -417,7 +439,7 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 	int voter_index = GameGetPlayerIndex(c);
 	if (voter_index == -1) { return; }
 	GamePlayer* p = &game.players.items[voter_index];
-	//if (p->is_dead) { return; }
+	if (p->is_dead) { return; }
 	if (game.state == GS_NIGHT) {
 		switch (p->role) {
 			case GRT_MAFIA:
@@ -433,7 +455,6 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 					if (p->role == GRT_MAFIA) { GameSendAction(c, nob_sb_to_sv(bw_temp), i); }
 					i++;
 				}
-				printf("MAFIA CHOSE: %d\n", game.mafia_chose);
 				break;
 			default:
 				break;

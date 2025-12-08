@@ -50,6 +50,7 @@
 		var ready_next = false;
 		var player_names = [];
 		var player_states = "";
+		var player_dead = "";
 		var player_next_count = 0;
 		var game_started = false;
 		var is_lobby = true;
@@ -149,6 +150,12 @@
 			}
 			return s;
 		}
+		function GetPlayerStatus(i) {
+			var stat = "";
+			if (player_states[i] != "0") { stat = "(ready)"; }
+			if (player_dead[i] != "0") { stat = "(dead)"; }
+			return stat;
+		}
 		// --- Server Message Handlers ---
 		function HandleServerInfoPlayer(reader) {
 			ready_next = reader.u8();
@@ -158,6 +165,7 @@
 			const player_count = reader.u32();
 			player_names = reader.strn().split('\0');
 			player_states = reader.strn();
+			player_dead = reader.strn();
 			player_names.pop();
 			playersListEl.innerHTML = "";
 			const playersNoneEl = document.getElementById("players_none");
@@ -249,6 +257,9 @@
 					voter_index = reader.u32();
 					chosen_index = reader.u32();
 					msgEl.innerHTML += eval(`\`${templGamePollMafiaChose}\``)
+					break;
+				case GAT.PLAYER_KILLED:
+					msgEl.innerHTML += eval(`\`${templPlayerKilled}\``)
 					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "";
