@@ -282,6 +282,7 @@
 					msgEl.innerHTML += eval(`\`${templGamePollKickChose}\``)
 					break;
 				case GAT.PLAYER_KILLED:
+					chosen_index = reader.u32();
 					msgEl.innerHTML += eval(`\`${templPlayerKilled}\``)
 					break;
 				case GAT.RESULTS:

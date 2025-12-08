@@ -159,12 +159,12 @@ void GamePlayerRemove(struct mg_connection* c) {
 }
 
 void GameSendHistory(struct mg_connection* c) {
+	GameUsersUpdate(c->mgr);
 	BReader br = {
 		.data = game.history.items,
 		.count = game.history.count,
 		.i = 0
 	};
-
 	size_t curr_player_index = -1;
 	for (size_t i = 0; i < game.players.count; i++) {
 		if (game.players.items[i].c == c) {
