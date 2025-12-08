@@ -438,11 +438,13 @@ bool HandleClientReadyNext(struct mg_connection* c, BReader* br) {
 	(void)br;
 	bool result = true;
 	game.ready_next_count = 0;
+	size_t not_dead_count = 0;
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		if (p->c == c) { p->ready_next = !p->ready_next; }
 		if (p->ready_next) { game.ready_next_count++; }
+		if (!p->is_dead) { not_dead_count++; }
 	}
-	if (game.ready_next_count == game.players.count) {
+	if (game.ready_next_count == not_dead_count) {
 		nob_da_foreach(GamePlayer, p, &game.players) {
 			p->ready_next = 0;
 		}

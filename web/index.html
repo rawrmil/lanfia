@@ -121,7 +121,7 @@
 			const readyNextButton = document.getElementById("ready_next_button");
 			if (!readyNextButton) { return; }
 			ready_next_button.disabled = !is_player;
-			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${player_next_count}/${player_names.length})`;
+			readyNextButton.innerHTML = `${ready_next ? "Not ready" : "Ready"} (${player_next_count}/${player_dead.split('0').length-1})`;
 		}
 		function UIReadyNextButtonDelete() {
 			var readyNextButton = document.getElementById("ready_next_button");
