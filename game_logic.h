@@ -303,28 +303,21 @@ void GameNight(struct mg_connection* c) {
 
 void GameDay(struct mg_connection* c) {
 	game.state = GS_DAY;
-	if (game.mafia_chose == -1) {
-		for (size_t i = 0; i < game.players.count; i++) {
-			GamePlayer* p = &game.players.items[i];
-			if (!p->is_dead && p->role != GRT_MAFIA) {
-				game.mafia_chose = i;
-			}
-		}
-		if (game.mafia_chose == -1) { NOB_UNREACHABLE("mafia autokill"); }
-	}
 	// MESSAGE
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_DAY_STARTED);
 	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 	// MAFIA KILL
 	GamePlayer* player_killed = &game.players.items[game.mafia_chose];
-	player_killed->is_dead = true;
-	bw_temp.count = 0;
-	BWriterAppend(&bw_temp,
-			BU8, GSMT_GAME_ACTION,
-			BU8, GAT_PLAYER_KILLED,
-			BU32, game.mafia_chose);
-	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	if (game.mafia_chose != -1) {
+		player_killed->is_dead = true;
+		bw_temp.count = 0;
+		BWriterAppend(&bw_temp,
+				BU8, GSMT_GAME_ACTION,
+				BU8, GAT_PLAYER_KILLED,
+				BU32, game.mafia_chose);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	}
 	// VOTE
 	for (size_t i = 0; i < game.players.count; i++) {
 		//GamePlayer* p = &game.players.items[i];
