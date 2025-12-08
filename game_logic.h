@@ -185,6 +185,9 @@ void GameSendHistory(struct mg_connection* c) {
 		}
 		br.i += msg_count;
 	}
+	bw_temp.count = 0;
+	BWriterAppend(&bw_temp, BU8, GSMT_HISTORY_END);
+	GameSend(c, nob_sb_to_sv(bw_temp));
 }
 
 void GameSendAction(struct mg_connection* c, Nob_String_View sv, int player_index) {

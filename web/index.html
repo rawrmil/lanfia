@@ -335,6 +335,7 @@
 				case GSMT.ERROR:           HandleServerGameError(reader); break;
 				case GSMT.CONFIRM:         HandleServerGameConfirm(reader); break;
 				case GSMT.GAME_ACTION:     HandleServerGameAction(reader); break;
+				case GSMT.HISTORY_END:     gameChatUnder.scrollIntoView(); break;
 			}
 		}
 	</script>
