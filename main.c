@@ -37,6 +37,7 @@
 
 // --- GLOBALS ---
 
+#define MAX_TIME 120.0
 
 // --- APP ---
 
@@ -194,7 +195,23 @@ int main(int argc, char* argv[]) {
 	GameMessageTypesGenerateJS();
 
 	while (1) {
-		mg_mgr_poll(&mgr, 1000);
+		mg_mgr_poll(&mgr, 200);
+		// TODO: move this shit
+		double curr = (double)nob_nanos_since_unspecified_epoch() / (double)NOB_NANOS_PER_SEC;
+		static double last_poll = 0.0;
+		if (last_poll == 0.0) { last_poll = curr; }
+		uint64_t sec_rem = (uint32_t)(MAX_TIME - (curr - game.last_state_s));
+		if (curr > last_poll + 1.0) {
+			last_poll = curr;
+			bw_temp.count = 0;
+			BWriterAppend(&bw_temp,
+				BU8, GSMT_TIMER,
+				BU32, sec_rem);
+			GameSendAction(mgr.conns, nob_sb_to_sv(bw_temp), -1);
+		}
+		if (curr > game.last_state_s + MAX_TIME) {
+			GameChangeState(mgr.conns);
+		}
 	}
 
 	// Closing

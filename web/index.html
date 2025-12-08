@@ -41,6 +41,8 @@
 				<hr>
 				<div id="game_chat_under">
 				</div>
+				<div id="game_chat_timer">
+				</div>
 			</div>
 		</div>
 	</div>
@@ -71,6 +73,7 @@
 		const gameChat = document.getElementById("game_chat");
 		const gameChatContent = document.getElementById("game_chat_content");
 		const gameChatUnder = document.getElementById("game_chat_under");
+		const gameChatTimer = document.getElementById("game_chat_timer");
 		// --- UI Handlers ---
 		UIToggleLobby(true);
 		UIToggleReady(false);
@@ -354,6 +357,10 @@
 					break;
 			}
 		}
+		function HandleServerGameTimer(reader) {
+			time_remaning = reader.u32();
+			gameChatTimer.innerHTML = "Timer: " + time_remaning;
+		}
 		// --- WebSockets ---
 		const ws = new WebSocket(`ws://${location.host}/ws`);
 		ws.binaryType = "arraybuffer";
@@ -371,6 +378,7 @@
 				case GSMT.CONFIRM:         HandleServerGameConfirm(reader); break;
 				case GSMT.GAME_ACTION:     HandleServerGameAction(reader); break;
 				case GSMT.HISTORY_END:     gameChatUnder.scrollIntoView(); break;
+				case GSMT.TIMER:           HandleServerGameTimer(reader); break;
 			}
 		}
 	</script>

@@ -14,6 +14,7 @@
 	X(GSMT_ERROR) \
 	X(GSMT_CONFIRM) \
 	X(GSMT_HISTORY_END) \
+	X(GSMT_TIMER) \
 	X(GSMT_LAST_) \
 
 #define X(name_) name_,

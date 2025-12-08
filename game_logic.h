@@ -36,6 +36,7 @@ typedef struct Game {
 	BWriter history;
 	int mafia_chose;
 	int doctor_chose;
+	double last_state_s;
 } Game;
 
 extern Game game;
@@ -382,8 +383,10 @@ void GameDay(struct mg_connection* c) {
 }
 
 void GameChangeState(struct mg_connection* c) {
+	game.last_state_s = (double)nob_nanos_since_unspecified_epoch() / NOB_NANOS_PER_SEC;
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		p->ready_next = 0;
+		p->voted_for = -1;
 	}
 	game.ready_next_count = 0;
 	switch (game.state) {
