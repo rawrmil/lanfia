@@ -298,14 +298,11 @@ void GameNight(struct mg_connection* c) {
 		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 		switch (p.role) {
 			case GRT_MAFIA:
-				bw_temp.count = 0;
-				BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_POLL);
-				GameSendAction(c, nob_sb_to_sv(bw_temp), i);
-				break;
 			case GRT_DOCTOR:
 				bw_temp.count = 0;
 				BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_POLL);
 				GameSendAction(c, nob_sb_to_sv(bw_temp), i);
+				break;
 			default:
 				break;
 		}
@@ -532,29 +529,18 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 	if (game.state == GS_NIGHT) {
 		switch (p->role) {
 			case GRT_MAFIA:
-				game.mafia_chose = index;
+			case GRT_DOCTOR:
+				if (p->role == GRT_MAFIA) { game.mafia_chose = index; }
+				if (p->role == GRT_DOCTOR) { game.doctor_chose = index; }
 				bw_temp.count = 0;
 				BWriterAppend(&bw_temp,
 					BU8, GSMT_GAME_ACTION,
-					BU8, GAT_POLL_MAFIA_CHOSE,
+					BU8, GAT_POLL_CHOSE,
+					BU8, p->role,
 					BU32, voter_index,
 					BU32, game.mafia_chose);
 				for (size_t i = 0; i < game.players.count; i++) {
-					if (game.players.items[i].role == GRT_MAFIA) {
-						GameSendAction(c, nob_sb_to_sv(bw_temp), i);
-					}
-				}
-				break;
-			case GRT_DOCTOR:
-				game.doctor_chose = index;
-				bw_temp.count = 0;
-				BWriterAppend(&bw_temp,
-					BU8, GSMT_GAME_ACTION,
-					BU8, GAT_POLL_DOCTOR_CHOSE,
-					BU32, voter_index,
-					BU32, game.doctor_chose);
-				for (size_t i = 0; i < game.players.count; i++) {
-					if (game.players.items[i].role == GRT_DOCTOR) {
+					if (game.players.items[i].role == p->role) {
 						GameSendAction(c, nob_sb_to_sv(bw_temp), i);
 					}
 				}
@@ -567,7 +553,8 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 		bw_temp.count = 0;
 		BWriterAppend(&bw_temp,
 			BU8, GSMT_GAME_ACTION,
-			BU8, GAT_POLL_KICK_CHOSE,
+			BU8, GAT_POLL_CHOSE,
+			BU8, 255,
 			BU32, voter_index,
 			BU32, index);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);

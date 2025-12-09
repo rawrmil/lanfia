@@ -279,20 +279,11 @@
 					UIPollSpawn();
 					UIReadyNextButtonSpawn();
 					break;
-				case GAT.POLL_MAFIA_CHOSE:
+				case GAT.POLL_CHOSE:
+					role = reader.u8();
 					voter_index = reader.u32();
 					chosen_index = reader.u32();
-					msgEl.innerHTML += eval(`\`${templGamePollMafiaChose}\``)
-					break;
-				case GAT.POLL_DOCTOR_CHOSE:
-					voter_index = reader.u32();
-					chosen_index = reader.u32();
-					msgEl.innerHTML += eval(`\`${templGamePollDoctorChose}\``)
-					break;
-				case GAT.POLL_KICK_CHOSE:
-					voter_index = reader.u32();
-					chosen_index = reader.u32();
-					msgEl.innerHTML += eval(`\`${templGamePollKickChose}\``)
+					msgEl.innerHTML += eval(`\`${templRoleChose[role]}\``)
 					break;
 				case GAT.PLAYER_KILLED:
 					chosen_index = reader.u32();

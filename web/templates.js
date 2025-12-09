@@ -79,23 +79,28 @@ templGamePoll =
 		</div>
 	`;
 
-templGamePollMafiaChose =
-	`
-		Anonymous note: Player '\${player_names[voter_index]}' chose to kill
-		'\${player_names[chosen_index]}'
-	`;
-
-templGamePollDoctorChose =
-	`
-		Anonymous note: Player '\${player_names[voter_index]}' chose to heal
-		'\${player_names[chosen_index]}'
-	`;
-
-templGamePollKickChose =
-	`
-		Player '\${player_names[voter_index]}' chose to kick
-		'\${player_names[chosen_index]}'
-	`;
+const templRoleChose = Object.freeze({
+    [GRT.VILLAGER]: `
+    `,
+    [GRT.MAFIA]: `
+			Anonymous note: Player '\${player_names[voter_index]}' chose to kill
+			'\${player_names[chosen_index]}'
+    `,
+    [GRT.SERIF]: `
+    `,
+    [GRT.DOCTOR]: `
+			Anonymous note: Player '\${player_names[voter_index]}' chose to heal
+			'\${player_names[chosen_index]}'
+    `,
+    [GRT.ESCORT]: `
+    `,
+    [GRT.MANIAC]: `
+    `,
+    255: `
+			Player '\${player_names[voter_index]}' chose to kick
+			'\${player_names[chosen_index]}'
+		`
+});
 
 templPlayerKilled =
 	`
