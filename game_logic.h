@@ -35,8 +35,13 @@ typedef struct Game {
 	GameState state;
 	BWriter history;
 	int mafia_chose;
+	int mafia_voter;
 	int doctor_chose;
+	int doctor_voter;
 	int serif_chose;
+	int serif_voter;
+	int escort_chose;
+	int escort_voter;
 	double last_state_s;
 } Game;
 
@@ -289,6 +294,7 @@ void GameNight(struct mg_connection* c) {
 	game.mafia_chose = -1;
 	game.doctor_chose = -1;
 	game.serif_chose = -1;
+	game.escort_chose = -1;
 	nob_da_foreach(GamePlayer, p, &game.players) { p->ready_next = 0; }
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
@@ -302,6 +308,7 @@ void GameNight(struct mg_connection* c) {
 			case GRT_MAFIA:
 			case GRT_DOCTOR:
 			case GRT_SERIF:
+			case GRT_ESCORT:
 				bw_temp.count = 0;
 				BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_POLL);
 				GameSendAction(c, nob_sb_to_sv(bw_temp), i);
@@ -319,8 +326,20 @@ void GameDay(struct mg_connection* c) {
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_DAY_STARTED);
 	GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	// ESCORT NOTE
+	if (game.escort_chose != -1) {
+		GamePlayer* player_checked = &game.players.items[game.serif_chose];
+		GameRoleType role = player_checked->role;
+		bw_temp.count = 0;
+		BWriterAppend(&bw_temp,
+			BU8, GSMT_GAME_ACTION,
+			BU8, GAT_PLAYER_STUNNED,
+			BU32, game.escort_chose,
+			BU8, role);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	}
 	// SERIF CHECK
-	if (game.serif_chose != -1) {
+	if (game.serif_chose != -1 && game.escort_chose != game.serif_voter) {
 		GamePlayer* player_checked = &game.players.items[game.serif_chose];
 		GameRoleType role = player_checked->role;
 		bw_temp.count = 0;
@@ -337,7 +356,11 @@ void GameDay(struct mg_connection* c) {
 	// MAFIA KILL
 	if (game.mafia_chose != -1) {
 		GamePlayer* player_killed = &game.players.items[game.mafia_chose];
-		if (game.mafia_chose != game.doctor_chose) {
+		bool is_doctor_healed = game.escort_chose != game.doctor_voter && game.mafia_chose == game.doctor_chose;
+		//printf("esccho=%d\n", game.escort_chose);
+		//printf("%d && %d\n", game.escort_chose != game.doctor_voter, game.mafia_chose == game.doctor_chose);
+		//printf("doc=%d\n", is_doctor_healed);
+		if (!is_doctor_healed && game.escort_chose != game.mafia_voter) {
 			player_killed->is_dead = true;
 			bw_temp.count = 0;
 			BWriterAppend(&bw_temp,
@@ -345,7 +368,7 @@ void GameDay(struct mg_connection* c) {
 				BU8, GAT_PLAYER_KILLED,
 				BU32, game.mafia_chose);
 			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
-		} else {
+		} else if (is_doctor_healed) {
 			bw_temp.count = 0;
 			BWriterAppend(&bw_temp,
 				BU8, GSMT_GAME_ACTION,
@@ -358,6 +381,7 @@ void GameDay(struct mg_connection* c) {
 	// VOTE
 	for (size_t i = 0; i < game.players.count; i++) {
 		//GamePlayer* p = &game.players.items[i];
+		if ((int)i == game.escort_chose) { continue; }
 		bw_temp.count = 0;
 		BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_POLL);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), i);
@@ -365,8 +389,9 @@ void GameDay(struct mg_connection* c) {
 	// GAME ENDED OR WHAT
 	size_t lkp[GRT_LAST_];
 	for (size_t i = 0; i < GRT_LAST_; i++) { lkp[i] = 0; }
-	nob_da_foreach(GamePlayer, p, &game.players) {
-		lkp[p->role] += !p->is_dead;
+	for (size_t i = 0; i < game.players.count; i++) {
+		GamePlayer* p = &game.players.items[i];
+		if (!p->is_dead || (int)i == game.escort_chose) { lkp[p->role]++; }
 	}
 	size_t mafia = lkp[GRT_MAFIA];
 	lkp[GRT_MAFIA] = 0;
@@ -542,6 +567,7 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 	if (index >= game.players.count) { return; }
 	int voter_index = GameGetPlayerIndex(c);
 	if (voter_index == -1) { return; }
+	if (game.state == GS_DAY && voter_index == game.escort_chose) { return; }
 	GamePlayer* p = &game.players.items[voter_index];
 	if (p->is_dead) { return; }
 	if (game.state == GS_NIGHT) {
@@ -549,10 +575,28 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 			case GRT_MAFIA:
 			case GRT_DOCTOR:
 			case GRT_SERIF:
+			case GRT_ESCORT:
 				int* chose = NULL;
-				if (p->role == GRT_MAFIA) { game.mafia_chose = index; chose = &game.mafia_chose; }
-				if (p->role == GRT_DOCTOR) { game.doctor_chose = index; chose = &game.doctor_chose; }
-				if (p->role == GRT_SERIF) { game.serif_chose = index; chose = &game.serif_chose; }
+				if (p->role == GRT_MAFIA) {
+					game.mafia_voter = voter_index;
+					game.mafia_chose = index;
+					chose = &game.mafia_chose;
+				}
+				if (p->role == GRT_DOCTOR) {
+					game.doctor_voter = voter_index;
+					game.doctor_chose = index;
+					chose = &game.doctor_chose; 
+				}
+				if (p->role == GRT_SERIF) {
+					game.serif_voter = voter_index;
+					game.serif_chose = index;
+					chose = &game.serif_chose;
+				}
+				if (p->role == GRT_ESCORT) {
+					game.escort_voter = voter_index;
+					game.escort_chose = index;
+					chose = &game.escort_chose;
+				}
 				if (chose == NULL) { break; }
 				bw_temp.count = 0;
 				BWriterAppend(&bw_temp,

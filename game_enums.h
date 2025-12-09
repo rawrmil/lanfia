@@ -88,6 +88,7 @@ typedef enum GameConfirmType { GC } GameConfirmType;
 	X(GAT_PLAYER_KILLED) \
 	X(GAT_PLAYER_KICKED) \
 	X(GAT_PLAYER_CHECKED) \
+	X(GAT_PLAYER_STUNNED) \
 	X(GAT_PLAYER_HEALED) \
 	X(GAT_MAFIA_WON) \
 	X(GAT_TOWN_WON) \

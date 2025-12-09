@@ -298,9 +298,17 @@
 					chosen_index = reader.u32();
 					msgEl.innerHTML += eval(`\`${templPlayerHealed}\``)
 					break;
+				case GAT.PLAYER_CHECKED:
+					chosen_index = reader.u32();
+					msgEl.innerHTML += eval(`\`${templPlayerStunned}\``)
+					break;
 				case GAT.PLAYER_KICKED:
 					chosen_index = reader.u32();
 					msgEl.innerHTML += eval(`\`${templPlayerKicked}\``)
+					break;
+				case GAT.PLAYER_STUNNED:
+					chosen_index = reader.u32();
+					msgEl.innerHTML += eval(`\`${templPlayerStunned}\``)
 					break;
 				case GAT.MAFIA_WON:
 					msgEl.innerHTML += "<h1>MAFIA WON</h1>"
