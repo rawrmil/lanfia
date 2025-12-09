@@ -102,7 +102,7 @@ typedef enum GameActionType { GAT } GameActionMsgType;
 // --- Game Role Type (GRT) ---
 
 #define GRT \
-	X(GRT_VILLAGER) \
+	X(GRT_TOWNSMAN) \
 	X(GRT_MAFIA) \
 	X(GRT_SERIF) \
 	X(GRT_DOCTOR) \

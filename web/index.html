@@ -232,7 +232,7 @@
 					player_role = role_type;
 					role_name = "";
 					switch (player_role) {
-						case GRT.VILLAGER: role_name += templRoleVillager; break;
+						case GRT.TOWNSMAN: role_name += templRoleVillager; break;
 						case GRT.MAFIA:    role_name += templRoleMafia; break;
 						case GRT.SERIF:    role_name += templRoleSerif; break;
 						case GRT.DOCTOR:   role_name += templRoleDoctor; break;
@@ -260,7 +260,7 @@
 					var role = reader.u8();
 					msgEl.innerHTML += templRoleTasks[role];
 					switch (role) {
-						case GRT.VILLAGER:
+						case GRT.TOWNSMAN:
 							break;
 						case GRT.MAFIA:
 							break;

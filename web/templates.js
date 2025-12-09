@@ -47,7 +47,7 @@ templNightStarted = `<h3>NIGHT STARTED</h3>`
 templChoicesNote = `<p>Players are doing their choices!</p>`
 
 const templRoleNames = Object.freeze({
-    [GRT.VILLAGER]: `villager`,
+    [GRT.TOWNSMAN]: `villager`,
     [GRT.MAFIA]: `mafia`,
     [GRT.SERIF]: `serif`,
     [GRT.DOCTOR]: `doctor`,
@@ -56,7 +56,7 @@ const templRoleNames = Object.freeze({
 });
 
 const templRoleTasks = Object.freeze({
-    [GRT.VILLAGER]: `
+    [GRT.TOWNSMAN]: `
         <h3>Villager Task</h3>
         <p>Just stare at the screen bro</p>
     `,
@@ -89,7 +89,7 @@ templGamePoll =
 	`;
 
 const templRoleChose = Object.freeze({
-    [GRT.VILLAGER]: `
+    [GRT.TOWNSMAN]: `
     `,
     [GRT.MAFIA]: `
 			Anonymous note: Player '\${player_names[voter_index]}' chose to kill

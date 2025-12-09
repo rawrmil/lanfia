@@ -214,9 +214,9 @@ void GameSetRolesCount(int* count_lookup, int n) {
 	count_lookup[GRT_DOCTOR]   = 1;
 	count_lookup[GRT_ESCORT]   = 1;
 	count_lookup[GRT_MANIAC]   = n > 7 ? 1 : 0;
-	count_lookup[GRT_VILLAGER] = n;
+	count_lookup[GRT_TOWNSMAN] = n;
 	for (int i = 1; i < GRT_LAST_; i++) {
-		count_lookup[GRT_VILLAGER] -= count_lookup[i];
+		count_lookup[GRT_TOWNSMAN] -= count_lookup[i];
 	}
 	printf("Players: %d\n", n);
 	for (int i = 0; i < GRT_LAST_; i++) {
@@ -238,7 +238,7 @@ void GameStart(struct mg_connection* c) {
 		// Give Roles
 		int count_lookup[GRT_LAST_];
 		GameSetRolesCount(count_lookup, game.players.count);
-		int role = GRT_VILLAGER;
+		int role = GRT_TOWNSMAN;
 		nob_da_foreach(GamePlayer, p, &game.players) {
 			if (count_lookup[role] == 0) { role++; }
 			if (role == GRT_LAST_) { NOB_UNREACHABLE("count_lookup ended"); }
