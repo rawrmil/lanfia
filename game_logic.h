@@ -239,8 +239,8 @@ void GameTestSetRoles() {
 }
 
 void GameStart(struct mg_connection* c) {
+	if (game.players.count <= 5) { return; }
 	game.state = GS_FIRST_DAY;
-	if (game.players.count < 5) { return; }
 	if (!game.manual_roles) {
 		// Give Roles
 		int count_lookup[GRT_LAST_];
