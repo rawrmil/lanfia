@@ -108,6 +108,8 @@ const templRoleChose = Object.freeze({
 			'\${player_names[chosen_index]}'
     `,
     [GRT.MANIAC]: `
+			Anonymous note: Player '\${player_names[voter_index]}' chose to kill
+			'\${player_names[chosen_index]}'
     `,
     255: `
 			Player '\${player_names[voter_index]}' chose to kick

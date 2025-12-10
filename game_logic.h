@@ -42,6 +42,8 @@ typedef struct Game {
 	int serif_voter;
 	int escort_chose;
 	int escort_voter;
+	int maniac_chose;
+	int maniac_voter;
 	double last_state_s;
 } Game;
 
@@ -320,6 +322,28 @@ void GameNight(struct mg_connection* c) {
 	GameUpdateReadyNext(c->mgr);
 }
 
+void PlayerKill(struct mg_connection* c, int killer_chose, int killer_voter) {
+	if (killer_chose == -1) { return; }
+	GamePlayer* player_killed = &game.players.items[killer_chose];
+	bool is_doctor_healed = game.escort_chose != game.doctor_voter && game.mafia_chose == game.doctor_chose;
+	if (!is_doctor_healed && game.escort_chose != killer_voter) {
+		player_killed->is_dead = true;
+		bw_temp.count = 0;
+		BWriterAppend(&bw_temp,
+			BU8, GSMT_GAME_ACTION,
+			BU8, GAT_PLAYER_KILLED,
+			BU32, killer_chose);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	} else if (is_doctor_healed) {
+		bw_temp.count = 0;
+		BWriterAppend(&bw_temp,
+			BU8, GSMT_GAME_ACTION,
+			BU8, GAT_PLAYER_HEALED,
+			BU32, game.doctor_chose);
+		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+	}
+}
+
 void GameDay(struct mg_connection* c) {
 	game.state = GS_DAY;
 	// MESSAGE
@@ -354,29 +378,8 @@ void GameDay(struct mg_connection* c) {
 		}
 	}
 	// MAFIA KILL
-	if (game.mafia_chose != -1) {
-		GamePlayer* player_killed = &game.players.items[game.mafia_chose];
-		bool is_doctor_healed = game.escort_chose != game.doctor_voter && game.mafia_chose == game.doctor_chose;
-		//printf("esccho=%d\n", game.escort_chose);
-		//printf("%d && %d\n", game.escort_chose != game.doctor_voter, game.mafia_chose == game.doctor_chose);
-		//printf("doc=%d\n", is_doctor_healed);
-		if (!is_doctor_healed && game.escort_chose != game.mafia_voter) {
-			player_killed->is_dead = true;
-			bw_temp.count = 0;
-			BWriterAppend(&bw_temp,
-				BU8, GSMT_GAME_ACTION,
-				BU8, GAT_PLAYER_KILLED,
-				BU32, game.mafia_chose);
-			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
-		} else if (is_doctor_healed) {
-			bw_temp.count = 0;
-			BWriterAppend(&bw_temp,
-				BU8, GSMT_GAME_ACTION,
-				BU8, GAT_PLAYER_HEALED,
-				BU32, game.doctor_chose);
-			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
-		}
-	}
+	PlayerKill(c, game.mafia_chose, game.mafia_voter);
+	PlayerKill(c, game.maniac_chose, game.maniac_voter);
 	GameUsersUpdate(c->mgr);
 	// VOTE
 	for (size_t i = 0; i < game.players.count; i++) {
@@ -576,6 +579,7 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 			case GRT_DOCTOR:
 			case GRT_SERIF:
 			case GRT_ESCORT:
+			case GRT_MANIAC:
 				int* chose = NULL;
 				if (p->role == GRT_MAFIA) {
 					game.mafia_voter = voter_index;
@@ -596,6 +600,11 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 					game.escort_voter = voter_index;
 					game.escort_chose = index;
 					chose = &game.escort_chose;
+				}
+				if (p->role == GRT_MANIAC) {
+					game.maniac_voter = voter_index;
+					game.maniac_chose = index;
+					chose = &game.maniac_chose;
 				}
 				if (chose == NULL) { break; }
 				bw_temp.count = 0;
