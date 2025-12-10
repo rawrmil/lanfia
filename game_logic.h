@@ -431,10 +431,6 @@ void GameDay(struct mg_connection* c) {
 
 void GameChangeState(struct mg_connection* c) {
 	game.last_state_s = (double)nob_nanos_since_unspecified_epoch() / NOB_NANOS_PER_SEC;
-	nob_da_foreach(GamePlayer, p, &game.players) {
-		p->ready_next = 0;
-		p->voted_for = -1;
-	}
 	game.ready_next_count = 0;
 	switch (game.state) {
 		case GS_FIRST_DAY:
@@ -452,20 +448,26 @@ void GameChangeState(struct mg_connection* c) {
 			int mxi = -1;
 			int mx = -1;
 			for (int i = 0; i < (int)game.players.count; i++) {
+				printf("  i=%d: %d\n", i, lkp[i]);
 				if (lkp[i] > mx) { mx = lkp[i]; mxi = i; }
 			}
+			printf("mxi=%d\n", mxi);
 			if (mxi != -1) {
 				game.players.items[mxi].is_dead = true;
 				bw_temp.count = 0;
 				BWriterAppend(&bw_temp,
-						BU8, GSMT_GAME_ACTION,
-						BU8, GAT_PLAYER_KICKED,
-						BU32, (uint32_t)mxi);
+					BU8, GSMT_GAME_ACTION,
+					BU8, GAT_PLAYER_KICKED,
+					BU32, (uint32_t)mxi);
 				GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 			}
 			GameNight(c);
 			break;
 		case GS_NIGHT:
+			nob_da_foreach(GamePlayer, p, &game.players) {
+				p->ready_next = 0;
+				p->voted_for = -1;
+			}
 			GameDay(c);
 			break;
 		default:
@@ -628,6 +630,7 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 				break;
 		}
 	} else if (game.state == GS_DAY) {
+		printf("voted: %d -> %d\n", voter_index, index);
 		p->voted_for = index;
 		bw_temp.count = 0;
 		BWriterAppend(&bw_temp,
