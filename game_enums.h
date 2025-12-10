@@ -44,6 +44,7 @@ enum { GCMT };
 	X(GS_FIRST_DAY) \
 	X(GS_DAY) \
 	X(GS_NIGHT) \
+	X(GS_RESULTS) \
 	X(GS_LAST_)
 
 #define X(name_) name_,

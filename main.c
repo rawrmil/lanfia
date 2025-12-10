@@ -37,7 +37,7 @@
 
 // --- GLOBALS ---
 
-#define MAX_TIME 120.0
+#define MAX_TIME 100.0
 
 // --- APP ---
 
@@ -203,11 +203,13 @@ int main(int argc, char* argv[]) {
 		uint64_t sec_rem = (uint32_t)(MAX_TIME - (curr - game.last_state_s));
 		if (curr > last_poll + 1.0) {
 			last_poll = curr;
-			bw_temp.count = 0;
-			BWriterAppend(&bw_temp,
-				BU8, GSMT_TIMER,
-				BU32, sec_rem);
-			GameSendAction(mgr.conns, nob_sb_to_sv(bw_temp), -1);
+			if (game.state != GS_LOBBY && game.state != GS_RESULTS){
+				bw_temp.count = 0;
+				BWriterAppend(&bw_temp,
+					BU8, GSMT_TIMER,
+					BU32, sec_rem);
+				GameSendAction(mgr.conns, nob_sb_to_sv(bw_temp), -1);
+			}
 		}
 		if (curr > game.last_state_s + MAX_TIME) {
 			GameChangeState(mgr.conns);

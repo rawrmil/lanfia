@@ -413,12 +413,14 @@ void GameDay(struct mg_connection* c) {
 				BU8, GSMT_GAME_ACTION,
 				BU8, GAT_MANIAC_WON);
 			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+			game.state = GS_RESULTS;
 		} else if (maniac == 0) {
 			bw_temp.count = 0;
 			BWriterAppend(&bw_temp,
 				BU8, GSMT_GAME_ACTION,
 				BU8, GAT_TOWN_WON);
 			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+			game.state = GS_RESULTS;
 		}
 	} else if (town == 0) {
 		bw_temp.count = 0;
@@ -426,6 +428,7 @@ void GameDay(struct mg_connection* c) {
 				BU8, GSMT_GAME_ACTION,
 				BU8, GAT_MAFIA_WON);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
+		game.state = GS_RESULTS;
 	}
 }
 
@@ -469,6 +472,12 @@ void GameChangeState(struct mg_connection* c) {
 				p->voted_for = -1;
 			}
 			GameDay(c);
+			break;
+		case GS_RESULTS:
+			// TODO: Free memory :)
+			memset(&game, 0, sizeof(game));
+			game.state = GS_LOBBY;
+			GameUsersUpdate(c->mgr);
 			break;
 		default:
 			break;

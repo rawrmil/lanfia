@@ -249,7 +249,7 @@ void MsgSeqMafiaWon() {
 	MsgVote(7, 3);
 	MsgReadyNextNPlayers(7);
 	ClientMsgAdd(5, BWriterAppend(NULL, BU8, GCMT_POLL, BU32, 4));
-	MsgReadyNextNPlayers(7);
+	//MsgReadyNextNPlayers(7);
 }
 
 void MsgSeqTownWon() {
