@@ -325,7 +325,10 @@ void GameNight(struct mg_connection* c) {
 void PlayerKill(struct mg_connection* c, int killer_chose, int killer_voter) {
 	if (killer_chose == -1) { return; }
 	GamePlayer* player_killed = &game.players.items[killer_chose];
-	bool is_doctor_healed = game.escort_chose != game.doctor_voter && game.mafia_chose == game.doctor_chose;
+	bool is_doctor_healed =
+		   game.escort_chose != game.doctor_voter
+		&& killer_chose == game.doctor_chose
+		&& killer_chose != -1;
 	if (!is_doctor_healed && game.escort_chose != killer_voter) {
 		player_killed->is_dead = true;
 		bw_temp.count = 0;
