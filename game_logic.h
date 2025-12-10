@@ -297,6 +297,7 @@ void GameNight(struct mg_connection* c) {
 	game.doctor_chose = -1;
 	game.serif_chose = -1;
 	game.escort_chose = -1;
+	game.maniac_chose = -1;
 	nob_da_foreach(GamePlayer, p, &game.players) { p->ready_next = 0; }
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp, BU8, GSMT_GAME_ACTION, BU8, GAT_NIGHT_STARTED);
