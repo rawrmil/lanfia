@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
 		uint64_t sec_rem = (uint32_t)(MAX_TIME - (curr - game.last_state_s));
 		if (curr > last_poll + 1.0) {
 			last_poll = curr;
-			if (game.state != GS_LOBBY && game.state != GS_RESULTS){
+			if (game.state != GS_LOBBY){
 				bw_temp.count = 0;
 				BWriterAppend(&bw_temp,
 					BU8, GSMT_TIMER,
