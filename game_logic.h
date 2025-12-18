@@ -475,7 +475,6 @@ void GameChangeState(struct mg_connection* c) {
 			GameDay(c);
 			break;
 		case GS_RESULTS:
-			// TODO: Free memory :)
 			nob_da_foreach(GamePlayer, p, &game.players) {
 				nob_sb_free(p->username);
 			}

@@ -75,6 +75,12 @@
 		const gameChatUnder = document.getElementById("game_chat_under");
 		const gameChatTimer = document.getElementById("game_chat_timer");
 		// --- UI Handlers ---
+		lobbyButtonEl.addEventListener("keydown", function(event) {
+			if (event.key === "Enter") {
+				event.preventDefault();
+				
+			}
+		});
 		UIToggleLobby(true);
 		UIToggleReady(false);
 		function UIToggleLobby(state) {
@@ -312,12 +318,15 @@
 					break;
 				case GAT.MAFIA_WON:
 					msgEl.innerHTML += "<h1>MAFIA WON</h1>"
+					msgEl.innerHTML += "<p>You can reload the page!</p>"
 					break;
 				case GAT.TOWN_WON:
 					msgEl.innerHTML += "<h1>TOWN WON</h1>"
+					msgEl.innerHTML += "<p>You can reload the page!</p>"
 					break;
 				case GAT.MANIAC_WON:
 					msgEl.innerHTML += "<h1>MANIAC WON</h1>"
+					msgEl.innerHTML += "<p>You can reload the page!</p>"
 					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "";
