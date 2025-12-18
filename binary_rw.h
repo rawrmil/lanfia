@@ -5,11 +5,7 @@
 
 #include "nob.h"
 
-typedef struct BReader {
-	const char *data;
-	size_t count;
-	size_t i;
-} BReader;
+typedef Nob_String_View BReader;
 
 enum {
 	BNULL,
@@ -28,11 +24,7 @@ bool BReadU64(BReader* br, uint64_t* out);
 bool BReadN(BReader* br, char* out, size_t n);
 Nob_String_Builder BReadSB(BReader* br, size_t n);
 
-typedef struct BWriter {
-	char*  items;
-	size_t count;
-	size_t capacity;
-} BWriter;
+typedef Nob_String_Builder BWriter;
 
 extern BWriter bw_temp;
 
@@ -51,10 +43,11 @@ void BWriterFree(BWriter bw);
 
 #define BR_READ_OUT(type_, amount_) \
 	do { \
-		if (br->i + amount_ > br->count) \
+		if (amount_ > br->count) \
 			return false; \
-		memcpy(out, &br->data[br->i], amount_); \
-		br->i += amount_; \
+		memcpy(out, br->data, amount_); \
+		br->data += amount_; \
+		br->count -= amount_; \
 		return true; \
 	} while(0);
 

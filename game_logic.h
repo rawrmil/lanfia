@@ -175,7 +175,6 @@ void GameSendHistory(struct mg_connection* c) {
 	BReader br = {
 		.data = game.history.items,
 		.count = game.history.count,
-		.i = 0
 	};
 	size_t curr_player_index = -1;
 	for (size_t i = 0; i < game.players.count; i++) {
@@ -183,19 +182,21 @@ void GameSendHistory(struct mg_connection* c) {
 			curr_player_index = i;
 		}
 	}
-	while (br.i < br.count) {
+	while (br.count > 0) {
 		uint32_t player_index;
 		if (!BReadU32(&br, &player_index)) { return; }
 		uint32_t msg_count;
 		if (!BReadU32(&br, &msg_count)) { return; }
+		NOB_ASSERT(msg_count <= br.count);
 		BWriter bw = {
-			.items = (char*)(br.data + br.i),
+			.items = (char*)br.data,
 			.count = msg_count
 		};
 		if (player_index == (unsigned int)-1 || player_index == curr_player_index) {
 			GameSend(c, nob_sb_to_sv(bw));
 		}
-		br.i += msg_count;
+		br.data += msg_count;
+		br.count -= msg_count;
 	}
 	bw_temp.count = 0;
 	BWriterAppend(&bw_temp, BU8, GSMT_HISTORY_END);
@@ -475,6 +476,11 @@ void GameChangeState(struct mg_connection* c) {
 			break;
 		case GS_RESULTS:
 			// TODO: Free memory :)
+			nob_da_foreach(GamePlayer, p, &game.players) {
+				nob_sb_free(p->username);
+			}
+			nob_da_free(game.players);
+			BWriterFree(game.history);
 			memset(&game, 0, sizeof(game));
 			game.state = GS_LOBBY;
 			GameUsersUpdate(c->mgr);
