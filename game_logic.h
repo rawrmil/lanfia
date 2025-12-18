@@ -452,10 +452,8 @@ void GameChangeState(struct mg_connection* c) {
 			int mxi = -1;
 			int mx = -1;
 			for (int i = 0; i < (int)game.players.count; i++) {
-				printf("  i=%d: %d\n", i, lkp[i]);
 				if (lkp[i] > mx) { mx = lkp[i]; mxi = i; }
 			}
-			printf("mxi=%d\n", mxi);
 			if (mxi != -1) {
 				game.players.items[mxi].is_dead = true;
 				bw_temp.count = 0;
@@ -644,7 +642,6 @@ void HandleClientLobbyPoll(struct mg_connection* c, BReader* br) {
 				break;
 		}
 	} else if (game.state == GS_DAY) {
-		printf("voted: %d -> %d\n", voter_index, index);
 		p->voted_for = index;
 		bw_temp.count = 0;
 		BWriterAppend(&bw_temp,
