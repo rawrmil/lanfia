@@ -8,7 +8,7 @@
 <body>
 	<nav class="game_nav">
 		<span id="game_logo">
-			LANfia
+			Mafia
 		</span>
 		<button id="lobby_button" onclick="UIToggleLobby(!is_lobby)"></button>
 	</nav>
@@ -64,6 +64,7 @@
 		var player_index = -1;
 		// --- Elements ---
 		const viewersEl = document.getElementById("game_viewers");
+		const logoEl = document.getElementById("game_logo");
 		const playersListEl = document.getElementById("players_list");
 		const usernameEl = document.getElementById("game_username");
 		const joinErrorEl = document.getElementById("game_join_error");
@@ -220,6 +221,7 @@
 					gameChatContent.innerHTML = "";
 					return;
 				case GAT.STARTED:
+					logoEl.innerHTML = "Mafia (game started)";
 					player_index = -1;
 					readyButtonEl.disabled = true;
 					game_started = true;
@@ -319,14 +321,17 @@
 				case GAT.MAFIA_WON:
 					msgEl.innerHTML += "<h1>MAFIA WON</h1>"
 					msgEl.innerHTML += "<p>You can reload the page!</p>"
+					logoEl.innerHTML = "Mafia (game ended)";
 					break;
 				case GAT.TOWN_WON:
 					msgEl.innerHTML += "<h1>TOWN WON</h1>"
 					msgEl.innerHTML += "<p>You can reload the page!</p>"
+					logoEl.innerHTML = "Mafia (game ended)";
 					break;
 				case GAT.MANIAC_WON:
 					msgEl.innerHTML += "<h1>MANIAC WON</h1>"
 					msgEl.innerHTML += "<p>You can reload the page!</p>"
+					logoEl.innerHTML = "Mafia (game ended)";
 					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "";
