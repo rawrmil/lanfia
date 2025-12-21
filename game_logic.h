@@ -255,12 +255,12 @@ void GameStart(struct mg_connection* c) {
 		}
 		// Shuffle
 		for (size_t i = 0; i < game.players.count; i++) {
-			int j = rand() % GAT_LAST_;
+			int j = rand() % game.players.count;
 			GameRoleType* i_role = &game.players.items[i].role;
 			GameRoleType* j_role = &game.players.items[j].role;
-			GameRoleType tmp = *i_role;
-			*i_role = *j_role;
-			*j_role = tmp;
+			*i_role ^= *j_role;
+			*j_role ^= *i_role;
+			*i_role ^= *j_role;
 		}
 	}
 	//for (int i = 0; i < game.players.count; i++) {
