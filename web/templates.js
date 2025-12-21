@@ -33,12 +33,6 @@ templGameStartedPlayerNote =
 templGameStartedSpectatorNote = `<p>You are a spectator!</p>`
 
 
-templRoleVillager = `villager`;
-templRoleMafia = `mafia`;
-templRoleSerif = `serif`;
-templRoleDoctor = `doctor`;
-templRoleEscort = `escort`;
-templRoleManiac = `maniac`;
 templGameActionRole = `<span>Your role is <b>\${role_name}</b>!</span>`
 
 templDayStarted = `<h3>DAY STARTED</h3>`
@@ -141,3 +135,17 @@ templPlayerStunned =
 	`
 		Player '\${player_names[chosen_index]}' stunned.
 	`;
+
+templGameMafiaGameStarted = `Mafia (game started)`;
+
+templGameMafiaGameEnded = `Mafia (game ended)`;
+
+templYouCanReload = `<p>You can reload the page!</p>`
+
+templMafiaWon = `<h1>MAFIA WON</h1>`;
+templTownWon = `<h1>TOWN WON</h1>`;
+templManiacWon = `<h1>MANIAC WON</h1>`;
+
+templErrGameStarted = `Game already started`;
+templErrNameTooLong = `Name too long`;
+templTimer = `Timer: `;

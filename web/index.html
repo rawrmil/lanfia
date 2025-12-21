@@ -129,7 +129,7 @@
 		}
 		function UIReadyNextButtonSpawn() {
 			UIReadyNextButtonDelete();
-			gameChatUnder.innerHTML += templReadyNextButton;
+			gameChatUnder.innerHTML += eval(`\`${templReadyNextButton}\``);
 		}
 		function UIReadyNextButtonUpdate() {
 			const readyNextButton = document.getElementById("ready_next_button");
@@ -214,8 +214,8 @@
 			UIReadyNextButtonUpdate();
 		}
 		function GameEnd(logoEl, msgEl) {
-			logoEl.innerHTML = "Mafia (game ended)";
-			msgEl.innerHTML += "<p>You can reload the page!</p>"
+			logoEl.innerHTML = eval(`\`${templGameMafiaGameEnded}\``);
+			msgEl.innerHTML += eval(`\`${templYouCanReload}\``);
 			game_started = false;
 			UIReadyNextButtonDelete();
 		}
@@ -228,17 +228,17 @@
 					gameChatContent.innerHTML = "";
 					return;
 				case GAT.STARTED:
-					logoEl.innerHTML = "Mafia (game started)";
+					logoEl.innerHTML = eval(`\`${templGameMafiaGameStarted}\``);
 					player_index = -1;
 					readyButtonEl.disabled = true;
 					game_started = true;
 					UIToggleLobby(false);
 					readyButtonEl.style.display = "none";
-					msgEl.innerHTML += templGameStarted;
+					msgEl.innerHTML += eval(`\`${templGameStarted}\``);
 					if (is_player) {
-						msgEl.innerHTML += templGameStartedPlayerNote;
+						msgEl.innerHTML += eval(`\`${templGameStartedPlayerNote}\``);
 					} else {
-						msgEl.innerHTML += templGameStartedSpectatorNote;
+						msgEl.innerHTML += eval(`\`${templGameStartedSpectatorNote}\``);
 					}
 					break;
 				case GAT.ROLE:
@@ -246,19 +246,12 @@
 					player_index = reader.u32();
 					player_role = role_type;
 					role_name = "";
-					switch (player_role) {
-						case GRT.TOWNSMAN: role_name += templRoleVillager; break;
-						case GRT.MAFIA:    role_name += templRoleMafia; break;
-						case GRT.SERIF:    role_name += templRoleSerif; break;
-						case GRT.DOCTOR:   role_name += templRoleDoctor; break;
-						case GRT.ESCORT:   role_name += templRoleEscort; break;
-						case GRT.MANIAC:   role_name += templRoleManiac; break;
-					}
+					role_name += eval(`\`${templRoleNames[player_role]}\``);
 					msgEl.innerHTML += eval(`\`${templGameActionRole}\``);
 					break;
 				case GAT.DAY_STARTED:
 					UIClearChatUnder();
-					msgEl.innerHTML += templDayStarted;
+					msgEl.innerHTML += eval(`\`${templDayStarted}\``);
 					UIReadyNextButtonSpawn();
 					break;
 				case GAT.DAY_ENDED:
@@ -266,14 +259,14 @@
 					break;
 				case GAT.NIGHT_STARTED:
 					UIClearChatUnder();
-					msgEl.innerHTML += templNightStarted;
+					msgEl.innerHTML += eval(`\`${templNightStarted}\``);
 					if (!is_player) {
-						msgEl.innerHTML += templChoicesNote;
+						msgEl.innerHTML += eval(`\`${templChoicesNote}\``);
 					}
 					break;
 				case GAT.NIGHT_ROLE_ACTION:
 					var role = reader.u8();
-					msgEl.innerHTML += templRoleTasks[role];
+					msgEl.innerHTML += eval(`\`${templRoleTasks[role]}\``);
 					switch (role) {
 						case GRT.TOWNSMAN:
 							break;
@@ -298,43 +291,43 @@
 					role = reader.u8();
 					voter_index = reader.u32();
 					chosen_index = reader.u32();
-					msgEl.innerHTML += eval(`\`${templRoleChose[role]}\``)
+					msgEl.innerHTML += eval(`\`${templRoleChose[role]}\``);
 					break;
 				case GAT.PLAYER_KILLED:
 					chosen_index = reader.u32();
-					msgEl.innerHTML += eval(`\`${templPlayerKilled}\``)
+					msgEl.innerHTML += eval(`\`${templPlayerKilled}\``);
 					break;
 				case GAT.PLAYER_CHECKED:
 					chosen_index = reader.u32();
 					role = reader.u8();
-					msgEl.innerHTML += eval(`\`${templPlayerChecked}\``)
+					msgEl.innerHTML += eval(`\`${templPlayerChecked}\``);
 					break;
 				case GAT.PLAYER_HEALED:
 					chosen_index = reader.u32();
-					msgEl.innerHTML += eval(`\`${templPlayerHealed}\``)
+					msgEl.innerHTML += eval(`\`${templPlayerHealed}\``);
 					break;
 				case GAT.PLAYER_CHECKED:
 					chosen_index = reader.u32();
-					msgEl.innerHTML += eval(`\`${templPlayerStunned}\``)
+					msgEl.innerHTML += eval(`\`${templPlayerStunned}\``);
 					break;
 				case GAT.PLAYER_KICKED:
 					chosen_index = reader.u32();
-					msgEl.innerHTML += eval(`\`${templPlayerKicked}\``)
+					msgEl.innerHTML += eval(`\`${templPlayerKicked}\``);
 					break;
 				case GAT.PLAYER_STUNNED:
 					chosen_index = reader.u32();
-					msgEl.innerHTML += eval(`\`${templPlayerStunned}\``)
+					msgEl.innerHTML += eval(`\`${templPlayerStunned}\``);
 					break;
 				case GAT.MAFIA_WON:
-					msgEl.innerHTML += "<h1>MAFIA WON</h1>"
+					msgEl.innerHTML += eval(`\`${templMafiaWon}\``);
 					GameEnd(logoEl, msgEl);
 					break;
 				case GAT.TOWN_WON:
-					msgEl.innerHTML += "<h1>TOWN WON</h1>"
+					msgEl.innerHTML += eval(`\`${templTownWon}\``);
 					GameEnd(logoEl, msgEl);
 					break;
 				case GAT.MANIAC_WON:
-					msgEl.innerHTML += "<h1>MANIAC WON</h1>"
+					msgEl.innerHTML += eval(`\`${templManiacWon}\``);
 					GameEnd(logoEl, msgEl);
 					break;
 				case GAT.RESULTS:
@@ -368,16 +361,16 @@
 			switch (err_type) {
 				case GE.JOIN_GAME_IN_PROGRESS:
 				case GE.LEAVE_GAME_IN_PROGRESS:
-					joinErrorEl.innerHTML = "Game already started";
+					joinErrorEl.innerHTML = eval(`\`${templErrGameStarted}\``);
 					break;
 				case GE.JOIN_NAME_TOO_LONG:
-					joinErrorEl.innerHTML = "Name too long";
+					joinErrorEl.innerHTML = eval(`\`${templErrNameTooLong}\``);
 					break;
 			}
 		}
 		function HandleServerGameTimer(reader) {
 			time_remaning = reader.u32();
-			gameChatTimer.innerHTML = "Timer: " + time_remaning;
+			gameChatTimer.innerHTML = eval(`\`${templTimer}\``) + time_remaning;
 		}
 		// --- WebSockets ---
 		const ws = new WebSocket(`ws://${location.host}/ws`);
