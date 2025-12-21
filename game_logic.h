@@ -72,6 +72,10 @@ void GameTestSetRoles();
 
 Game game;
 
+void GameResetLastStateTimer() {
+	game.last_state_s = (double)nob_nanos_since_unspecified_epoch() / NOB_NANOS_PER_SEC;
+}
+
 GamePlayer* GameGetPlayer(struct mg_connection* c) {
 	nob_da_foreach(GamePlayer, p, &game.players) {
 		if (c == p->c) { return p; }
@@ -240,6 +244,7 @@ void GameTestSetRoles() {
 }
 
 void GameStart(struct mg_connection* c) {
+	GameResetLastStateTimer();
 	if (game.players.count <= 5) { return; }
 	game.state = GS_FIRST_DAY;
 	if (!game.manual_roles) {
@@ -434,7 +439,7 @@ void GameDay(struct mg_connection* c) {
 }
 
 void GameChangeState(struct mg_connection* c) {
-	game.last_state_s = (double)nob_nanos_since_unspecified_epoch() / NOB_NANOS_PER_SEC;
+	GameResetLastStateTimer();
 	game.ready_next_count = 0;
 	switch (game.state) {
 		case GS_FIRST_DAY:
