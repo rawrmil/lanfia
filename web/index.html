@@ -101,6 +101,7 @@
 				document.getElementById("join_button").style.display  = "none";
 				document.getElementById("leave_button").style.display = "unset";
 				document.getElementById("ready_button").style.display = "unset";
+				document.getElementById("ready_button").disabled = game_started;
 				usernameEl.disabled = true;
 			} else {
 				document.getElementById("join_button").style.display  = "unset";
@@ -322,16 +323,19 @@
 					msgEl.innerHTML += "<h1>MAFIA WON</h1>"
 					msgEl.innerHTML += "<p>You can reload the page!</p>"
 					logoEl.innerHTML = "Mafia (game ended)";
+					game_started = false;
 					break;
 				case GAT.TOWN_WON:
 					msgEl.innerHTML += "<h1>TOWN WON</h1>"
 					msgEl.innerHTML += "<p>You can reload the page!</p>"
 					logoEl.innerHTML = "Mafia (game ended)";
+					game_started = false;
 					break;
 				case GAT.MANIAC_WON:
 					msgEl.innerHTML += "<h1>MANIAC WON</h1>"
 					msgEl.innerHTML += "<p>You can reload the page!</p>"
 					logoEl.innerHTML = "Mafia (game ended)";
+					game_started = false;
 					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "";
