@@ -324,18 +324,21 @@
 					msgEl.innerHTML += "<p>You can reload the page!</p>"
 					logoEl.innerHTML = "Mafia (game ended)";
 					game_started = false;
+					UIReadyNextButtonDelete();
 					break;
 				case GAT.TOWN_WON:
 					msgEl.innerHTML += "<h1>TOWN WON</h1>"
 					msgEl.innerHTML += "<p>You can reload the page!</p>"
 					logoEl.innerHTML = "Mafia (game ended)";
 					game_started = false;
+					UIReadyNextButtonDelete();
 					break;
 				case GAT.MANIAC_WON:
 					msgEl.innerHTML += "<h1>MANIAC WON</h1>"
 					msgEl.innerHTML += "<p>You can reload the page!</p>"
 					logoEl.innerHTML = "Mafia (game ended)";
 					game_started = false;
+					UIReadyNextButtonDelete();
 					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "";

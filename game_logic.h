@@ -420,6 +420,7 @@ void GameDay(struct mg_connection* c) {
 				BU8, GAT_MANIAC_WON);
 			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 			game.state = GS_RESULTS;
+			GameChangeState(c);
 		} else if (maniac == 0) {
 			bw_temp.count = 0;
 			BWriterAppend(&bw_temp,
@@ -427,6 +428,7 @@ void GameDay(struct mg_connection* c) {
 				BU8, GAT_TOWN_WON);
 			GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 			game.state = GS_RESULTS;
+			GameChangeState(c);
 		}
 	} else if (town == 0) {
 		bw_temp.count = 0;
@@ -435,6 +437,7 @@ void GameDay(struct mg_connection* c) {
 				BU8, GAT_MAFIA_WON);
 		GameSendAction(c, nob_sb_to_sv(bw_temp), -1);
 		game.state = GS_RESULTS;
+		GameChangeState(c);
 	}
 }
 
