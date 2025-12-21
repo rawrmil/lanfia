@@ -1,151 +1,163 @@
+const is_ru = /^ru\b/i.test(navigator.language || navigator.userLanguage);
+
+function EN(s) {
+	return is_ru ? "" : s;
+}
+
+function RU(s) {
+	return is_ru ? s : "";
+}
+
 templReadyNextButton =
-	`
-		<div style="display: flex; justify-content: center;">
-			<button id="ready_next_button" onclick="SendGameReadyNext()">
-				Ready
-			</button>
-		</div>
-	`
+    `
+        <div style="display: flex; justify-content: center;">
+            <button id="ready_next_button" onclick="SendGameReadyNext()">
+                \${EN("Ready")}\${RU("Готов")}
+            </button>
+        </div>
+    `
 
 templPlayerListEntry =
-	`
-		<div class='player_entry'>
-			<span class='player_number'>\${Number(i)+1}.</span>
-			&nbsp;
-			<span class='player_name'>\${Escaped(player_names[i]+"\\n")}</span>
-			&nbsp;
-			<span class='player_name'>\${GetPlayerStatus(i)}</span>
-		</div>
-	`
+    `
+        <div class='player_entry'>
+            <span class='player_number'>\${Number(i)+1}.</span>
+            &nbsp;
+            <span class='player_name'>\${Escaped(player_names[i]+"\\n")}</span>
+            &nbsp;
+            <span class='player_name'>\${GetPlayerStatus(i)}</span>
+        </div>
+    `
 
-templGameStarted = `<h1>GAME STARTED</h1>`
+templGameStarted = `<h1>\${EN("GAME STARTED")}\${RU("ИГРА НАЧАЛАСЬ")}</h1>`
 
 templGameStartedPlayerNote =
-	`
-		<p>
-			Become familiar with your role and let's get started!
-		</p>
-		<p>
-			Press "Ready" button
-		</p>
-	`
+    `
+        <p>
+            \${EN("Become familiar with your role and let's get started!")}
+            \${RU("Ознакомьтесь со своей ролью и начинаем!")}
+        </p>
+        <p>
+            \${EN("Press \"Ready\" button")}
+            \${RU("Нажмите кнопку \"Готов\"")}
+        </p>
+    `
 
-templGameStartedSpectatorNote = `<p>You are a spectator!</p>`
+templGameStartedSpectatorNote = `<p>\${EN("You are a spectator!")}\${RU("Вы наблюдатель!")}</p>`
 
 
-templGameActionRole = `<span>Your role is <b>\${role_name}</b>!</span>`
+templGameActionRole = `<span>\${EN("Your role is")}\${RU("Ваша роль")} <b>\${role_name}</b>!</span>`
 
-templDayStarted = `<h3>DAY STARTED</h3>`
-templNightStarted = `<h3>NIGHT STARTED</h3>`
+templDayStarted = `<h3>\${EN("DAY STARTED")}\${RU("ДЕНЬ НАЧАЛСЯ")}</h3>`
+templNightStarted = `<h3>\${EN("NIGHT STARTED")}\${RU("НОЧЬ НАЧАЛАСЬ")}</h3>`
 
-templChoicesNote = `<p>Players are doing their choices!</p>`
+templChoicesNote = `<p>\${EN("Players are doing their choices!")}\${RU("Игроки делают выбор!")}</p>`
 
 const templRoleNames = Object.freeze({
-    [GRT.TOWNSMAN]: `villager`,
-    [GRT.MAFIA]: `mafia`,
-    [GRT.SERIF]: `serif`,
-    [GRT.DOCTOR]: `doctor`,
-    [GRT.ESCORT]: `escort`,
-    [GRT.MANIAC]: `maniac`
+    [GRT.TOWNSMAN]: `\${EN("villager")}\${RU("мирный житель")}`,
+    [GRT.MAFIA]: `\${EN("mafia")}\${RU("мафия")}`,
+    [GRT.SERIF]: `\${EN("serif")}\${RU("шериф")}`,
+    [GRT.DOCTOR]: `\${EN("doctor")}\${RU("доктор")}`,
+    [GRT.ESCORT]: `\${EN("escort")}\${RU("эскорт")}`,
+    [GRT.MANIAC]: `\${EN("maniac")}\${RU("маньяк")}`
 });
 
 const templRoleTasks = Object.freeze({
     [GRT.TOWNSMAN]: `
-        <h3>Villager Task</h3>
-        <p>Just stare at the screen bro</p>
+        <h3>\${EN("Villager Task")}\${RU("Задача мирного жителя")}</h3>
+        <p>\${EN("Just stare at the screen bro")}\${RU("Просто смотри в экран, братан")}</p>
     `,
     [GRT.MAFIA]: `
-        <h3>Mafia Task</h3>
-        <p>Last Mafia to vote locks the kill target</p>
+        <h3>\${EN("Mafia Task")}\${RU("Задача мафии")}</h3>
+        <p>\${EN("Last Mafia to vote locks the kill target")}\${RU("Последний мафия, проголосовавший, выбирает цель убийства")}</p>
     `,
     [GRT.SERIF]: `
-        <h3>Serif Task</h3>
+        <h3>\${EN("Serif Task")}\${RU("Задача шерифа")}</h3>
     `,
     [GRT.DOCTOR]: `
-        <h3>Doctor Task</h3>
+        <h3>\${EN("Doctor Task")}\${RU("Задача доктора")}</h3>
     `,
     [GRT.ESCORT]: `
-        <h3>Escort Task</h3>
+        <h3>\${EN("Escort Task")}\${RU("Задача эскорта")}</h3>
     `,
     [GRT.MANIAC]: `
-        <h3>Maniac Task</h3>
+        <h3>\${EN("Maniac Task")}\${RU("Задача маньяка")}</h3>
     `
 });
 
-templGameEnded = `<h1>GAME RESULTS</h1>`;
+templGameEnded = `<h1>\${EN("GAME RESULTS")}\${RU("РЕЗУЛЬТАТЫ ИГРЫ")}</h1>`;
 
 templGamePoll =
-	`
-		<div id="game_poll">
-			Choose:
-			\${GeneratePoll()}
-		</div>
-	`;
+    `
+        <div id="game_poll">
+            \${EN("Choose:")}\${RU("Выберите:")}
+            \${GeneratePoll()}
+        </div>
+    `;
 
 const templRoleChose = Object.freeze({
     [GRT.TOWNSMAN]: `
     `,
     [GRT.MAFIA]: `
-			Anonymous note: Player '\${player_names[voter_index]}' chose to kill
-			'\${player_names[chosen_index]}'
+            \${EN("Anonymous note: Player")}\${RU("Анонимная записка: Игрок")} '\${player_names[voter_index]}' \${EN("chose to kill")}\${RU("выбрал убить")}
+            '\${player_names[chosen_index]}'
     `,
     [GRT.SERIF]: `
-			Anonymous note: Player '\${player_names[voter_index]}' chose to check 
-			'\${player_names[chosen_index]}'
+            \${EN("Anonymous note: Player")}\${RU("Анонимная записка: Игрок")} '\${player_names[voter_index]}' \${EN("chose to check")}\${RU("выбрал проверить")} 
+            '\${player_names[chosen_index]}'
     `,
     [GRT.DOCTOR]: `
-			Anonymous note: Player '\${player_names[voter_index]}' chose to heal
-			'\${player_names[chosen_index]}'
+            \${EN("Anonymous note: Player")}\${RU("Анонимная записка: Игрок")} '\${player_names[voter_index]}' \${EN("chose to heal")}\${RU("выбрал лечить")}
+            '\${player_names[chosen_index]}'
     `,
     [GRT.ESCORT]: `
-			Anonymous note: Player '\${player_names[voter_index]}' chose to stunn 
-			'\${player_names[chosen_index]}'
+            \${EN("Anonymous note: Player")}\${RU("Анонимная записка: Игрок")} '\${player_names[voter_index]}' \${EN("chose to stunn")}\${RU("выбрал оглушить")}
+            '\${player_names[chosen_index]}'
     `,
     [GRT.MANIAC]: `
-			Anonymous note: Player '\${player_names[voter_index]}' chose to kill
-			'\${player_names[chosen_index]}'
+            \${EN("Anonymous note: Player")}\${RU("Анонимная записка: Игрок")} '\${player_names[voter_index]}' \${EN("chose to kill")}\${RU("выбрал убить")}
+            '\${player_names[chosen_index]}'
     `,
     255: `
-			Player '\${player_names[voter_index]}' chose to kick
-			'\${player_names[chosen_index]}'
-		`
+            \${EN("Player")}\${RU("Игрок")} '\${player_names[voter_index]}' \${EN("chose to kick")}\${RU("выбрал выгнать")}
+            '\${player_names[chosen_index]}'
+        `
 });
 
 templPlayerKilled =
-	`
-		Player '\${player_names[chosen_index]}' killed.
-	`;
+    `
+        \${EN("Player")}\${RU("Игрок")} '\${player_names[chosen_index]}' \${EN("killed.")}\${RU("убит.")}
+    `;
 
 templPlayerChecked =
-	`
-		Anonymous note: Player '\${player_names[chosen_index]}' is \${templRoleNames[role]}.
-	`;
+    `
+        \${EN("Anonymous note: Player")}\${RU("Анонимная записка: Игрок")} '\${player_names[chosen_index]}' \${EN("is")}\${RU("это")} \${templRoleNames[role]}.
+    `;
 
 templPlayerKicked =
-	`
-		Player '\${player_names[chosen_index]}' kicked.
-	`;
+    `
+        \${EN("Player")}\${RU("Игрок")} '\${player_names[chosen_index]}' \${EN("kicked.")}\${RU("выгнан.")}
+    `;
 
 templPlayerHealed =
-	`
-		Player '\${player_names[chosen_index]}' healed.
-	`;
+    `
+        \${EN("Player")}\${RU("Игрок")} '\${player_names[chosen_index]}' \${EN("healed.")}\${RU("вылечен.")}
+    `;
 
 templPlayerStunned =
-	`
-		Player '\${player_names[chosen_index]}' stunned.
-	`;
+    `
+        \${EN("Player")}\${RU("Игрок")} '\${player_names[chosen_index]}' \${EN("stunned.")}\${RU("оглушен.")}
+    `;
 
-templGameMafiaGameStarted = `Mafia (game started)`;
+templGameMafiaGameStarted = `\${EN("Mafia (game started)")}\${RU("Мафия (игра началась)")}`;
 
-templGameMafiaGameEnded = `Mafia (game ended)`;
+templGameMafiaGameEnded = `\${EN("Mafia (game ended)")}\${RU("Мафия (игра окончена)")}`;
 
-templYouCanReload = `<p>You can reload the page!</p>`
+templYouCanReload = `<p>\${EN("You can reload the page!")}\${RU("Можно перезагрузить страницу!")}</p>`
 
-templMafiaWon = `<h1>MAFIA WON</h1>`;
-templTownWon = `<h1>TOWN WON</h1>`;
-templManiacWon = `<h1>MANIAC WON</h1>`;
+templMafiaWon = `<h1>\${EN("MAFIA WON")}\${RU("МАФИЯ ПОБЕДИЛА")}</h1>`;
+templTownWon = `<h1>\${EN("TOWN WON")}\${RU("ГОРОД ПОБЕДИЛ")}</h1>`;
+templManiacWon = `<h1>\${EN("MANIAC WON")}\${RU("МАНЬЯК ПОБЕДИЛ")}</h1>`;
 
-templErrGameStarted = `Game already started`;
-templErrNameTooLong = `Name too long`;
-templTimer = `Timer: `;
+templErrGameStarted = `\${EN("Game already started")}\${RU("Игра уже началась")}`;
+templErrNameTooLong = `\${EN("Name too long")}\${RU("Имя слишком длинное")}`;
+templTimer = `\${EN("Timer: ")}\${RU("Таймер: ")}`;
