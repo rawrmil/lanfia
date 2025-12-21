@@ -213,6 +213,12 @@
 			if (all_ready) { ready_next = false; }
 			UIReadyNextButtonUpdate();
 		}
+		function GameEnd(logoEl, msgEl) {
+			logoEl.innerHTML = "Mafia (game ended)";
+			msgEl.innerHTML += "<p>You can reload the page!</p>"
+			game_started = false;
+			UIReadyNextButtonDelete();
+		}
 		function HandleServerGameAction(reader) {
 			const action = reader.u8();
 			var msgEl = document.createElement('div');
@@ -321,32 +327,19 @@
 					break;
 				case GAT.MAFIA_WON:
 					msgEl.innerHTML += "<h1>MAFIA WON</h1>"
-					msgEl.innerHTML += "<p>You can reload the page!</p>"
-					logoEl.innerHTML = "Mafia (game ended)";
-					game_started = false;
-					UIReadyNextButtonDelete();
+					GameEnd(logoEl, msgEl);
 					break;
 				case GAT.TOWN_WON:
 					msgEl.innerHTML += "<h1>TOWN WON</h1>"
-					msgEl.innerHTML += "<p>You can reload the page!</p>"
-					logoEl.innerHTML = "Mafia (game ended)";
-					game_started = false;
-					UIReadyNextButtonDelete();
+					GameEnd(logoEl, msgEl);
 					break;
 				case GAT.MANIAC_WON:
 					msgEl.innerHTML += "<h1>MANIAC WON</h1>"
-					msgEl.innerHTML += "<p>You can reload the page!</p>"
-					logoEl.innerHTML = "Mafia (game ended)";
-					game_started = false;
-					UIReadyNextButtonDelete();
+					GameEnd(logoEl, msgEl);
 					break;
 				case GAT.RESULTS:
 					msgEl.innerHTML += "";
 					break;
-				// TODO: on end:
-				// readyButtonEl.disabled = false;
-				// game_started = false;
-				// UIToggleLobby(true);
 				default:
 					return;
 			}
